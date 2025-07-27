@@ -498,7 +498,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
             Icon(Icons.brightness_6, color: Colors.white),
             SizedBox(width: 8),
             Text(
-              'Karachi Method',
+              'Prayerly',
               style: TextStyle(color: Colors.white, fontSize: 14),
             ),
           ],
@@ -546,6 +546,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
                   child: InfoCard(
                     currentLocation: currentLocation,
                     getIslamicDate: _getIslamicDate,
+                    latitude: latitude,
+                    longitude: longitude,
                   ),
                 ),
               ],

@@ -23,7 +23,6 @@ class InfoCard extends StatefulWidget {
 }
 
 class _InfoCardState extends State<InfoCard> {
-  String _gmtOffset = "Loading...";
   String _altitude = "Loading...";
 
   @override
@@ -36,16 +35,6 @@ class _InfoCardState extends State<InfoCard> {
     // Calculate GMT offset from device timezone
     final now = DateTime.now();
     final offset = now.timeZoneOffset;
-    final offsetHours = offset.inHours;
-    final offsetMinutes = (offset.inMinutes % 60).abs();
-    final sign = offset.isNegative ? "-" : "+";
-
-    setState(() {
-      _gmtOffset = "GMT: $sign$offsetHours";
-      if (offsetMinutes != 0) {
-        _gmtOffset += ":${offsetMinutes.toString().padLeft(2, '0')}";
-      }
-    });
 
     if (widget.latitude != null && widget.longitude != null) {
       try {
@@ -138,7 +127,7 @@ class _InfoCardState extends State<InfoCard> {
               const Icon(FontAwesomeIcons.mountainSun, color: Colors.blue, size: 14),
               const SizedBox(width: 8),
               Text(
-                "$_gmtOffset, $_altitude",
+                "$_altitude",
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
