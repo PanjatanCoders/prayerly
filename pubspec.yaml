@@ -16,6 +16,8 @@ dependencies:
   intl: ^0.20.2
   geocoding: ^4.0.0
   flutter_launcher_icons: ^0.14.4
+  marquee: ^2.3.0
+  font_awesome_flutter: ^10.8.0
 
 dev_dependencies:
   flutter_test:

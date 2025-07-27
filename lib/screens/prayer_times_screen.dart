@@ -315,15 +315,15 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
 
   Widget _buildCircularTimer() {
     return Container(
-      width: 200,
-      height: 200,
+      width: 180,
+      height: 180,
       child: Stack(
         alignment: Alignment.center,
         children: [
           // Background circle
           Container(
-            width: 200,
-            height: 200,
+            width: 180,
+            height: 180,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.black.withOpacity(0.3),
@@ -331,7 +331,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
           ),
           // Progress circle
           CustomPaint(
-            size: Size(200, 200),
+            size: Size(180, 180),
             painter: CircularProgressPainter(
               progress: _getTimerProgress(),
               color: _getPrayerColor(nextPrayer),
@@ -345,7 +345,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
                 nextPrayer,
                 style: TextStyle(
                   color: _getPrayerColor(nextPrayer),
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -353,11 +353,11 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
                 "${timeRemaining.inHours.toString().padLeft(2, '0')}:${(timeRemaining.inMinutes % 60).toString().padLeft(2, '0')}:${(timeRemaining.inSeconds % 60).toString().padLeft(2, '0')}",
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 4),
               Text(
                 _formatCurrentTime(),
                 style: TextStyle(
@@ -541,7 +541,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildCircularTimer(),
-                SizedBox(width: 16),
+                SizedBox(width: 5),
                 Expanded(
                   child: InfoCard(
                     currentLocation: currentLocation,
@@ -569,7 +569,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
                         Icon(Icons.schedule, color: Colors.white, size: 20),
                         SizedBox(width: 8),
                         Text(
-                          'Prayer Times (University of Islamic Sciences, Karachi)',
+                          'Prayer Times',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 14,
