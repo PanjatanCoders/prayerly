@@ -480,24 +480,33 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
+            SizedBox(height: 10),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.baseline, // ADD THIS
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                // _buildCircularTimer(),
-                CircularTimerWidget(
-                  nextPrayer: nextPrayer,
-                  timeRemaining: timeRemaining,
-                  getTimerProgress: _getTimerProgress,
-                  getPrayerColor: _getPrayerColor,
-                  formatCurrentTime: _formatCurrentTime,
+                Baseline(
+                  baseline: 20.0, // This value needs to be determined by inspecting your widget's text
+                  baselineType: TextBaseline.alphabetic,
+                  child:CircularTimerWidget(
+                    nextPrayer: nextPrayer,
+                    timeRemaining: timeRemaining,
+                    getTimerProgress: _getTimerProgress,
+                    getPrayerColor: _getPrayerColor,
+                    formatCurrentTime: _formatCurrentTime,
+                  ),
                 ),
                 SizedBox(width: 5),
                 Expanded(
-                  child: InfoCard(
-                    currentLocation: currentLocation,
-                    getIslamicDate: _getIslamicDate,
-                    latitude: latitude,
-                    longitude: longitude,
+                  child: Baseline(
+                    baseline: 20.0, // This value needs to be determined for InfoCard
+                    baselineType: TextBaseline.alphabetic,
+                    child: InfoCard(
+                      currentLocation: currentLocation,
+                      getIslamicDate: _getIslamicDate,
+                      latitude: latitude,
+                      longitude: longitude,
+                    ),
                   ),
                 ),
               ],

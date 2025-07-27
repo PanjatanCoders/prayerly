@@ -66,6 +66,7 @@ class _InfoCardState extends State<InfoCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // height: 150,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.grey[900],

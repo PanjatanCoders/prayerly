@@ -20,16 +20,17 @@ class CircularTimerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double size = 200;
     return Container(
-      width: 180,
-      height: 180,
+      width: size,
+      height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
           // Background circle
           Container(
-            width: 180,
-            height: 180,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.black.withOpacity(0.3),
@@ -37,7 +38,7 @@ class CircularTimerWidget extends StatelessWidget {
           ),
           // Progress circle
           CustomPaint(
-            size: Size(180, 180),
+            size: Size(size, size),
             painter: CircularProgressPainter(
               progress: getTimerProgress(),
               color: getPrayerColor(nextPrayer),
