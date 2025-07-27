@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 
+import '../utils/circle_times.dart';
 import '../utils/circular_progress_painter.dart';
 import '../utils/time_info_card.dart';
 
@@ -313,64 +314,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     return (totalMinutes - remainingMinutes) / totalMinutes;
   }
 
-  Widget _buildCircularTimer() {
-    return Container(
-      width: 180,
-      height: 180,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Background circle
-          Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black.withOpacity(0.3),
-            ),
-          ),
-          // Progress circle
-          CustomPaint(
-            size: Size(180, 180),
-            painter: CircularProgressPainter(
-              progress: _getTimerProgress(),
-              color: _getPrayerColor(nextPrayer),
-            ),
-          ),
-          // Timer text
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                nextPrayer,
-                style: TextStyle(
-                  color: _getPrayerColor(nextPrayer),
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "${timeRemaining.inHours.toString().padLeft(2, '0')}:${(timeRemaining.inMinutes % 60).toString().padLeft(2, '0')}:${(timeRemaining.inSeconds % 60).toString().padLeft(2, '0')}",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                _formatCurrentTime(),
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPrayerTimeItem(String prayer, DateTime time, bool hasNotification) {
     bool isCurrentPrayer = prayer == currentPrayer;
@@ -540,7 +483,14 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCircularTimer(),
+                // _buildCircularTimer(),
+                CircularTimerWidget(
+                  nextPrayer: nextPrayer,
+                  timeRemaining: timeRemaining,
+                  getTimerProgress: _getTimerProgress,
+                  getPrayerColor: _getPrayerColor,
+                  formatCurrentTime: _formatCurrentTime,
+                ),
                 SizedBox(width: 5),
                 Expanded(
                   child: InfoCard(
@@ -552,7 +502,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
                 ),
               ],
             ),
-            SizedBox(height: 24),
+            SizedBox(height: 10),
 
             // Prayer Times List
             Container(
