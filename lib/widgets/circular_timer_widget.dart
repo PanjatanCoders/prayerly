@@ -1,4 +1,3 @@
-// widgets/circular_timer_widget.dart
 import 'package:flutter/material.dart';
 import '../utils/circular_progress_painter.dart';
 import '../services/prayer_service.dart';
@@ -16,7 +15,7 @@ class CircularTimerWidget extends StatelessWidget {
     required this.timeRemaining,
     required this.currentTime,
     required this.progress,
-    this.size = 200,
+    this.size = 180,
   });
 
   @override
@@ -28,21 +27,7 @@ class CircularTimerWidget extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Background circle
-          Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black.withOpacity(0.3),
-              border: Border.all(
-                color: Colors.grey.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-          ),
-
-          // Progress circle
+          // Progress circle (this is your only circle now)
           CustomPaint(
             key: ValueKey('progress_${progress}_$nextPrayer'),
             size: Size(size, size),

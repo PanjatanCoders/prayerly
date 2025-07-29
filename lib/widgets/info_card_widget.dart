@@ -1,5 +1,6 @@
 // widgets/info_card_widget.dart
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/elevation_service.dart';
 
 class InfoCardWidget extends StatelessWidget {
@@ -19,7 +20,7 @@ class InfoCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
@@ -38,7 +39,7 @@ class InfoCardWidget extends StatelessWidget {
 
           // Islamic date
           _buildInfoRow(
-            icon: Icons.calendar_today,
+            icon: FontAwesomeIcons.solidMoon,
             text: islamicDate,
           ),
 
@@ -144,7 +145,7 @@ class CompactInfoCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(8),
@@ -177,7 +178,7 @@ class CompactInfoCardWidget extends StatelessWidget {
           // Islamic date
           Row(
             children: [
-              const Icon(Icons.calendar_today, color: Colors.white, size: 14),
+              const Icon(FontAwesomeIcons.moon, color: Colors.white, size: 14),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
