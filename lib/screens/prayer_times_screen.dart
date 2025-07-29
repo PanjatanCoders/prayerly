@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 
-import '../utils/circle_times.dart';
 import '../utils/circular_progress_painter.dart';
 import '../utils/time_info_card.dart';
 
@@ -42,6 +40,10 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   @override
   void initState() {
     super.initState();
+
+    // Initialize lastFetchDate to prevent null errors
+    lastFetchDate = DateTime.now();
+
     _animationController = AnimationController(
       duration: Duration(seconds: 60),
       vsync: this,
@@ -131,10 +133,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       if (placemarks.isNotEmpty) {
         final Placemark place = placemarks.first;
         setState(() {
-          // Compose a detailed address
           currentLocation =
           '${place.name}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}';
-          // For example: Shariff Apartment, Kondhwa, Pune, Maharashtra
         });
       } else {
         setState(() {
@@ -152,10 +152,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     final now = DateTime.now();
     final lastFetch = lastFetchDate;
 
-    // Fetch new times if:
-    // 1. It's a new day
-    // 2. Location has changed significantly
-    // 3. No prayer times exist
     return now.day != lastFetch.day ||
         now.month != lastFetch.month ||
         now.year != lastFetch.year ||
@@ -167,7 +163,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       final now = DateTime.now();
       final dateString = DateFormat('dd-MM-yyyy').format(now);
 
-      // Aladhan API with University of Islamic Sciences, Karachi method (method=1)
       final response = await http.get(
         Uri.parse(
             'http://api.aladhan.com/v1/timings/$dateString?latitude=$latitude&longitude=$longitude&method=$calculationMethod'
@@ -189,13 +184,11 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
             'Isha': _parseTimeString(timings['Isha']),
           };
 
-          // Format Islamic date
           islamicDate = "${hijriDate['day']} ${hijriDate['month']['en']}, ${hijriDate['year']}";
         });
       }
     } catch (e) {
       print('Error fetching prayer times: $e');
-      // Fallback to default times
       _setDefaultPrayerTimes();
     }
   }
@@ -233,15 +226,12 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     String next = "Fajr";
     Duration remaining = Duration.zero;
 
-    // Create a list of prayer times with their names
     List<MapEntry<String, DateTime>> prayers = prayerTimes.entries
-        .where((entry) => entry.key != 'Sunrise') // Exclude sunrise from prayer calculations
+        .where((entry) => entry.key != 'Sunrise')
         .toList();
 
-    // Sort by time
     prayers.sort((a, b) => a.value.compareTo(b.value));
 
-    // Find current and next prayer
     for (int i = 0; i < prayers.length; i++) {
       if (now.isBefore(prayers[i].value)) {
         next = prayers[i].key;
@@ -250,14 +240,12 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         if (i > 0) {
           current = prayers[i - 1].key;
         } else {
-          // Before Fajr, current prayer is Isha from previous day
           current = "Isha";
         }
         break;
       }
     }
 
-    // If we're after Isha, next prayer is Fajr tomorrow
     if (now.isAfter(prayers.last.value)) {
       current = prayers.last.key;
       next = "Fajr";
@@ -279,7 +267,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   }
 
   String _formatTime(DateTime time) {
-    return DateFormat('hh:mm:ss a').format(time);
+    return DateFormat('hh:mm a').format(time);
   }
 
   String _formatCurrentTime() {
@@ -306,14 +294,194 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   }
 
   double _getTimerProgress() {
-    if (timeRemaining.inSeconds <= 0) return 0.0;
+    if (timeRemaining.inSeconds <= 0) return 1.0;
 
-    // Calculate progress based on time between prayers
-    const totalMinutes = 360; // Approximate 6 hours between prayers
-    final remainingMinutes = timeRemaining.inMinutes;
-    return (totalMinutes - remainingMinutes) / totalMinutes;
+    // Get time between current and next prayer for more accurate progress
+    final now = currentTime;
+    DateTime? currentPrayerTime;
+    DateTime? nextPrayerTime;
+
+    // Find current and next prayer times
+    List<MapEntry<String, DateTime>> prayers = prayerTimes.entries
+        .where((entry) => entry.key != 'Sunrise')
+        .toList();
+    prayers.sort((a, b) => a.value.compareTo(b.value));
+
+    for (int i = 0; i < prayers.length; i++) {
+      if (now.isBefore(prayers[i].value)) {
+        nextPrayerTime = prayers[i].value;
+        if (i > 0) {
+          currentPrayerTime = prayers[i - 1].value;
+        } else {
+          // Before Fajr, current prayer is Isha from previous day
+          final yesterday = DateTime(now.year, now.month, now.day - 1);
+          currentPrayerTime = DateTime(yesterday.year, yesterday.month, yesterday.day,
+              prayerTimes['Isha']!.hour, prayerTimes['Isha']!.minute);
+        }
+        break;
+      }
+    }
+
+    // After Isha
+    if (now.isAfter(prayers.last.value)) {
+      currentPrayerTime = prayers.last.value;
+      final tomorrow = DateTime(now.year, now.month, now.day + 1);
+      nextPrayerTime = DateTime(tomorrow.year, tomorrow.month, tomorrow.day,
+          prayerTimes['Fajr']!.hour, prayerTimes['Fajr']!.minute);
+    }
+
+    if (currentPrayerTime != null && nextPrayerTime != null) {
+      final totalDuration = nextPrayerTime.difference(currentPrayerTime);
+      final elapsedDuration = now.difference(currentPrayerTime);
+      return (elapsedDuration.inSeconds / totalDuration.inSeconds).clamp(0.0, 1.0);
+    }
+
+    return 0.0;
   }
 
+  // Integrated Circular Timer Widget
+  Widget _buildCircularTimer() {
+    double size = 200;
+
+    // Debug prints to check if values are updating
+    print('CircularTimer Debug:');
+    print('- Current Time: ${_formatCurrentTime()}');
+    print('- Next Prayer: $nextPrayer');
+    print('- Time Remaining: ${timeRemaining.inHours}:${timeRemaining.inMinutes % 60}:${timeRemaining.inSeconds % 60}');
+    print('- Progress: ${_getTimerProgress()}');
+
+    return Container(
+      key: ValueKey('${currentTime.millisecondsSinceEpoch}'), // Force rebuild
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background circle
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withOpacity(0.3),
+              border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
+            ),
+          ),
+          // Progress circle
+          CustomPaint(
+            key: ValueKey('progress_${_getTimerProgress()}_${nextPrayer}'),
+            size: Size(size, size),
+            painter: CircularProgressPainter(
+              progress: _getTimerProgress(),
+              color: _getPrayerColor(nextPrayer),
+            ),
+          ),
+          // Timer text
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                nextPrayer,
+                key: ValueKey('prayer_$nextPrayer'),
+                style: TextStyle(
+                  color: _getPrayerColor(nextPrayer),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "${timeRemaining.inHours.toString().padLeft(2, '0')}:"
+                    "${(timeRemaining.inMinutes % 60).toString().padLeft(2, '0')}:"
+                    "${(timeRemaining.inSeconds % 60).toString().padLeft(2, '0')}",
+                key: ValueKey('remaining_${timeRemaining.inSeconds}'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                _formatCurrentTime(),
+                key: ValueKey('current_${currentTime.millisecondsSinceEpoch}'),
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Info Card Widget
+  Widget _buildInfoCard() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on, color: Colors.white, size: 16),
+              SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  currentLocation,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.calendar_today, color: Colors.white, size: 16),
+              SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  _getIslamicDate(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.gps_fixed, color: Colors.white, size: 16),
+              SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  "${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildPrayerTimeItem(String prayer, DateTime time, bool hasNotification) {
     bool isCurrentPrayer = prayer == currentPrayer;
@@ -442,7 +610,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
             SizedBox(width: 8),
             Text(
               'Prayerly',
-              style: TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
         ),
@@ -480,38 +648,17 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
-            SizedBox(height: 10),
+            // Top section with circular timer and info
             Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline, // ADD THIS
-              textBaseline: TextBaseline.alphabetic,
               children: [
-                Baseline(
-                  baseline: 20.0, // This value needs to be determined by inspecting your widget's text
-                  baselineType: TextBaseline.alphabetic,
-                  child:CircularTimerWidget(
-                    nextPrayer: nextPrayer,
-                    timeRemaining: timeRemaining,
-                    getTimerProgress: _getTimerProgress,
-                    getPrayerColor: _getPrayerColor,
-                    formatCurrentTime: _formatCurrentTime,
-                  ),
-                ),
-                SizedBox(width: 5),
+                _buildCircularTimer(),
+                SizedBox(width: 16),
                 Expanded(
-                  child: Baseline(
-                    baseline: 20.0, // This value needs to be determined for InfoCard
-                    baselineType: TextBaseline.alphabetic,
-                    child: InfoCard(
-                      currentLocation: currentLocation,
-                      getIslamicDate: _getIslamicDate,
-                      latitude: latitude,
-                      longitude: longitude,
-                    ),
-                  ),
+                  child: _buildInfoCard(),
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 24),
 
             // Prayer Times List
             Container(
@@ -533,7 +680,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
                           'Prayer Times',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 14,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

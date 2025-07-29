@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'circular_progress_painter.dart';
 
-class CircularTimerWidget extends StatelessWidget {
+class CircularTimerWidget extends StatefulWidget {
   final String nextPrayer;
   final Duration timeRemaining;
-  final double Function() getTimerProgress; // Function returning progress 0.0-1.0
-  final Color Function(String) getPrayerColor; // Function that returns color for a given prayer name
-  final String Function() formatCurrentTime; // Function that returns formatted current time
+  final double Function() getTimerProgress;
+  final Color Function(String) getPrayerColor;
+  final String Function() formatCurrentTime;
 
   const CircularTimerWidget({
     Key? key,
@@ -18,6 +18,11 @@ class CircularTimerWidget extends StatelessWidget {
     required this.formatCurrentTime,
   }) : super(key: key);
 
+  @override
+  State<CircularTimerWidget> createState() => _CircularTimerWidgetState();
+}
+
+class _CircularTimerWidgetState extends State<CircularTimerWidget> {
   @override
   Widget build(BuildContext context) {
     double size = 200;
@@ -40,8 +45,8 @@ class CircularTimerWidget extends StatelessWidget {
           CustomPaint(
             size: Size(size, size),
             painter: CircularProgressPainter(
-              progress: getTimerProgress(),
-              color: getPrayerColor(nextPrayer),
+              progress: widget.getTimerProgress(),
+              color: widget.getPrayerColor(widget.nextPrayer),
             ),
           ),
           // Timer text
@@ -49,17 +54,17 @@ class CircularTimerWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                nextPrayer,
+                widget.nextPrayer,
                 style: TextStyle(
-                  color: getPrayerColor(nextPrayer),
+                  color: widget.getPrayerColor(widget.nextPrayer),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                "${timeRemaining.inHours.toString().padLeft(2, '0')}:"
-                    "${(timeRemaining.inMinutes % 60).toString().padLeft(2, '0')}:"
-                    "${(timeRemaining.inSeconds % 60).toString().padLeft(2, '0')}",
+                "${widget.timeRemaining.inHours.toString().padLeft(2, '0')}:"
+                    "${(widget.timeRemaining.inMinutes % 60).toString().padLeft(2, '0')}:"
+                    "${(widget.timeRemaining.inSeconds % 60).toString().padLeft(2, '0')}",
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -68,7 +73,7 @@ class CircularTimerWidget extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                formatCurrentTime(),
+                widget.formatCurrentTime(),
                 style: const TextStyle(
                   color: Colors.grey,
                   fontSize: 14,
