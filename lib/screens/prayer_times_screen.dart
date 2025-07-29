@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:awesome_notifications/awesome_notifications.dart';
 
 import '../services/location_service.dart';
 import '../services/elevation_service.dart';
 import '../services/prayer_service.dart';
+import '../services/notification_service.dart'; // Add this import
 import '../widgets/circular_timer_widget.dart';
 import '../widgets/info_card_widget.dart';
 import '../widgets/prayer_times_list_widget.dart';
@@ -32,10 +34,12 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   // State
   bool _isLoading = true;
   bool _isLoadingElevation = false;
+  bool _notificationsEnabled = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeNotifications();
     _setupTimers();
     _initializeApp();
   }
@@ -45,6 +49,26 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     _timeUpdateTimer.cancel();
     _dailyUpdateTimer.cancel();
     super.dispose();
+  }
+
+  /// Initialize notifications
+  Future<void> _initializeNotifications() async {
+    try {
+      await NotificationService.initialize();
+
+      // Set up notification listeners
+      AwesomeNotifications().setListeners(
+        onActionReceivedMethod: NotificationService.onNotificationTap,
+      );
+
+      // Check if notifications are enabled
+      final enabled = await NotificationService.areNotificationsEnabled();
+      setState(() {
+        _notificationsEnabled = enabled;
+      });
+    } catch (e) {
+      print('Error initializing notifications: $e');
+    }
   }
 
   /// Sets up periodic timers for updates
@@ -89,6 +113,11 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
 
       // Update prayer status
       _updatePrayerStatus();
+
+      // Schedule notifications if prayer times are available
+      if (_prayerTimesData != null && _notificationsEnabled) {
+        await _scheduleNotifications();
+      }
 
     } catch (e) {
       print('Error initializing app: $e');
@@ -158,8 +187,25 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         _prayerTimesData = prayerTimesData;
       });
 
+      // Schedule notifications when prayer times are updated
+      if (_notificationsEnabled) {
+        await _scheduleNotifications();
+      }
+
     } catch (e) {
       print('Error fetching prayer times: $e');
+    }
+  }
+
+  /// Schedule notifications for prayer times
+  Future<void> _scheduleNotifications() async {
+    if (_prayerTimesData?.prayerTimes.isEmpty ?? true) return;
+
+    try {
+      await NotificationService.schedulePrayerNotifications(_prayerTimesData!.prayerTimes);
+      print('Prayer notifications scheduled successfully');
+    } catch (e) {
+      print('Error scheduling notifications: $e');
     }
   }
 
@@ -197,6 +243,41 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     await _initializeApp();
   }
 
+  /// Toggle notifications
+  Future<void> _toggleNotifications() async {
+    if (_notificationsEnabled) {
+      // Disable notifications
+      await NotificationService.cancelAllNotifications();
+      setState(() {
+        _notificationsEnabled = false;
+      });
+      _showSnackBar('Notifications disabled');
+    } else {
+      // Enable notifications
+      final enabled = await NotificationService.requestPermissions();
+      if (enabled) {
+        setState(() {
+          _notificationsEnabled = true;
+        });
+        await _scheduleNotifications();
+        _showSnackBar('Notifications enabled');
+      } else {
+        _showSnackBar('Notification permissions denied');
+      }
+    }
+  }
+
+  /// Show snackbar message
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.grey[800],
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -218,6 +299,15 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     ];
 
     List<Widget> actionChildren = [
+      // Notification toggle button
+      IconButton(
+        icon: Icon(
+          _notificationsEnabled ? Icons.notifications : Icons.notifications_off,
+          color: _notificationsEnabled ? Colors.orange : Colors.grey,
+        ),
+        onPressed: _toggleNotifications,
+        tooltip: _notificationsEnabled ? 'Disable Notifications' : 'Enable Notifications',
+      ),
       IconButton(
         icon: const Icon(Icons.refresh, color: Colors.white),
         onPressed: _refreshData,
@@ -315,6 +405,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       _buildInfoItem('Calculation Method', 'University of Islamic Sciences, Karachi'),
       _buildInfoItem('Location', _locationData?.isDefault == true ? 'Default (Permission denied)' : 'GPS Location'),
       _buildInfoItem('Prayer Times Source', _prayerTimesData?.isDefault == true ? 'Fallback Data' : 'API Data'),
+      _buildInfoItem('Notifications', _notificationsEnabled ? 'Enabled (15 min before)' : 'Disabled'),
     ];
 
     if (_elevation != null) {
@@ -336,6 +427,14 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
             children: infoChildren,
           ),
           actions: [
+            if (!_notificationsEnabled)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _toggleNotifications();
+                },
+                child: const Text('Enable Notifications', style: TextStyle(color: Colors.orange)),
+              ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Close', style: TextStyle(color: Colors.white)),
