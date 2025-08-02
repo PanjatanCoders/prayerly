@@ -19,6 +19,7 @@ dependencies:
   marquee: ^2.3.0
   font_awesome_flutter: ^10.8.0
   awesome_notifications: ^0.10.1
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:

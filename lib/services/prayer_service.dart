@@ -1,4 +1,6 @@
 // services/prayer_service.dart
+// ignore_for_file: unused_local_variable, avoid_print, unnecessary_brace_in_string_interps, depend_on_referenced_packages
+
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
