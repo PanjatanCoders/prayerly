@@ -1,4 +1,4 @@
-// services/adhan_service.dart (Enhanced version)
+// services/adhan_service.dart (Updated + Restored)
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,8 +10,7 @@ class AdhanService {
   static const String _notificationSettingsKey = 'prayer_notification_settings';
   static const String _volumeSettingsKey = 'adhan_volume_settings';
   static const String _adhanTypeKey = 'selected_adhan_type';
-  
-  // Default notification settings
+
   static const Map<String, bool> _defaultSettings = {
     'Fajr': true,
     'Dhuhr': true,
@@ -20,41 +19,33 @@ class AdhanService {
     'Isha': true,
   };
 
-  // Available adhan types
   static const Map<String, String> adhanTypes = {
-    'makkah': 'Makkah',
-    'madinah': 'Madinah', 
-    'egypt': 'Egypt',
-    'turkey': 'Turkey',
+    'azan1': 'Makkah',
+    'azan2': 'Madinah',
+    'azan3': 'Egypt',
+    'azan4': 'Turkey',
+    'azan_fajr1': 'Fajr Special',
   };
 
-  /// Initialize the AdhanService
   static Future<void> initialize() async {
     await _setupAudioPlayer();
     await _initializeNotifications();
   }
 
-  /// Setup audio player with proper configuration
   static Future<void> _setupAudioPlayer() async {
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.stop);
       await _audioPlayer.setPlayerMode(PlayerMode.mediaPlayer);
-      
-      // Set initial volume
       final volume = await getAdhanVolume();
       await _audioPlayer.setVolume(volume);
-      
-      // Listen for completion to auto-dismiss playing notification
       _audioPlayer.onPlayerComplete.listen((_) {
         _dismissPlayingNotification();
       });
-      
     } catch (e) {
       debugPrint('Error setting up audio player: $e');
     }
   }
 
-  /// Initialize notifications with proper channels
   static Future<void> _initializeNotifications() async {
     await AwesomeNotifications().initialize(
       null,
@@ -67,7 +58,7 @@ class AdhanService {
           defaultColor: Colors.amber,
           importance: NotificationImportance.Max,
           channelShowBadge: true,
-          playSound: false, // We handle sound manually
+          playSound: false,
           enableVibration: true,
           enableLights: true,
           criticalAlerts: true,
@@ -83,28 +74,25 @@ class AdhanService {
           playSound: false,
           enableVibration: false,
           onlyAlertOnce: true,
-        )
+        ),
       ],
       channelGroups: [
         NotificationChannelGroup(
           channelGroupKey: 'adhan_group',
           channelGroupName: 'Adhan',
-        )
+        ),
       ],
     );
   }
 
-  /// Get notification settings from SharedPreferences
   static Future<Map<String, bool>> getNotificationSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final settingsJson = prefs.getString(_notificationSettingsKey);
-      
       if (settingsJson != null) {
         final Map<String, dynamic> decoded = json.decode(settingsJson);
         return decoded.map((key, value) => MapEntry(key, value as bool));
       }
-      
       return Map.from(_defaultSettings);
     } catch (e) {
       debugPrint('Error loading notification settings: $e');
@@ -112,32 +100,30 @@ class AdhanService {
     }
   }
 
-  /// Update notification setting for specific prayer
-  static Future<void> updateNotificationSetting(String prayer, bool enabled) async {
+  static Future<void> updateNotificationSetting(
+    String prayer,
+    bool enabled,
+  ) async {
     try {
       final settings = await getNotificationSettings();
       settings[prayer] = enabled;
-      
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_notificationSettingsKey, json.encode(settings));
-      
       debugPrint('Updated $prayer notification: $enabled');
     } catch (e) {
       debugPrint('Error updating notification setting: $e');
     }
   }
 
-  /// Get adhan volume (0.0 to 1.0)
   static Future<double> getAdhanVolume() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getDouble(_volumeSettingsKey) ?? 0.8; // Default 80%
+      return prefs.getDouble(_volumeSettingsKey) ?? 0.8;
     } catch (e) {
       return 0.8;
     }
   }
 
-  /// Set adhan volume
   static Future<void> setAdhanVolume(double volume) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -148,17 +134,15 @@ class AdhanService {
     }
   }
 
-  /// Get selected adhan type
   static Future<String> getSelectedAdhanType() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_adhanTypeKey) ?? 'makkah';
+      return prefs.getString(_adhanTypeKey) ?? 'azan1';
     } catch (e) {
-      return 'makkah';
+      return 'azan1';
     }
   }
 
-  /// Set selected adhan type
   static Future<void> setSelectedAdhanType(String type) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -168,127 +152,28 @@ class AdhanService {
     }
   }
 
-  /// Schedule adhan notifications for enabled prayers
-  static Future<void> scheduleAdhanNotifications(
-    Map<String, DateTime> prayerTimes,
-    Map<String, bool> notificationSettings,
-  ) async {
-    try {
-      // Cancel all existing adhan notifications
-      await AwesomeNotifications().cancelNotificationsByChannelKey('adhan_channel');
-      
-      final now = DateTime.now();
-      
-      for (final entry in prayerTimes.entries) {
-        final prayerName = entry.key;
-        final prayerTime = entry.value;
-        
-        // Skip Sunrise and disabled prayers
-        if (prayerName == 'Sunrise' || !(notificationSettings[prayerName] ?? false)) {
-          continue;
-        }
-        
-        // Only schedule future prayers (including next day)
-        DateTime scheduleTime = prayerTime;
-        if (prayerTime.isBefore(now)) {
-          scheduleTime = prayerTime.add(const Duration(days: 1));
-        }
-        
-        await _scheduleAdhanNotification(prayerName, scheduleTime);
-      }
-      
-      debugPrint('Adhan notifications scheduled successfully');
-    } catch (e) {
-      debugPrint('Error scheduling adhan notifications: $e');
-    }
-  }
-
-  /// Schedule individual adhan notification
-  static Future<void> _scheduleAdhanNotification(String prayerName, DateTime prayerTime) async {
-    try {
-      final notificationId = _getNotificationId(prayerName);
-      
-      await AwesomeNotifications().createNotification(
-        content: NotificationContent(
-          id: notificationId,
-          channelKey: 'adhan_channel',
-          title: '🕌 $prayerName Prayer Time',
-          body: 'It\'s time for $prayerName prayer. Tap to play Adhan.',
-          wakeUpScreen: true,
-          fullScreenIntent: true,
-          criticalAlert: true,
-          category: NotificationCategory.Alarm,
-          notificationLayout: NotificationLayout.BigText,
-          largeIcon: 'resource://drawable/ic_mosque', // Add mosque icon
-          payload: {
-            'prayer': prayerName,
-            'action': 'play_adhan',
-            'time': prayerTime.millisecondsSinceEpoch.toString(),
-          },
-        ),
-        actionButtons: [
-          NotificationActionButton(
-            key: 'play_adhan',
-            label: 'Play Adhan',
-            color: Colors.green,
-            actionType: ActionType.SilentAction,
-          ),
-          NotificationActionButton(
-            key: 'dismiss',
-            label: 'Dismiss',
-            actionType: ActionType.DismissAction,
-          ),
-        ],
-        schedule: NotificationCalendar.fromDate(date: prayerTime),
-      );
-      
-      debugPrint('Scheduled $prayerName adhan for ${prayerTime.toString()}');
-    } catch (e) {
-      debugPrint('Error scheduling $prayerName notification: $e');
-    }
-  }
-
-  /// Get notification ID for prayer
-  static int _getNotificationId(String prayerName) {
-    switch (prayerName) {
-      case 'Fajr': return 1001;
-      case 'Dhuhr': return 1002;
-      case 'Asr': return 1003;
-      case 'Maghrib': return 1004;
-      case 'Isha': return 1005;
-      default: return 1000;
-    }
-  }
-
-  /// Play adhan audio
   static Future<void> playAdhan(String prayerName) async {
     try {
-      // Stop any currently playing audio
       await stopAdhan();
-      
-      // Get the appropriate adhan file
       final adhanFile = await _getAdhanFile(prayerName);
-      
-      debugPrint('Playing adhan for $prayerName: $adhanFile');
-      
-      // Set volume before playing
       final volume = await getAdhanVolume();
       await _audioPlayer.setVolume(volume);
-      
-      // Play the adhan
       await _audioPlayer.play(AssetSource(adhanFile));
-      
-      // Show playing notification with controls
       await _showPlayingNotification(prayerName);
-      
     } catch (e) {
       debugPrint('Error playing adhan: $e');
-      // Fallback: just show notification without audio
       await _showPlayingNotification(prayerName);
     }
   }
 
-  /// Stop adhan audio
+  static Future<String> _getAdhanFile(String prayerName) async {
+    final adhanType = await getSelectedAdhanType();
+    if (prayerName == 'Fajr' && adhanType == 'azan_fajr1') {
+      return 'audio/adhan/azan_fajr1.mp3';
+    }
+    return 'audio/adhan/$adhanType.mp3';
+  }
+
   static Future<void> stopAdhan() async {
     try {
       await _audioPlayer.stop();
@@ -298,37 +183,22 @@ class AdhanService {
     }
   }
 
-  /// Pause adhan audio
-  static Future<void> pauseAdhan() async {
+  static Future<void> testAdhan() async {
     try {
-      await _audioPlayer.pause();
+      await stopAdhan();
+      final adhanType = await getSelectedAdhanType();
+      final testFile = adhanType == 'azan_fajr1'
+          ? 'audio/adhan/azan_fajr1.mp3'
+          : 'audio/adhan/$adhanType.mp3';
+      await _audioPlayer.play(AssetSource(testFile));
+      Future.delayed(const Duration(seconds: 10), () {
+        stopAdhan();
+      });
     } catch (e) {
-      debugPrint('Error pausing adhan: $e');
+      debugPrint('Error testing adhan: $e');
     }
   }
 
-  /// Resume adhan audio
-  static Future<void> resumeAdhan() async {
-    try {
-      await _audioPlayer.resume();
-    } catch (e) {
-      debugPrint('Error resuming adhan: $e');
-    }
-  }
-
-  /// Get appropriate adhan file for prayer
-  static Future<String> _getAdhanFile(String prayerName) async {
-    final adhanType = await getSelectedAdhanType();
-    
-    // Special case for Fajr if different adhan exists
-    if (prayerName == 'Fajr') {
-      return 'audio/adhan_fajr_$adhanType.mp3';
-    }
-    
-    return 'audio/adhan_$adhanType.mp3';
-  }
-
-  /// Show notification while adhan is playing
   static Future<void> _showPlayingNotification(String prayerName) async {
     try {
       await AwesomeNotifications().createNotification(
@@ -341,10 +211,7 @@ class AdhanService {
           category: NotificationCategory.Status,
           notificationLayout: NotificationLayout.MediaPlayer,
           backgroundColor: Colors.green,
-          payload: {
-            'prayer': prayerName,
-            'action': 'control_adhan',
-          },
+          payload: {'prayer': prayerName, 'action': 'control_adhan'},
         ),
         actionButtons: [
           NotificationActionButton(
@@ -364,7 +231,6 @@ class AdhanService {
     }
   }
 
-  /// Dismiss playing notification
   static Future<void> _dismissPlayingNotification() async {
     try {
       await AwesomeNotifications().cancel(2000);
@@ -373,34 +239,30 @@ class AdhanService {
     }
   }
 
-  /// Handle notification tap and actions
   static Future<void> onNotificationTap(ReceivedAction receivedAction) async {
     try {
       final payload = receivedAction.payload;
       final action = payload?['action'];
       final prayer = payload?['prayer'];
       final buttonKey = receivedAction.buttonKeyPressed;
-      
-      debugPrint('Notification action - Key: $buttonKey, Action: $action, Prayer: $prayer');
-      
-      // Handle button presses
+
+      debugPrint(
+        'Notification action - Key: $buttonKey, Action: $action, Prayer: $prayer',
+      );
+
       switch (buttonKey) {
         case 'play_adhan':
-          if (prayer != null) {
-            await playAdhan(prayer);
-          }
+          if (prayer != null) await playAdhan(prayer);
           break;
         case 'stop_adhan':
           await stopAdhan();
           break;
         case 'pause_adhan':
-          await pauseAdhan();
+          await _audioPlayer.pause();
           break;
         case 'dismiss':
-          // Just dismiss, no action needed
           break;
         default:
-          // Handle notification tap (no button)
           if (action == 'play_adhan' && prayer != null) {
             await playAdhan(prayer);
           }
@@ -411,60 +273,106 @@ class AdhanService {
     }
   }
 
-  /// Get current playing status
-  static Future<bool> isPlaying() async {
+  static Future<void> scheduleAdhanNotifications(
+    Map<String, DateTime> prayerTimes,
+    Map<String, bool> notificationSettings,
+  ) async {
     try {
-      return _audioPlayer.state == PlayerState.playing;
+      await AwesomeNotifications().cancelNotificationsByChannelKey(
+        'adhan_channel',
+      );
+      final now = DateTime.now();
+
+      for (final entry in prayerTimes.entries) {
+        final name = entry.key;
+        final time = entry.value;
+        if (name == 'Sunrise' || !(notificationSettings[name] ?? false))
+          continue;
+        DateTime scheduleTime = time.isBefore(now)
+            ? time.add(const Duration(days: 1))
+            : time;
+        await _scheduleAdhanNotification(name, scheduleTime);
+      }
+      debugPrint('Adhan notifications scheduled successfully');
     } catch (e) {
-      return false;
+      debugPrint('Error scheduling adhan notifications: $e');
     }
   }
 
-  /// Get current position
-  static Future<Duration> getCurrentPosition() async {
+  static Future<void> _scheduleAdhanNotification(
+    String prayer,
+    DateTime time,
+  ) async {
     try {
-      return await _audioPlayer.getCurrentPosition() ?? Duration.zero;
+      final id = _getNotificationId(prayer);
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
+          id: id,
+          channelKey: 'adhan_channel',
+          title: '🕌 $prayer Prayer Time',
+          body: 'It\'s time for $prayer prayer. Tap to play Adhan.',
+          wakeUpScreen: true,
+          fullScreenIntent: true,
+          criticalAlert: true,
+          category: NotificationCategory.Alarm,
+          notificationLayout: NotificationLayout.BigText,
+          largeIcon: 'resource://drawable/ic_mosque',
+          payload: {
+            'prayer': prayer,
+            'action': 'play_adhan',
+            'time': time.millisecondsSinceEpoch.toString(),
+          },
+        ),
+        actionButtons: [
+          NotificationActionButton(
+            key: 'play_adhan',
+            label: 'Play Adhan',
+            color: Colors.green,
+            actionType: ActionType.SilentAction,
+          ),
+          NotificationActionButton(
+            key: 'dismiss',
+            label: 'Dismiss',
+            actionType: ActionType.DismissAction,
+          ),
+        ],
+        schedule: NotificationCalendar.fromDate(date: time),
+      );
     } catch (e) {
-      return Duration.zero;
+      debugPrint('Error scheduling $prayer notification: $e');
     }
   }
 
-  /// Get duration
-  static Future<Duration> getDuration() async {
-    try {
-      return await _audioPlayer.getDuration() ?? Duration.zero;
-    } catch (e) {
-      return Duration.zero;
+  static int _getNotificationId(String prayerName) {
+    switch (prayerName) {
+      case 'Fajr':
+        return 1001;
+      case 'Dhuhr':
+        return 1002;
+      case 'Asr':
+        return 1003;
+      case 'Maghrib':
+        return 1004;
+      case 'Isha':
+        return 1005;
+      default:
+        return 1000;
     }
   }
 
-  /// Test adhan playback (for settings)
-  static Future<void> testAdhan() async {
-    try {
-      await stopAdhan();
-      final adhanFile = await _getAdhanFile('Test');
-      await _audioPlayer.play(AssetSource(adhanFile));
-      
-      // Auto-stop after 10 seconds for testing
-      Future.delayed(const Duration(seconds: 10), () {
-        stopAdhan();
-      });
-    } catch (e) {
-      debugPrint('Error testing adhan: $e');
-    }
-  }
-
-  /// Cancel all adhan notifications
   static Future<void> cancelAllNotifications() async {
     try {
-      await AwesomeNotifications().cancelNotificationsByChannelKey('adhan_channel');
-      await AwesomeNotifications().cancelNotificationsByChannelKey('adhan_playing_channel');
+      await AwesomeNotifications().cancelNotificationsByChannelKey(
+        'adhan_channel',
+      );
+      await AwesomeNotifications().cancelNotificationsByChannelKey(
+        'adhan_playing_channel',
+      );
     } catch (e) {
       debugPrint('Error canceling notifications: $e');
     }
   }
 
-  /// Dispose resources
   static Future<void> dispose() async {
     try {
       await _audioPlayer.dispose();

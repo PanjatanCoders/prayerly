@@ -34,8 +34,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-assets:
-  - assets/icons/icon.png
+  assets:
+    - assets/icons/icon.png
+    - assets/audio/adhan/azan1.mp3
+    - assets/audio/adhan/azan2.mp3
+    - assets/audio/adhan/azan3.mp3
+    - assets/audio/adhan/azan4.mp3
+    - assets/audio/adhan/azan_fajr1.mp3
 flutter_icons:
   android: true
   image_path: "assets/icons/icon.png"
