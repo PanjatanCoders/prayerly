@@ -1,8 +1,11 @@
 // main.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+
 import 'services/notification_service.dart';
 import 'screens/prayer_times_screen.dart';
+import 'providers/adhan_settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,7 +13,12 @@ void main() async {
   // Initialize notifications
   await NotificationService.initialize();
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AdhanSettingsProvider()..loadSettings(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {

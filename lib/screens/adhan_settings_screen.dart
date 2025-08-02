@@ -1,74 +1,12 @@
-// screens/adhan_settings_screen.dart
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/adhan_settings_provider.dart';
 import '../services/adhan_service.dart';
 
-class AdhanSettingsScreen extends StatefulWidget {
+class AdhanSettingsScreen extends StatelessWidget {
   const AdhanSettingsScreen({super.key});
 
-  @override
-  State<AdhanSettingsScreen> createState() => _AdhanSettingsScreenState();
-}
-
-class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
-  double _volume = 0.8;
-  String _selectedAdhanType = 'makkah';
-  Map<String, bool> _notificationSettings = {};
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final volume = await AdhanService.getAdhanVolume();
-      final adhanType = await AdhanService.getSelectedAdhanType();
-      final notifications = await AdhanService.getNotificationSettings();
-
-      if (mounted) {
-        setState(() {
-          _volume = volume;
-          _selectedAdhanType = adhanType;
-          _notificationSettings = notifications;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading settings: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _saveVolumeSettings(double volume) async {
-    await AdhanService.setAdhanVolume(volume);
-    setState(() {
-      _volume = volume;
-    });
-  }
-
-  Future<void> _saveAdhanType(String type) async {
-    await AdhanService.setSelectedAdhanType(type);
-    setState(() {
-      _selectedAdhanType = type;
-    });
-  }
-
-  Future<void> _togglePrayerNotification(String prayer, bool enabled) async {
-    await AdhanService.updateNotificationSetting(prayer, enabled);
-    setState(() {
-      _notificationSettings[prayer] = enabled;
-    });
-  }
-
-  void _testAdhan() {
+  void _testAdhan(BuildContext context) {
     AdhanService.testAdhan();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -80,6 +18,8 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<AdhanSettingsProvider>(context);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -94,29 +34,28 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
           style: TextStyle(color: Colors.white),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildVolumeSection(),
-                  const SizedBox(height: 24),
-                  _buildAdhanTypeSection(),
-                  const SizedBox(height: 24),
-                  _buildPrayerNotificationsSection(),
-                  const SizedBox(height: 24),
-                  _buildTestSection(),
-                ],
-              ),
-            ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildVolumeSection(context, provider),
+            const SizedBox(height: 24),
+            _buildAdhanTypeSection(provider),
+            const SizedBox(height: 24),
+            _buildPrayerNotificationsSection(provider),
+            const SizedBox(height: 24),
+            _buildTestSection(context),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildVolumeSection() {
+  Widget _buildVolumeSection(
+    BuildContext context,
+    AdhanSettingsProvider provider,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -140,7 +79,7 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
               ),
               const Spacer(),
               Text(
-                '${(_volume * 100).round()}%',
+                '${(provider.volume * 100).round()}%',
                 style: const TextStyle(
                   color: Colors.amber,
                   fontSize: 14,
@@ -158,13 +97,11 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
               overlayColor: Colors.amber.withOpacity(0.2),
             ),
             child: Slider(
-              value: _volume,
+              value: provider.volume,
               min: 0.0,
               max: 1.0,
               divisions: 10,
-              onChanged: (value) {
-                _saveVolumeSettings(value);
-              },
+              onChanged: (value) => provider.setVolume(value),
             ),
           ),
         ],
@@ -172,7 +109,7 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
     );
   }
 
-  Widget _buildAdhanTypeSection() {
+  Widget _buildAdhanTypeSection(AdhanSettingsProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -204,10 +141,10 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
                 style: const TextStyle(color: Colors.white),
               ),
               value: entry.key,
-              groupValue: _selectedAdhanType,
+              groupValue: provider.adhanType,
               onChanged: (value) {
                 if (value != null) {
-                  _saveAdhanType(value);
+                  provider.setAdhanType(value);
                 }
               },
               activeColor: Colors.amber,
@@ -219,7 +156,7 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
     );
   }
 
-  Widget _buildPrayerNotificationsSection() {
+  Widget _buildPrayerNotificationsSection(AdhanSettingsProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -246,13 +183,10 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
           const SizedBox(height: 8),
           const Text(
             'Choose which prayers should play adhan',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 16),
-          ..._notificationSettings.entries.map((entry) {
+          ...provider.notificationSettings.entries.map((entry) {
             return SwitchListTile(
               title: Text(
                 entry.key,
@@ -267,7 +201,7 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
               ),
               value: entry.value,
               onChanged: (value) {
-                _togglePrayerNotification(entry.key, value);
+                provider.toggleNotification(entry.key, value);
               },
               activeColor: Colors.amber,
               contentPadding: EdgeInsets.zero,
@@ -278,7 +212,7 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
     );
   }
 
-  Widget _buildTestSection() {
+  Widget _buildTestSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -305,16 +239,13 @@ class _AdhanSettingsScreenState extends State<AdhanSettingsScreen> {
           const SizedBox(height: 8),
           const Text(
             'Test the selected adhan with current volume settings',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _testAdhan,
+              onPressed: () => _testAdhan(context),
               icon: const Icon(Icons.play_arrow),
               label: const Text('Play Test Adhan'),
               style: ElevatedButton.styleFrom(
