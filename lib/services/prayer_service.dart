@@ -1,265 +1,355 @@
 // services/prayer_service.dart
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 
 class PrayerService {
-  // University of Islamic Sciences, Karachi method = 1
-  static const int _calculationMethod = 1;
-  static const String _baseUrl = 'http://api.aladhan.com/v1/timings';
-
-  /// Fetches prayer times for given coordinates and date
+  static const String _baseUrl = 'https://api.aladhan.com/v1/timings';
+  
+  // Use Hanafi method by default
+  static const bool _useHanafiMethod = true;
+  
+  /// Get prayer times for given coordinates
   static Future<PrayerTimesData> getPrayerTimes({
     required double latitude,
     required double longitude,
     DateTime? date,
   }) async {
+    final targetDate = date ?? DateTime.now();
+    
     try {
-      final targetDate = date ?? DateTime.now();
-      final dateString = DateFormat('dd-MM-yyyy').format(targetDate);
-
-      final response = await http.get(
-        Uri.parse(
-            '$_baseUrl/$dateString?latitude=$latitude&longitude=$longitude&method=$_calculationMethod'
-        ),
-      ).timeout(const Duration(seconds: 15));
-
+      // Format date for API
+      final String formattedDate = 
+          '${targetDate.day.toString().padLeft(2, '0')}-'
+          '${targetDate.month.toString().padLeft(2, '0')}-'
+          '${targetDate.year}';
+      
+      // Use method 1 (University of Islamic Sciences, Karachi) for Hanafi
+      // and school parameter 1 for Hanafi Asr calculation
+      final String url = '$_baseUrl/$formattedDate'
+          '?latitude=$latitude'
+          '&longitude=$longitude'
+          '&method=1'  // Karachi method (Hanafi friendly)
+          '&school=1'; // 1 = Hanafi, 0 = Shafi
+      
+      final response = await http.get(Uri.parse(url));
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return _parsePrayerTimesResponse(data, targetDate);
+        final timings = data['data']['timings'];
+        final dateInfo = data['data']['date'];
+        
+        // Parse prayer times
+        final Map<String, DateTime> prayerTimes = {};
+        
+        prayerTimes['Fajr'] = _parseTime(timings['Fajr'], targetDate);
+        prayerTimes['Sunrise'] = _parseTime(timings['Sunrise'], targetDate);
+        prayerTimes['Dhuhr'] = _parseTime(timings['Dhuhr'], targetDate);
+        prayerTimes['Asr'] = _parseTime(timings['Asr'], targetDate);
+        prayerTimes['Maghrib'] = _parseTime(timings['Maghrib'], targetDate);
+        prayerTimes['Isha'] = _parseTime(timings['Isha'], targetDate);
+        
+        // Double-check Asr time with manual Hanafi calculation
+        if (_useHanafiMethod) {
+          final calculatedAsr = _calculateHanafiAsr(
+            latitude: latitude,
+            longitude: longitude,
+            date: targetDate,
+          );
+          
+          // Use the later time (API or calculated) for safety
+          if (calculatedAsr.isAfter(prayerTimes['Asr']!)) {
+            prayerTimes['Asr'] = calculatedAsr;
+          }
+        }
+        
+        // Get Islamic date
+        final hijriDate = dateInfo['hijri'];
+        final islamicDate = '${hijriDate['day']} ${hijriDate['month']['en']} ${hijriDate['year']}';
+        
+        return PrayerTimesData(
+          prayerTimes: prayerTimes,
+          islamicDate: islamicDate,
+          isDefault: false,
+        );
+        
       } else {
-        print('API Error: ${response.statusCode}');
-        return _getDefaultPrayerTimes(targetDate);
+        throw Exception('Failed to fetch prayer times: ${response.statusCode}');
       }
+      
     } catch (e) {
       print('Error fetching prayer times: $e');
-      return _getDefaultPrayerTimes(date ?? DateTime.now());
-    }
-  }
-
-  /// Parses the API response and returns prayer times data
-  static PrayerTimesData _parsePrayerTimesResponse(Map<String, dynamic> data, DateTime date) {
-    try {
-      final timings = data['data']['timings'];
-      final hijriDate = data['data']['date']['hijri'];
-
-      final prayerTimes = {
-        'Fajr': _parseTimeString(timings['Fajr'], date),
-        'Sunrise': _parseTimeString(timings['Sunrise'], date),
-        'Dhuhr': _parseTimeString(timings['Dhuhr'], date),
-        'Asr': _parseTimeString(timings['Asr'], date),
-        'Maghrib': _parseTimeString(timings['Maghrib'], date),
-        'Isha': _parseTimeString(timings['Isha'], date),
-      };
-
-      final islamicDate = "${hijriDate['day']} ${hijriDate['month']['en']}, ${hijriDate['year']}";
-
-      return PrayerTimesData(
-        prayerTimes: prayerTimes,
-        islamicDate: islamicDate,
-        gregorianDate: date,
-        isDefault: false,
+      
+      // Fallback to manual calculation
+      return _calculatePrayerTimesManually(
+        latitude: latitude,
+        longitude: longitude,
+        date: targetDate,
       );
-    } catch (e) {
-      print('Error parsing prayer times response: $e');
-      return _getDefaultPrayerTimes(date);
     }
   }
-
-  /// Parses time string and creates DateTime object
-  static DateTime _parseTimeString(String timeString, DateTime date) {
+  
+  /// Manual Hanafi Asr calculation
+  static DateTime _calculateHanafiAsr({
+    required double latitude,
+    required double longitude,
+    required DateTime date,
+  }) {
     try {
-      final parts = timeString.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-
-      return DateTime(date.year, date.month, date.day, hour, minute);
+      // Convert to radians
+      final double lat = latitude * (pi / 180);
+      final double lng = longitude * (pi / 180);
+      
+      // Day of year
+      final int dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays + 1;
+      
+      // Solar declination
+      final double declination = 23.45 * 
+          sin((360 * (284 + dayOfYear) / 365) * (pi / 180)) * (pi / 180);
+      
+      // Equation of time
+      final double eqTime = 4 * (longitude - 15 * (longitude / 15).round());
+      
+      // Solar noon
+      final double solarNoon = 12 - eqTime / 60;
+      
+      // Calculate noon altitude
+      final double noonAltitude = asin(
+        sin(declination) * sin(lat) + cos(declination) * cos(lat)
+      );
+      
+      // Hanafi method: shadow = 2 * object height (plus noon shadow)
+      // Standard method: shadow = 1 * object height (plus noon shadow)
+      final double shadowFactor = 2.0; // Hanafi
+      
+      // Calculate Asr angle
+      final double cotNoonAlt = 1 / tan(noonAltitude);
+      final double asrAngle = atan(1 / (shadowFactor + cotNoonAlt));
+      
+      // Hour angle for Asr
+      final double hourAngle = acos(
+        (sin(asrAngle) - sin(lat) * sin(declination)) /
+        (cos(lat) * cos(declination))
+      ) * (180 / pi);
+      
+      // Asr time
+      final double asrTime = solarNoon + hourAngle / 15;
+      
+      // Convert to DateTime
+      final int hours = asrTime.floor();
+      final int minutes = ((asrTime - hours) * 60).round();
+      
+      return DateTime(date.year, date.month, date.day, hours, minutes);
+      
     } catch (e) {
-      print('Error parsing time string: $timeString');
-      // Return a default time if parsing fails
-      return DateTime(date.year, date.month, date.day, 12, 0);
+      print('Error calculating Hanafi Asr: $e');
+      // Fallback: add 1 hour to a standard calculation
+      return DateTime(date.year, date.month, date.day, 15, 30);
     }
   }
-
-  /// Returns default prayer times when API is unavailable
-  static PrayerTimesData _getDefaultPrayerTimes(DateTime date) {
-    print('Using fallback prayer times - API unavailable');
-
-    final prayerTimes = {
-      'Fajr': DateTime(date.year, date.month, date.day, 4, 51, 0),
-      'Sunrise': DateTime(date.year, date.month, date.day, 6, 7, 0),
-      'Dhuhr': DateTime(date.year, date.month, date.day, 12, 41, 0),
-      'Asr': DateTime(date.year, date.month, date.day, 17, 12, 0),
-      'Maghrib': DateTime(date.year, date.month, date.day, 19, 14, 0),
-      'Isha': DateTime(date.year, date.month, date.day, 20, 30, 0),
-    };
-
+  
+  /// Manual calculation fallback
+  static PrayerTimesData _calculatePrayerTimesManually({
+    required double latitude,
+    required double longitude,
+    required DateTime date,
+  }) {
+    final Map<String, DateTime> prayerTimes = {};
+    
+    try {
+      // Basic calculations (you can enhance these)
+      final double lat = latitude * (pi / 180);
+      final int dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays + 1;
+      final double declination = 23.45 * 
+          sin((360 * (284 + dayOfYear) / 365) * (pi / 180)) * (pi / 180);
+      final double eqTime = 4 * (longitude - 15 * (longitude / 15).round());
+      final double solarNoon = 12 - eqTime / 60;
+      
+      // Fajr (18 degrees below horizon)
+      prayerTimes['Fajr'] = _calculatePrayerTime(lat, declination, solarNoon, -18.0, true, date);
+      
+      // Sunrise
+      prayerTimes['Sunrise'] = _calculatePrayerTime(lat, declination, solarNoon, -0.833, true, date);
+      
+      // Dhuhr (solar noon + 1 minute)
+      final int noonHours = solarNoon.floor();
+      final int noonMinutes = ((solarNoon - noonHours) * 60).round() + 1;
+      prayerTimes['Dhuhr'] = DateTime(date.year, date.month, date.day, noonHours, noonMinutes);
+      
+      // Asr (Hanafi method)
+      prayerTimes['Asr'] = _calculateHanafiAsr(
+        latitude: latitude,
+        longitude: longitude,
+        date: date,
+      );
+      
+      // Maghrib
+      prayerTimes['Maghrib'] = _calculatePrayerTime(lat, declination, solarNoon, -0.833, false, date);
+      
+      // Isha (17 degrees below horizon)
+      prayerTimes['Isha'] = _calculatePrayerTime(lat, declination, solarNoon, -17.0, false, date);
+      
+    } catch (e) {
+      print('Error in manual calculation: $e');
+      // Fallback times
+      prayerTimes['Fajr'] = DateTime(date.year, date.month, date.day, 5, 30);
+      prayerTimes['Sunrise'] = DateTime(date.year, date.month, date.day, 6, 45);
+      prayerTimes['Dhuhr'] = DateTime(date.year, date.month, date.day, 12, 30);
+      prayerTimes['Asr'] = DateTime(date.year, date.month, date.day, 15, 45); // Later time for Hanafi
+      prayerTimes['Maghrib'] = DateTime(date.year, date.month, date.day, 18, 15);
+      prayerTimes['Isha'] = DateTime(date.year, date.month, date.day, 19, 45);
+    }
+    
     return PrayerTimesData(
       prayerTimes: prayerTimes,
-      islamicDate: "1 Safar, 1447",
-      gregorianDate: date,
+      islamicDate: _getDefaultIslamicDate(date),
       isDefault: true,
     );
   }
-
-  /// Gets current and next prayer information
-  static PrayerStatus getCurrentPrayerStatus(Map<String, DateTime> prayerTimes, DateTime currentTime) {
-    if (prayerTimes.isEmpty) {
-      return PrayerStatus(
-        currentPrayer: "None",
-        nextPrayer: "Fajr",
-        timeRemaining: Duration.zero,
-        progress: 0.0,
-      );
+  
+  /// Helper method for prayer time calculation
+  static DateTime _calculatePrayerTime(
+    double lat, 
+    double declination, 
+    double solarNoon, 
+    double angle, 
+    bool isBefore, 
+    DateTime date
+  ) {
+    try {
+      final double hourAngle = acos(
+        (sin(angle * (pi / 180)) - sin(lat) * sin(declination)) /
+        (cos(lat) * cos(declination))
+      ) * (180 / pi);
+      
+      final double prayerTime = isBefore 
+        ? solarNoon - hourAngle / 15
+        : solarNoon + hourAngle / 15;
+      
+      final int hours = prayerTime.floor();
+      final int minutes = ((prayerTime - hours) * 60).round();
+      
+      return DateTime(date.year, date.month, date.day, hours, minutes);
+    } catch (e) {
+      // Fallback
+      return DateTime(date.year, date.month, date.day, 12, 0);
     }
-
-    String current = "None";
-    String next = "Fajr";
-    Duration remaining = Duration.zero;
-
-    // Get prayers excluding Sunrise for prayer status
-    List<MapEntry<String, DateTime>> prayers = prayerTimes.entries
-        .where((entry) => entry.key != 'Sunrise')
-        .toList();
-
-    prayers.sort((a, b) => a.value.compareTo(b.value));
-
-    // Find current and next prayer
+  }
+  
+  /// Parse time string to DateTime
+  static DateTime _parseTime(String timeStr, DateTime date) {
+    final parts = timeStr.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    return DateTime(date.year, date.month, date.day, hour, minute);
+  }
+  
+  /// Get default Islamic date
+  static String _getDefaultIslamicDate(DateTime date) {
+    // Simple approximation - you might want to use a proper Islamic calendar library
+    final islamicYear = date.year - 579;
+    return '${date.day} Hijri ${islamicYear}';
+  }
+  
+  /// Format time for display
+  static String formatTime(DateTime time) {
+    final hour = time.hour;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:$minute $period';
+  }
+  
+  /// Get current prayer status
+  static PrayerStatus getCurrentPrayerStatus(
+    Map<String, DateTime> prayerTimes,
+    DateTime currentTime,
+  ) {
+    final prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    
     for (int i = 0; i < prayers.length; i++) {
-      if (currentTime.isBefore(prayers[i].value)) {
-        next = prayers[i].key;
-        remaining = prayers[i].value.difference(currentTime);
-
-        if (i > 0) {
-          current = prayers[i - 1].key;
-        } else {
-          current = "Isha"; // Before Fajr means we're in Isha time
-        }
-        break;
+      final prayerTime = prayerTimes[prayers[i]]!;
+      final nextPrayerIndex = (i + 1) % prayers.length;
+      final nextPrayerTime = prayerTimes[prayers[nextPrayerIndex]]!;
+      
+      if (currentTime.isBefore(prayerTime)) {
+        // Next prayer is this one
+        final timeRemaining = prayerTime.difference(currentTime);
+        final previousPrayer = i == 0 ? prayers.last : prayers[i - 1];
+        
+        return PrayerStatus(
+          currentPrayer: previousPrayer,
+          nextPrayer: prayers[i],
+          timeRemaining: timeRemaining,
+          progress: _calculateProgress(prayerTimes, previousPrayer, prayers[i], currentTime),
+        );
       }
     }
-
-    // If after all prayers (after Isha)
-    if (currentTime.isAfter(prayers.last.value)) {
-      current = prayers.last.key;
-      next = "Fajr";
-      final tomorrow = DateTime(currentTime.year, currentTime.month, currentTime.day + 1);
-      final fajrTomorrow = DateTime(tomorrow.year, tomorrow.month, tomorrow.day,
-          prayerTimes['Fajr']!.hour, prayerTimes['Fajr']!.minute);
-      remaining = fajrTomorrow.difference(currentTime);
-    }
-
-    // Calculate progress
-    double progress = _calculateProgress(prayerTimes, currentTime, current, next);
-
+    
+    // After Isha, next is Fajr
+    final timeToFajr = prayerTimes['Fajr']!.add(const Duration(days: 1)).difference(currentTime);
+    
     return PrayerStatus(
-      currentPrayer: current,
-      nextPrayer: next,
-      timeRemaining: remaining,
-      progress: progress,
+      currentPrayer: 'Isha',
+      nextPrayer: 'Fajr',
+      timeRemaining: timeToFajr,
+      progress: _calculateProgress(prayerTimes, 'Isha', 'Fajr', currentTime),
     );
   }
-
-  /// Calculates progress between current and next prayer
+  
+  /// Calculate progress between prayers
   static double _calculateProgress(
-      Map<String, DateTime> prayerTimes,
-      DateTime currentTime,
-      String currentPrayer,
-      String nextPrayer,
-      ) {
-    try {
-      DateTime? currentPrayerTime;
-      DateTime? nextPrayerTime;
-
-      List<MapEntry<String, DateTime>> prayers = prayerTimes.entries
-          .where((entry) => entry.key != 'Sunrise')
-          .toList();
-      prayers.sort((a, b) => a.value.compareTo(b.value));
-
-      // Find current and next prayer times
-      for (int i = 0; i < prayers.length; i++) {
-        if (currentTime.isBefore(prayers[i].value)) {
-          nextPrayerTime = prayers[i].value;
-          if (i > 0) {
-            currentPrayerTime = prayers[i - 1].value;
-          } else {
-            // Before Fajr, current prayer is Isha from previous day
-            final yesterday = DateTime(currentTime.year, currentTime.month, currentTime.day - 1);
-            currentPrayerTime = DateTime(yesterday.year, yesterday.month, yesterday.day,
-                prayerTimes['Isha']!.hour, prayerTimes['Isha']!.minute);
-          }
-          break;
-        }
-      }
-
-      // After Isha
-      if (currentTime.isAfter(prayers.last.value)) {
-        currentPrayerTime = prayers.last.value;
-        final tomorrow = DateTime(currentTime.year, currentTime.month, currentTime.day + 1);
-        nextPrayerTime = DateTime(tomorrow.year, tomorrow.month, tomorrow.day,
-            prayerTimes['Fajr']!.hour, prayerTimes['Fajr']!.minute);
-      }
-
-      if (currentPrayerTime != null && nextPrayerTime != null) {
-        final totalDuration = nextPrayerTime.difference(currentPrayerTime);
-        final elapsedDuration = currentTime.difference(currentPrayerTime);
-        return (elapsedDuration.inSeconds / totalDuration.inSeconds).clamp(0.0, 1.0);
-      }
-
-      return 0.0;
-    } catch (e) {
-      print('Error calculating progress: $e');
-      return 0.0;
-    }
+    Map<String, DateTime> prayerTimes,
+    String currentPrayer,
+    String nextPrayer,
+    DateTime currentTime,
+  ) {
+    final currentPrayerTime = prayerTimes[currentPrayer]!;
+    final nextPrayerTime = nextPrayer == 'Fajr' && currentPrayer == 'Isha'
+        ? prayerTimes[nextPrayer]!.add(const Duration(days: 1))
+        : prayerTimes[nextPrayer]!;
+    
+    final totalDuration = nextPrayerTime.difference(currentPrayerTime);
+    final elapsed = currentTime.difference(currentPrayerTime);
+    
+    if (totalDuration.inSeconds <= 0) return 0.0;
+    
+    final progress = elapsed.inSeconds / totalDuration.inSeconds;
+    return progress.clamp(0.0, 1.0);
   }
 
-  /// Formats time for display
-  static String formatTime(DateTime time) {
-    return DateFormat('hh:mm a').format(time);
-  }
-
-  /// Formats current time with seconds
-  static String formatCurrentTime(DateTime time) {
-    return DateFormat('hh:mm:ss a').format(time);
+  static String formatCurrentTime(DateTime currentTime) {
+    final hour = currentTime.hour;
+    final minute = currentTime.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:$minute $period';
   }
 }
 
-/// Data class to hold prayer times information
+/// Data models
 class PrayerTimesData {
   final Map<String, DateTime> prayerTimes;
   final String islamicDate;
-  final DateTime gregorianDate;
   final bool isDefault;
-
+  
   PrayerTimesData({
     required this.prayerTimes,
     required this.islamicDate,
-    required this.gregorianDate,
     required this.isDefault,
   });
-
-  @override
-  String toString() {
-    return 'PrayerTimesData(islamicDate: $islamicDate, isDefault: $isDefault, times: ${prayerTimes.length})';
-  }
 }
 
-/// Data class to hold current prayer status
 class PrayerStatus {
   final String currentPrayer;
   final String nextPrayer;
   final Duration timeRemaining;
   final double progress;
-
+  
   PrayerStatus({
     required this.currentPrayer,
     required this.nextPrayer,
     required this.timeRemaining,
     required this.progress,
   });
-
-  @override
-  String toString() {
-    return 'PrayerStatus(current: $currentPrayer, next: $nextPrayer, remaining: ${timeRemaining.inMinutes}min)';
-  }
 }

@@ -8,6 +8,7 @@ import '../services/elevation_service.dart';
 class InfoCardWidget extends StatelessWidget {
   final String location;
   final String islamicDate;
+  final String currentDate; // Added this missing parameter
   final double? elevation;
   final bool isLoadingElevation;
 
@@ -15,6 +16,7 @@ class InfoCardWidget extends StatelessWidget {
     super.key,
     required this.location,
     required this.islamicDate,
+    required this.currentDate, // Now properly required
     this.elevation,
     this.isLoadingElevation = false,
   });
@@ -35,6 +37,14 @@ class InfoCardWidget extends StatelessWidget {
             icon: Icons.location_on,
             text: location,
             maxLines: 2,
+          ),
+
+          const SizedBox(height: 12),
+
+          // Current date
+          _buildInfoRow(
+            icon: Icons.calendar_today,
+            text: currentDate,
           ),
 
           const SizedBox(height: 12),
@@ -89,32 +99,32 @@ class InfoCardWidget extends StatelessWidget {
         Expanded(
           child: isLoadingElevation
               ? Row(
-            children: [
-              SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                "Loading elevation...",
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 10,
-                ),
-              ),
-            ],
-          )
+                  children: [
+                    SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "Loading elevation...",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                )
               : Text(
-            _formatElevationWithFeet(elevation),
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 10,
-            ),
-          ),
+                  _formatElevationWithFeet(elevation),
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 10,
+                  ),
+                ),
         ),
       ],
     );
@@ -135,12 +145,14 @@ class InfoCardWidget extends StatelessWidget {
 class CompactInfoCardWidget extends StatelessWidget {
   final String location;
   final String islamicDate;
+  final String currentDate;
   final double? elevation;
 
   const CompactInfoCardWidget({
     super.key,
     required this.location,
     required this.islamicDate,
+    required this.currentDate,
     this.elevation,
   });
 
@@ -170,6 +182,25 @@ class CompactInfoCardWidget extends StatelessWidget {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Current date
+          Row(
+            children: [
+              const Icon(Icons.calendar_today, color: Colors.white, size: 14),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  currentDate,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ],

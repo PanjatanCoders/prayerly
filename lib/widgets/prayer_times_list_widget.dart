@@ -78,9 +78,9 @@ class PrayerTimesListWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isCurrentPrayer
-            ? Colors.green.withOpacity(0.1)
+            ? Colors.green.withValues(alpha: 0.1)
             : isNextPrayer
-            ? Colors.red.withOpacity(0.1)
+            ? Colors.red.withValues(alpha: 0.1)
             : Colors.transparent,
         border: isCurrentPrayer
             ? Border.all(color: Colors.green, width: 2)
