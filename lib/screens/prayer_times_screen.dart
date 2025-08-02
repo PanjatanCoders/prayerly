@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -67,7 +69,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         _notificationsEnabled = enabled;
       });
     } catch (e) {
-      print('Error initializing notifications: $e');
+      debugPrint('Error initializing notifications: $e');
     }
   }
 
@@ -90,7 +92,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     // Daily update timer - check for new prayer times every hour
     _dailyUpdateTimer = Timer.periodic(const Duration(hours: 1), (timer) {
       if (_shouldFetchNewPrayerTimes()) {
-        print('Daily update: Fetching new prayer times');
+        debugPrint('Daily update: Fetching new prayer times');
         _fetchPrayerTimes();
         _lastFetchDate = DateTime.now();
       }
@@ -120,7 +122,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       }
 
     } catch (e) {
-      print('Error initializing app: $e');
+      debugPrint('Error initializing app: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -138,7 +140,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         _locationData = locationData;
       });
     } catch (e) {
-      print('Error getting location: $e');
+      debugPrint('Error getting location: $e');
       // LocationService handles fallback, so we should still have data
     }
   }
@@ -164,7 +166,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         });
       }
     } catch (e) {
-      print('Error fetching elevation: $e');
+      debugPrint('Error fetching elevation: $e');
       if (mounted) {
         setState(() {
           _isLoadingElevation = false;
@@ -193,7 +195,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       }
 
     } catch (e) {
-      print('Error fetching prayer times: $e');
+      debugPrint('Error fetching prayer times: $e');
     }
   }
 
@@ -203,9 +205,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
 
     try {
       await NotificationService.schedulePrayerNotifications(_prayerTimesData!.prayerTimes);
-      print('Prayer notifications scheduled successfully');
+      debugPrint('Prayer notifications scheduled successfully');
     } catch (e) {
-      print('Error scheduling notifications: $e');
+      debugPrint('Error scheduling notifications: $e');
     }
   }
 
