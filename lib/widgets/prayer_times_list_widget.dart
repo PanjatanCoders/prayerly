@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/prayer_service.dart';
+import '../services/adhan_service.dart';
 
-class PrayerTimesListWidget extends StatelessWidget {
+class PrayerTimesListWidget extends StatefulWidget {
   final Map<String, DateTime> prayerTimes;
   final String currentPrayer;
   final String nextPrayer;
@@ -14,7 +15,53 @@ class PrayerTimesListWidget extends StatelessWidget {
   });
 
   @override
+  State<PrayerTimesListWidget> createState() => _PrayerTimesListWidgetState();
+}
+
+class _PrayerTimesListWidgetState extends State<PrayerTimesListWidget> {
+  Map<String, bool> _notificationSettings = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationSettings();
+  }
+
+  Future<void> _loadNotificationSettings() async {
+    try {
+      final settings = await AdhanService.getNotificationSettings();
+      if (mounted) {
+        setState(() {
+          _notificationSettings = settings;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading notification settings: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -33,15 +80,12 @@ class PrayerTimesListWidget extends StatelessWidget {
     children.add(const SizedBox(height: 16));
 
     // Add prayer time items
-    prayerTimes.entries.forEach((entry) {
-      bool hasNotification = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
-          .contains(entry.key);
-      children.add(_buildPrayerTimeItem(
-        entry.key,
-        entry.value,
-        hasNotification,
-      ));
-    });
+    for (var entry in widget.prayerTimes.entries) {
+      bool hasNotification = _notificationSettings[entry.key] ?? false;
+      children.add(
+        _buildPrayerTimeItem(entry.key, entry.value, hasNotification),
+      );
+    }
 
     return Column(children: children);
   }
@@ -60,18 +104,18 @@ class PrayerTimesListWidget extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Icon(
-          Icons.access_time,
-          color: Colors.grey[600],
-          size: 16,
-        ),
+        Icon(Icons.access_time, color: Colors.grey[600], size: 16),
       ],
     );
   }
 
-  Widget _buildPrayerTimeItem(String prayer, DateTime time, bool hasNotification) {
-    bool isCurrentPrayer = prayer == currentPrayer;
-    bool isNextPrayer = prayer == nextPrayer;
+  Widget _buildPrayerTimeItem(
+    String prayer,
+    DateTime time,
+    bool hasNotification,
+  ) {
+    bool isCurrentPrayer = prayer == widget.currentPrayer;
+    bool isNextPrayer = prayer == widget.nextPrayer;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -118,12 +162,18 @@ class PrayerTimesListWidget extends StatelessWidget {
               color: Colors.amber,
               size: 20,
             ),
+          if (!hasNotification)
+            const Icon(Icons.notifications_off, color: Colors.grey, size: 20),
         ],
       ),
     );
   }
 
-  Widget _buildPrayerInfo(String prayer, bool isCurrentPrayer, bool isNextPrayer) {
+  Widget _buildPrayerInfo(
+    String prayer,
+    bool isCurrentPrayer,
+    bool isNextPrayer,
+  ) {
     List<Widget> children = [];
 
     // Prayer name row
@@ -139,54 +189,57 @@ class PrayerTimesListWidget extends StatelessWidget {
     ];
 
     if (isCurrentPrayer) {
-      nameRowChildren.add(Container(
-        margin: const EdgeInsets.only(left: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.green,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Text(
-          'Now',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
+      nameRowChildren.add(
+        Container(
+          margin: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Text(
+            'Now',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ));
+      );
     }
 
     if (isNextPrayer) {
-      nameRowChildren.add(Container(
-        margin: const EdgeInsets.only(left: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.red,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Text(
-          'Next',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
+      nameRowChildren.add(
+        Container(
+          margin: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Text(
+            'Next',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ));
+      );
     }
 
     children.add(Row(children: nameRowChildren));
 
     // Add Hanafi note for Asr
     if (prayer == 'Asr') {
-      children.add(const Text(
-        '(Hanafi)',
-        style: TextStyle(
-          color: Colors.blue,
-          fontSize: 12,
+      children.add(
+        const Text(
+          '(Hanafi)',
+          style: TextStyle(color: Colors.blue, fontSize: 12),
         ),
-      ));
+      );
     }
 
     return Column(
@@ -215,7 +268,7 @@ class PrayerTimesListWidget extends StatelessWidget {
   }
 }
 
-class CompactPrayerTimesWidget extends StatelessWidget {
+class CompactPrayerTimesWidget extends StatefulWidget {
   final Map<String, DateTime> prayerTimes;
   final String currentPrayer;
   final String nextPrayer;
@@ -228,7 +281,61 @@ class CompactPrayerTimesWidget extends StatelessWidget {
   });
 
   @override
+  State<CompactPrayerTimesWidget> createState() =>
+      _CompactPrayerTimesWidgetState();
+}
+
+class _CompactPrayerTimesWidgetState extends State<CompactPrayerTimesWidget> {
+  Map<String, bool> _notificationSettings = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationSettings();
+  }
+
+  Future<void> _loadNotificationSettings() async {
+    try {
+      final settings = await AdhanService.getNotificationSettings();
+      if (mounted) {
+        setState(() {
+          _notificationSettings = settings;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading notification settings: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -243,75 +350,84 @@ class CompactPrayerTimesWidget extends StatelessWidget {
     List<Widget> children = [];
 
     // Add header
-    children.add(Row(
-      children: [
-        const Icon(Icons.schedule, color: Colors.white, size: 16),
-        const SizedBox(width: 6),
-        const Text(
-          'Prayer Times',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+    children.add(
+      Row(
+        children: [
+          const Icon(Icons.schedule, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          const Text(
+            'Prayer Times',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
-    ));
+        ],
+      ),
+    );
 
     children.add(const SizedBox(height: 12));
 
     // Add compact prayer items (excluding Sunrise)
-    final filteredEntries = prayerTimes.entries
+    final filteredEntries = widget.prayerTimes.entries
         .where((entry) => entry.key != 'Sunrise')
         .toList();
 
     for (var entry in filteredEntries) {
-      bool isCurrentPrayer = entry.key == currentPrayer;
-      bool isNextPrayer = entry.key == nextPrayer;
+      bool isCurrentPrayer = entry.key == widget.currentPrayer;
+      bool isNextPrayer = entry.key == widget.nextPrayer;
+      bool hasNotification = _notificationSettings[entry.key] ?? false;
 
-      children.add(Container(
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: isCurrentPrayer
-              ? Colors.green.withOpacity(0.2)
-              : isNextPrayer
-              ? Colors.red.withOpacity(0.2)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(4),
+      children.add(
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: isCurrentPrayer
+                ? Colors.green.withOpacity(0.2)
+                : isNextPrayer
+                ? Colors.red.withOpacity(0.2)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 3,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: _getPrayerColor(entry.key),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                entry.key,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: isCurrentPrayer || isNextPrayer
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                PrayerService.formatTime(entry.value),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+              const SizedBox(width: 4),
+              if (hasNotification)
+                const Icon(
+                  Icons.notifications_active,
+                  color: Colors.amber,
+                  size: 14,
+                ),
+            ],
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 3,
-              height: 20,
-              decoration: BoxDecoration(
-                color: _getPrayerColor(entry.key),
-                borderRadius: BorderRadius.circular(1),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              entry.key,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: isCurrentPrayer || isNextPrayer
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              PrayerService.formatTime(entry.value),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ));
+      );
     }
 
     return Column(children: children);

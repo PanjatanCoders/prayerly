@@ -1,9 +1,10 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, avoid_unnecessary_containers
 
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:prayerly/screens/adhan_settings_screen.dart';
 
 import '../services/location_service.dart';
 import '../services/elevation_service.dart';
@@ -60,7 +61,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     // Refresh data when app comes back to foreground
     if (state == AppLifecycleState.resumed) {
       _refreshCurrentTime();
@@ -164,89 +165,91 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     }
   }
 
- // Gets current location using LocationService
-Future<void> _getCurrentLocation() async {
-  if (!mounted) return;
-
-  setState(() {
-    _isLoadingLocation = true;
-  });
-
-  try {
-    final locationData = await LocationService.getCurrentLocation();
-    
+  // Gets current location using LocationService
+  Future<void> _getCurrentLocation() async {
     if (!mounted) return;
 
-    // Get address from coordinates
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-      locationData.latitude,
-      locationData.longitude,
-    );
-    
-    if (!mounted) return;
-
-    final placemark = placemarks.first;
-    
-    // Build more specific address with area/sublocality
-    String address = '';
-    
-    // Priority order: subLocality -> thoroughfare -> locality -> administrativeArea -> country
-    if (placemark.subLocality != null && placemark.subLocality!.isNotEmpty) {
-      address = placemark.subLocality!;
-      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-        address += ', ${placemark.locality}';
-      }
-    } else if (placemark.thoroughfare != null && placemark.thoroughfare!.isNotEmpty) {
-      address = placemark.thoroughfare!;
-      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-        address += ', ${placemark.locality}';
-      }
-    } else if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-      address = placemark.locality!;
-      if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
-        address += ', ${placemark.administrativeArea}';
-      }
-    } else if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
-      address = placemark.administrativeArea!;
-    }
-    
-    // Always add country at the end if available
-    if (placemark.country != null && placemark.country!.isNotEmpty) {
-      address += ', ${placemark.country}';
-    }
-    
-    // Fallback if no address components found
-    if (address.isEmpty) {
-      address = 'Unknown Location';
-    }
-    
     setState(() {
-      _locationData = locationData.copyWith(address: address);
-      _isLoadingLocation = false;
+      _isLoadingLocation = true;
     });
-    
-    // Debug print to see all available address components
-    debugPrint('Address components:');
-    debugPrint('  Street: ${placemark.street}');
-    debugPrint('  Thoroughfare: ${placemark.thoroughfare}');
-    debugPrint('  SubThoroughfare: ${placemark.subThoroughfare}');
-    debugPrint('  Locality: ${placemark.locality}');
-    debugPrint('  SubLocality: ${placemark.subLocality}');
-    debugPrint('  AdministrativeArea: ${placemark.administrativeArea}');
-    debugPrint('  SubAdministrativeArea: ${placemark.subAdministrativeArea}');
-    debugPrint('  PostalCode: ${placemark.postalCode}');
-    debugPrint('  Country: ${placemark.country}');
-    debugPrint('  Final address: $address');
-    
-  } catch (e) {
-    debugPrint('Error getting location or address: $e');
-    if (mounted) {
+
+    try {
+      final locationData = await LocationService.getCurrentLocation();
+
+      if (!mounted) return;
+
+      // Get address from coordinates
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        locationData.latitude,
+        locationData.longitude,
+      );
+
+      if (!mounted) return;
+
+      final placemark = placemarks.first;
+
+      // Build more specific address with area/sublocality
+      String address = '';
+
+      // Priority order: subLocality -> thoroughfare -> locality -> administrativeArea -> country
+      if (placemark.subLocality != null && placemark.subLocality!.isNotEmpty) {
+        address = placemark.subLocality!;
+        if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+          address += ', ${placemark.locality}';
+        }
+      } else if (placemark.thoroughfare != null &&
+          placemark.thoroughfare!.isNotEmpty) {
+        address = placemark.thoroughfare!;
+        if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+          address += ', ${placemark.locality}';
+        }
+      } else if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+        address = placemark.locality!;
+        if (placemark.administrativeArea != null &&
+            placemark.administrativeArea!.isNotEmpty) {
+          address += ', ${placemark.administrativeArea}';
+        }
+      } else if (placemark.administrativeArea != null &&
+          placemark.administrativeArea!.isNotEmpty) {
+        address = placemark.administrativeArea!;
+      }
+
+      // Always add country at the end if available
+      if (placemark.country != null && placemark.country!.isNotEmpty) {
+        address += ', ${placemark.country}';
+      }
+
+      // Fallback if no address components found
+      if (address.isEmpty) {
+        address = 'Unknown Location';
+      }
+
       setState(() {
+        _locationData = locationData.copyWith(address: address);
         _isLoadingLocation = false;
       });
+
+      // Debug print to see all available address components
+      debugPrint('Address components:');
+      debugPrint('  Street: ${placemark.street}');
+      debugPrint('  Thoroughfare: ${placemark.thoroughfare}');
+      debugPrint('  SubThoroughfare: ${placemark.subThoroughfare}');
+      debugPrint('  Locality: ${placemark.locality}');
+      debugPrint('  SubLocality: ${placemark.subLocality}');
+      debugPrint('  AdministrativeArea: ${placemark.administrativeArea}');
+      debugPrint('  SubAdministrativeArea: ${placemark.subAdministrativeArea}');
+      debugPrint('  PostalCode: ${placemark.postalCode}');
+      debugPrint('  Country: ${placemark.country}');
+      debugPrint('  Final address: $address');
+    } catch (e) {
+      debugPrint('Error getting location or address: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingLocation = false;
+        });
+      }
     }
   }
-}
 
   /// Fetches elevation data
   Future<void> _fetchElevation() async {
@@ -448,9 +451,42 @@ Future<void> _getCurrentLocation() async {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      leading: const Icon(Icons.menu, color: Colors.white),
+      // leading: const Icon(Icons.menu, color: Colors.white),
+      leading: GestureDetector(
+        onTap: () {
+          _showCustomMenu(context);
+        },
+        child: const Icon(Icons.menu, color: Colors.white),
+      ),
       title: Row(mainAxisSize: MainAxisSize.min, children: titleChildren),
       actions: actionChildren,
+    );
+  }
+
+  void _showCustomMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text('Settings'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdhanSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -460,9 +496,9 @@ Future<void> _getCurrentLocation() async {
       const CircularProgressIndicator(color: Colors.white),
       const SizedBox(height: 16),
       Text(
-        _isLoadingLocation 
-          ? 'Getting your location...'
-          : 'Loading prayer times...',
+        _isLoadingLocation
+            ? 'Getting your location...'
+            : 'Loading prayer times...',
         style: const TextStyle(color: Colors.white),
       ),
     ];
@@ -492,9 +528,9 @@ Future<void> _getCurrentLocation() async {
             ),
             const SizedBox(height: 8),
             Text(
-              _locationData == null 
-                ? 'Unable to get location'
-                : _prayerTimesData == null
+              _locationData == null
+                  ? 'Unable to get location'
+                  : _prayerTimesData == null
                   ? 'Unable to fetch prayer times'
                   : 'Unable to calculate prayer status',
               style: TextStyle(color: Colors.grey[400], fontSize: 14),
