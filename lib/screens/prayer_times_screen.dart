@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:prayerly/screens/adhan_settings_screen.dart';
+import 'package:prayerly/screens/qaza_tracker_screen.dart';
 
 import '../services/location_service.dart';
 import '../services/elevation_service.dart';
@@ -87,13 +88,14 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     try {
       // Initialize AdhanService first
       await AdhanService.initialize();
-      
+
       // Initialize NotificationService
       await NotificationService.initialize();
 
       // Set up notification listeners for AdhanService
       AwesomeNotifications().setListeners(
-        onActionReceivedMethod: AdhanService.onNotificationTap, // Use AdhanService listener
+        onActionReceivedMethod:
+            AdhanService.onNotificationTap, // Use AdhanService listener
       );
 
       // Check if notifications are enabled
@@ -318,13 +320,13 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     try {
       // Get notification settings from AdhanService
       final notificationSettings = await AdhanService.getNotificationSettings();
-      
+
       // Schedule adhan notifications using AdhanService
       await AdhanService.scheduleAdhanNotifications(
         _prayerTimesData!.prayerTimes,
         notificationSettings,
       );
-      
+
       debugPrint('Adhan notifications scheduled successfully');
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
@@ -476,13 +478,65 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   void _showCustomMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext context) {
         return Container(
           child: Wrap(
             children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[600],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Qaza Tracker Option - NEW
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.format_list_numbered,
+                    color: Colors.green,
+                  ),
+                ),
+                title: const Text(
+                  'Qaza Tracker',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Track missed prayers',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const QazaTrackerScreen(),
+                    ),
+                  );
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text('Settings'),
+                subtitle: const Text(
+                  'Adhan & notifications',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
