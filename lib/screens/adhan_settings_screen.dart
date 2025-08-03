@@ -39,6 +39,8 @@ class AdhanSettingsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildAutoPlaySection(provider),
+            const SizedBox(height: 24),
             _buildVolumeSection(context, provider),
             const SizedBox(height: 24),
             _buildAdhanTypeSection(provider),
@@ -48,6 +50,57 @@ class AdhanSettingsScreen extends StatelessWidget {
             _buildTestSection(context),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAutoPlaySection(AdhanSettingsProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.play_circle_fill, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Auto-Play Settings',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SwitchListTile(
+            title: const Text(
+              'Auto-play Adhan',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              provider.autoPlayEnabled 
+                  ? 'Adhan will play automatically when prayer time arrives'
+                  : 'Tap notification to play adhan manually',
+              style: TextStyle(
+                color: provider.autoPlayEnabled ? Colors.green : Colors.grey,
+                fontSize: 12,
+              ),
+            ),
+            value: provider.autoPlayEnabled,
+            onChanged: (value) {
+              provider.setAutoPlayEnabled(value);
+            },
+            activeColor: Colors.amber,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ],
       ),
     );
   }
@@ -181,9 +234,11 @@ class AdhanSettingsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Choose which prayers should play adhan',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
+          Text(
+            provider.autoPlayEnabled 
+                ? 'Choose which prayers should automatically play adhan'
+                : 'Choose which prayers should send notifications',
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 16),
           ...provider.notificationSettings.entries.map((entry) {
@@ -193,7 +248,11 @@ class AdhanSettingsScreen extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
               ),
               subtitle: Text(
-                entry.value ? 'Adhan will play' : 'Silent notification only',
+                entry.value 
+                    ? (provider.autoPlayEnabled 
+                        ? 'Adhan will play automatically' 
+                        : 'Notification will be sent')
+                    : 'No notification',
                 style: TextStyle(
                   color: entry.value ? Colors.green : Colors.grey,
                   fontSize: 12,

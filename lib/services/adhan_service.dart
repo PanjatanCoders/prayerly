@@ -1,4 +1,4 @@
-// services/adhan_service.dart (Updated + Restored)
+// services/adhan_service.dart (Updated with Auto-Play)
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +10,7 @@ class AdhanService {
   static const String _notificationSettingsKey = 'prayer_notification_settings';
   static const String _volumeSettingsKey = 'adhan_volume_settings';
   static const String _adhanTypeKey = 'selected_adhan_type';
+  static const String _autoPlayKey = 'auto_play_adhan';
 
   static const Map<String, bool> _defaultSettings = {
     'Fajr': true,
@@ -58,7 +59,7 @@ class AdhanService {
           defaultColor: Colors.amber,
           importance: NotificationImportance.Max,
           channelShowBadge: true,
-          playSound: false,
+          playSound: false, // We handle audio ourselves
           enableVibration: true,
           enableLights: true,
           criticalAlerts: true,
@@ -115,6 +116,24 @@ class AdhanService {
     }
   }
 
+  static Future<bool> getAutoPlayEnabled() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_autoPlayKey) ?? true; // Default to true
+    } catch (e) {
+      return true;
+    }
+  }
+
+  static Future<void> setAutoPlayEnabled(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_autoPlayKey, enabled);
+    } catch (e) {
+      debugPrint('Error setting auto play: $e');
+    }
+  }
+
   static Future<double> getAdhanVolume() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -160,6 +179,7 @@ class AdhanService {
       await _audioPlayer.setVolume(volume);
       await _audioPlayer.play(AssetSource(adhanFile));
       await _showPlayingNotification(prayerName);
+      debugPrint('Playing adhan for $prayerName prayer');
     } catch (e) {
       debugPrint('Error playing adhan: $e');
       await _showPlayingNotification(prayerName);
@@ -239,6 +259,7 @@ class AdhanService {
     }
   }
 
+  // This method is called when notifications are created OR when user interacts with them
   static Future<void> onNotificationTap(ReceivedAction receivedAction) async {
     try {
       final payload = receivedAction.payload;
@@ -250,6 +271,7 @@ class AdhanService {
         'Notification action - Key: $buttonKey, Action: $action, Prayer: $prayer',
       );
 
+      // Handle button presses
       switch (buttonKey) {
         case 'play_adhan':
           if (prayer != null) await playAdhan(prayer);
@@ -263,8 +285,14 @@ class AdhanService {
         case 'dismiss':
           break;
         default:
+          // This handles the case when notification is created (no button pressed)
+          // or when the notification itself is tapped
           if (action == 'play_adhan' && prayer != null) {
-            await playAdhan(prayer);
+            final autoPlay = await getAutoPlayEnabled();
+            if (autoPlay || buttonKey == null) {
+              // Auto play if enabled, or if user tapped the notification
+              await playAdhan(prayer);
+            }
           }
           break;
       }
@@ -305,12 +333,16 @@ class AdhanService {
   ) async {
     try {
       final id = _getNotificationId(prayer);
+      final autoPlay = await getAutoPlayEnabled();
+      
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: id,
           channelKey: 'adhan_channel',
           title: '🕌 $prayer Prayer Time',
-          body: 'It\'s time for $prayer prayer. Tap to play Adhan.',
+          body: autoPlay 
+              ? 'It\'s time for $prayer prayer. Adhan will play automatically.'
+              : 'It\'s time for $prayer prayer. Tap to play Adhan.',
           wakeUpScreen: true,
           fullScreenIntent: true,
           criticalAlert: true,
