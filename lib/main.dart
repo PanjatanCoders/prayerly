@@ -1,17 +1,15 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
 import 'services/notification_service.dart';
 import 'services/adhan_service.dart';
-import 'screens/prayer_times_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'providers/adhan_settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize both services
   await NotificationService.initialize();
   await AdhanService.initialize();
 
@@ -35,29 +33,20 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    // Set up notification listeners for AdhanService (handles auto-play)
     AwesomeNotifications().setListeners(
       onActionReceivedMethod: AdhanService.onNotificationTap,
-      onNotificationCreatedMethod: (ReceivedNotification notification) async {
-        // This is called when notification is created - trigger auto-play
-        debugPrint('Notification created: ${notification.id} - ${notification.title}');
-        
-        // Check if this is a prayer notification and auto-play is enabled
+      onNotificationCreatedMethod: (notification) async {
+        // Notification logic...
         final payload = notification.payload;
         if (payload != null && payload['action'] == 'play_adhan') {
           final prayer = payload['prayer'];
           final autoPlay = await AdhanService.getAutoPlayEnabled();
-          
           if (autoPlay && prayer != null) {
-            debugPrint('Auto-playing adhan for $prayer');
             await AdhanService.playAdhan(prayer);
           }
         }
       },
-      onNotificationDisplayedMethod: (ReceivedNotification notification) async {
-        // This is called when notification is displayed
-        debugPrint('Notification displayed: ${notification.id}');
-      },
+      onNotificationDisplayedMethod: (notification) async {},
     );
   }
 
@@ -69,7 +58,7 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.orange,
         brightness: Brightness.dark,
       ),
-      home: const PrayerTimesScreen(),
+      home: const WelcomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
