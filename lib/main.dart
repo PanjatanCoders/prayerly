@@ -5,6 +5,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 
 import 'services/notification_service.dart';
 import 'screens/prayer_times_screen.dart';
+
 import 'providers/adhan_settings_provider.dart';
 
 void main() async {

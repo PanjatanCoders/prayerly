@@ -10,6 +10,7 @@ import '../services/location_service.dart';
 import '../services/elevation_service.dart';
 import '../services/prayer_service.dart';
 import '../services/notification_service.dart';
+import '../services/adhan_service.dart'; // Import AdhanService
 import '../widgets/circular_timer_widget.dart';
 import '../widgets/info_card_widget.dart';
 import '../widgets/prayer_times_list_widget.dart';
@@ -45,7 +46,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeNotifications();
+    _initializeServices(); // Initialize both services
     _setupTimers();
     _initializeApp();
   }
@@ -81,14 +82,18 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     }
   }
 
-  /// Initialize notifications
-  Future<void> _initializeNotifications() async {
+  /// Initialize both notification services
+  Future<void> _initializeServices() async {
     try {
+      // Initialize AdhanService first
+      await AdhanService.initialize();
+      
+      // Initialize NotificationService
       await NotificationService.initialize();
 
-      // Set up notification listeners
+      // Set up notification listeners for AdhanService
       AwesomeNotifications().setListeners(
-        onActionReceivedMethod: NotificationService.onNotificationTap,
+        onActionReceivedMethod: AdhanService.onNotificationTap, // Use AdhanService listener
       );
 
       // Check if notifications are enabled
@@ -99,7 +104,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         });
       }
     } catch (e) {
-      debugPrint('Error initializing notifications: $e');
+      debugPrint('Error initializing services: $e');
     }
   }
 
@@ -306,15 +311,21 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     }
   }
 
-  /// Schedule notifications for prayer times
+  /// Schedule notifications for prayer times using AdhanService
   Future<void> _scheduleNotifications() async {
     if (_prayerTimesData?.prayerTimes.isEmpty ?? true) return;
 
     try {
-      await NotificationService.schedulePrayerNotifications(
+      // Get notification settings from AdhanService
+      final notificationSettings = await AdhanService.getNotificationSettings();
+      
+      // Schedule adhan notifications using AdhanService
+      await AdhanService.scheduleAdhanNotifications(
         _prayerTimesData!.prayerTimes,
+        notificationSettings,
       );
-      debugPrint('Prayer notifications scheduled successfully');
+      
+      debugPrint('Adhan notifications scheduled successfully');
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
     }
@@ -361,8 +372,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   /// Toggle notifications
   Future<void> _toggleNotifications() async {
     if (_notificationsEnabled) {
-      // Disable notifications
-      await NotificationService.cancelAllNotifications();
+      // Disable notifications using AdhanService
+      await AdhanService.cancelAllNotifications();
       if (mounted) {
         setState(() {
           _notificationsEnabled = false;
@@ -451,7 +462,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      // leading: const Icon(Icons.menu, color: Colors.white),
       leading: GestureDetector(
         onTap: () {
           _showCustomMenu(context);
@@ -608,7 +618,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       ),
       _buildInfoItem(
         'Notifications',
-        _notificationsEnabled ? 'Enabled (15 min before)' : 'Disabled',
+        _notificationsEnabled ? 'Enabled (Auto Adhan)' : 'Disabled',
       ),
     ];
 

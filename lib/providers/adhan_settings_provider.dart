@@ -7,7 +7,7 @@ import '../services/adhan_service.dart';
 
 class AdhanSettingsProvider extends ChangeNotifier {
   double _volume = 0.8;
-  String _adhanType = 'makkah';
+  String _adhanType = 'azan1';
   Map<String, bool> _notificationSettings = {};
 
   double get volume => _volume;

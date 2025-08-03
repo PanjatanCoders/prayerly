@@ -20,11 +20,11 @@ class AdhanService {
   };
 
   static const Map<String, String> adhanTypes = {
-    'azan1': 'Makkah',
-    'azan2': 'Madinah',
-    'azan3': 'Egypt',
-    'azan4': 'Turkey',
-    'azan_fajr1': 'Fajr Special',
+    'azan1': 'Azan1',
+    'azan2': 'Azan2',
+    'azan3': 'Azan3',
+    'azan4': 'Azan4',
+    'azan_fajr1': 'Fajr Azan',
   };
 
   static Future<void> initialize() async {
