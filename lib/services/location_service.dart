@@ -1,4 +1,5 @@
 // services/location_service.dart
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
@@ -45,7 +46,7 @@ class LocationService {
         return _getDefaultLocation();
       }
     } catch (e) {
-      print('Error getting location: $e');
+      debugPrint('Error getting location: $e');
       return _getDefaultLocation();
     }
   }
@@ -87,7 +88,7 @@ class LocationService {
         return "Unknown location";
       }
     } catch (e) {
-      print('Error getting address: $e');
+      debugPrint('Error getting address: $e');
       return "Location unavailable";
     }
   }

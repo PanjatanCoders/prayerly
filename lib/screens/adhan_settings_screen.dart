@@ -147,7 +147,7 @@ class AdhanSettingsScreen extends StatelessWidget {
               activeTrackColor: Colors.amber,
               inactiveTrackColor: Colors.grey[700],
               thumbColor: Colors.amber,
-              overlayColor: Colors.amber.withOpacity(0.2),
+              overlayColor: Colors.amber.withValues(alpha: 0.2),
             ),
             child: Slider(
               value: provider.volume,

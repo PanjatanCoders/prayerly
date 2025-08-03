@@ -49,7 +49,7 @@ class NotificationService {
     // Request permissions
     bool isAllowed = await requestPermissions();
     if (!isAllowed) {
-      print('Notification permissions denied');
+      debugPrint('Notification permissions denied');
       return;
     }
 
@@ -72,7 +72,7 @@ class NotificationService {
           prayerName: prayerName,
         );
 
-        print('Scheduled notification for $prayerName at ${notificationTime.toString()}');
+        debugPrint('Scheduled notification for $prayerName at ${notificationTime.toString()}');
         notificationId++;
       }
     }
@@ -132,7 +132,7 @@ class NotificationService {
   static Future<void> onNotificationTap(ReceivedNotification receivedNotification) async {
     // Handle what happens when user taps the notification
     String? prayerName = receivedNotification.payload?['prayer_name'];
-    print('Notification tapped for prayer: $prayerName');
+    debugPrint('Notification tapped for prayer: $prayerName');
 
     // You can navigate to a specific screen or perform other actions here
   }

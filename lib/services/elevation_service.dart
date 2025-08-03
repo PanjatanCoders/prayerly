@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ElevationService {
@@ -26,7 +27,7 @@ class ElevationService {
       // Fallback to alternative API if first one fails
       return await _getElevationFallback(latitude, longitude);
     } catch (e) {
-      print('Error fetching elevation from primary API: $e');
+      debugPrint('Error fetching elevation from primary API: $e');
       return await _getElevationFallback(latitude, longitude);
     }
   }
@@ -48,7 +49,7 @@ class ElevationService {
         }
       }
     } catch (e) {
-      print('Error fetching elevation from fallback API: $e');
+      debugPrint('Error fetching elevation from fallback API: $e');
     }
 
     return null; // Return null if all attempts fail

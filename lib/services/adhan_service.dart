@@ -1,4 +1,6 @@
 // services/adhan_service.dart (Updated with Auto-Play)
+// ignore_for_file: unnecessary_null_comparison
+
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -314,8 +316,9 @@ class AdhanService {
       for (final entry in prayerTimes.entries) {
         final name = entry.key;
         final time = entry.value;
-        if (name == 'Sunrise' || !(notificationSettings[name] ?? false))
+        if (name == 'Sunrise' || !(notificationSettings[name] ?? false)) {
           continue;
+        }
         DateTime scheduleTime = time.isBefore(now)
             ? time.add(const Duration(days: 1))
             : time;
