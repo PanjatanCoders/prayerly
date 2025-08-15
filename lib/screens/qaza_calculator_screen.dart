@@ -1,4 +1,3 @@
-// screens/qaza_calculator_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/qaza_service.dart';
@@ -60,6 +59,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
     // Calculate prayers per year (approximately)
     const daysPerYear = 365;
     const fardPrayersPerDay = 5; // Fajr, Zuhr, Asr, Maghrib, Isha
+    // ignore: unused_local_variable
     const witrPrayersPerDay = 1; // Witr (Hanafi considers it Wajib)
     
     // Calculate missed prayers during irregular years

@@ -6,6 +6,7 @@ import 'package:prayerly/screens/qaza_settings_screen.dart';
 import 'package:prayerly/screens/qaza_statistics_screen.dart';
 import 'package:prayerly/widgets/add_qaza_dialog.dart';
 import 'package:prayerly/widgets/complete_qaza_dialog.dart';
+// ignore: unused_import
 import 'dart:math' as math;
 import '../services/qaza_service.dart';
 
