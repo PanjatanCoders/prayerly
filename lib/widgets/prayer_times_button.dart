@@ -136,13 +136,13 @@ class _PrayerTimesButtonState extends State<PrayerTimesButton>
                     BoxShadow(
                       color: const Color(
                         0xFF2ECC71,
-                      ).withOpacity(0.3 + hoverValue * 0.2),
+                      ).withValues(alpha: 0.3 + hoverValue * 0.2),
                       blurRadius: 20 + hoverValue * 10,
                       spreadRadius: 2 + hoverValue * 3,
                       offset: const Offset(0, 8),
                     ),
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 4),
                     ),
@@ -175,7 +175,7 @@ class _PrayerTimesButtonState extends State<PrayerTimesButton>
                         ),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),

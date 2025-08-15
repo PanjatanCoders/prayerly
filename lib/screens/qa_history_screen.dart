@@ -97,7 +97,7 @@ class _QazaHistoryScreenState extends State<QazaHistoryScreen> {
                 decoration: BoxDecoration(
                   color: Colors.grey[900],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: actionColor.withOpacity(0.7), width: 1.5),
+                  border: Border.all(color: actionColor.withValues(alpha: 0.7), width: 1.5),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +137,7 @@ class _QazaHistoryScreenState extends State<QazaHistoryScreen> {
     final color = _getPrayerColor(prayer);
     return Chip(
       label: Text('$prayer: $count', style: const TextStyle(color: Colors.white)),
-      backgroundColor: color.withOpacity(0.8),
+      backgroundColor: color.withValues(alpha: 0.8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     );
   }

@@ -1,5 +1,8 @@
 // services/qaza_service.dart
+// ignore_for_file: prefer_conditional_assignment
+
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class QazaService {
@@ -36,7 +39,7 @@ class QazaService {
       
       return qazaCounts;
     } catch (e) {
-      print('Error getting Qaza counts: $e');
+      debugPrint('Error getting Qaza counts: $e');
       return _getDefaultQazaCounts();
     }
   }
@@ -47,7 +50,7 @@ class QazaService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_qazaDataKey, json.encode(counts));
     } catch (e) {
-      print('Error setting Qaza counts: $e');
+      debugPrint('Error setting Qaza counts: $e');
     }
   }
 
@@ -126,7 +129,7 @@ class QazaService {
       final List<dynamic> historyList = json.decode(historyStr);
       return historyList.map((item) => QazaHistoryEntry.fromJson(item)).toList();
     } catch (e) {
-      print('Error getting Qaza history: $e');
+      debugPrint('Error getting Qaza history: $e');
       return [];
     }
   }
@@ -152,7 +155,7 @@ class QazaService {
       final historyJson = history.map((e) => e.toJson()).toList();
       await prefs.setString(_qazaHistoryKey, json.encode(historyJson));
     } catch (e) {
-      print('Error logging Qaza history: $e');
+      debugPrint('Error logging Qaza history: $e');
     }
   }
 
@@ -214,7 +217,7 @@ class QazaService {
       final Map<String, dynamic> settingsData = json.decode(settingsStr);
       return QazaSettings.fromJson(settingsData);
     } catch (e) {
-      print('Error getting Qaza settings: $e');
+      debugPrint('Error getting Qaza settings: $e');
       return QazaSettings.defaultSettings();
     }
   }
@@ -225,7 +228,7 @@ class QazaService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_qazaSettingsKey, json.encode(settings.toJson()));
     } catch (e) {
-      print('Error saving Qaza settings: $e');
+      debugPrint('Error saving Qaza settings: $e');
     }
   }
 
@@ -280,7 +283,7 @@ class QazaService {
       await prefs.remove(_qazaHistoryKey);
       await prefs.remove(_qazaSettingsKey);
     } catch (e) {
-      print('Error clearing Qaza data: $e');
+      debugPrint('Error clearing Qaza data: $e');
     }
   }
 
@@ -333,7 +336,7 @@ class QazaService {
       
       return true;
     } catch (e) {
-      print('Error importing Qaza data: $e');
+      debugPrint('Error importing Qaza data: $e');
       return false;
     }
   }

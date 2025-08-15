@@ -143,7 +143,7 @@ class QiblaDirectionBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.shade800.withOpacity(0.3),
+            color: Colors.green.shade800.withValues(alpha: 0.3),
             blurRadius: 8,
             spreadRadius: 1,
           ),

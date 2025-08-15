@@ -1,4 +1,6 @@
 // services/qibla_service.dart
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';

@@ -67,7 +67,7 @@ class AnimatedTitle extends StatelessWidget {
                 Text(
                   'Your Spiritual Companion',
                   style: TextStyle(
-                    color: const Color(0xFF2ECC71).withOpacity(0.8),
+                    color: const Color(0xFF2ECC71).withValues(alpha: 0.8),
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     letterSpacing: 1,
@@ -92,7 +92,7 @@ class AnimatedTitle extends StatelessWidget {
                     borderRadius: BorderRadius.circular(2),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF2ECC71).withOpacity(0.5),
+                        color: const Color(0xFF2ECC71).withValues(alpha: 0.5),
                         blurRadius: 10,
                         spreadRadius: 1,
                       ),

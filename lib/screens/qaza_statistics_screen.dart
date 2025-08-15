@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_brace_in_string_interps
+
 import 'package:flutter/material.dart';
 import '../services/qaza_service.dart';
 
@@ -89,7 +91,7 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
                       final count = _qazaCounts[prayer] ?? 0;
                       return Chip(
                         label: Text('$prayer: $count', style: const TextStyle(color: Colors.white)),
-                        backgroundColor: _getPrayerColor(prayer).withOpacity(0.85),
+                        backgroundColor: _getPrayerColor(prayer).withValues(alpha: 0.85),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       );
                     }).toList(),
@@ -165,7 +167,7 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

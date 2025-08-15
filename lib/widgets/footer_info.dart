@@ -93,13 +93,13 @@ class _FooterInfoState extends State<FooterInfo>
               end: Alignment.bottomCenter,
               colors: [
                 Colors.transparent,
-                const Color(0xFF1A1A1A).withOpacity(0.3),
+                const Color(0xFF1A1A1A).withValues(alpha: 0.3),
                 Colors.transparent,
               ],
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFF2ECC71).withOpacity(0.1 + glowValue * 0.1),
+              color: const Color(0xFF2ECC71).withValues(alpha: 0.1 + glowValue * 0.1),
               width: 1,
             ),
           ),
@@ -109,9 +109,9 @@ class _FooterInfoState extends State<FooterInfo>
               ShaderMask(
                 shaderCallback: (bounds) => LinearGradient(
                   colors: [
-                    const Color(0xFF2ECC71).withOpacity(0.8),
-                    Colors.white.withOpacity(0.9),
-                    const Color(0xFF2ECC71).withOpacity(0.8),
+                    const Color(0xFF2ECC71).withValues(alpha: 0.8),
+                    Colors.white.withValues(alpha: 0.9),
+                    const Color(0xFF2ECC71).withValues(alpha: 0.8),
                   ],
                   stops: [0.0, 0.5, 1.0],
                 ).createShader(bounds),
@@ -126,7 +126,7 @@ class _FooterInfoState extends State<FooterInfo>
                       Shadow(
                         color: const Color(
                           0xFF2ECC71,
-                        ).withOpacity(glowValue * 0.5),
+                        ).withValues(alpha: glowValue * 0.5),
                         blurRadius: 10,
                         offset: const Offset(0, 0),
                       ),
@@ -141,7 +141,7 @@ class _FooterInfoState extends State<FooterInfo>
               Text(
                 "All rights reserved",
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   letterSpacing: 0.3,
@@ -160,7 +160,7 @@ class _FooterInfoState extends State<FooterInfo>
                       Colors.transparent,
                       const Color(
                         0xFF2ECC71,
-                      ).withOpacity(0.5 + glowValue * 0.3),
+                      ).withValues(alpha: 0.5 + glowValue * 0.3),
                       Colors.transparent,
                     ],
                   ),
@@ -178,12 +178,12 @@ class _FooterInfoState extends State<FooterInfo>
                 decoration: BoxDecoration(
                   color: const Color(
                     0xFF2ECC71,
-                  ).withOpacity(0.1 + glowValue * 0.05),
+                  ).withValues(alpha: 0.1 + glowValue * 0.05),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: const Color(
                       0xFF2ECC71,
-                    ).withOpacity(0.2 + glowValue * 0.1),
+                    ).withValues(alpha: 0.2 + glowValue * 0.1),
                     width: 1,
                   ),
                 ),
@@ -193,13 +193,13 @@ class _FooterInfoState extends State<FooterInfo>
                     Icon(
                       Icons.info_outline,
                       size: 14,
-                      color: const Color(0xFF2ECC71).withOpacity(0.8),
+                      color: const Color(0xFF2ECC71).withValues(alpha: 0.8),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       "Version ${widget.version.isEmpty ? '...' : widget.version}",
                       style: TextStyle(
-                        color: const Color(0xFF2ECC71).withOpacity(0.9),
+                        color: const Color(0xFF2ECC71).withValues(alpha: 0.9),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.5,
@@ -224,12 +224,12 @@ class _FooterInfoState extends State<FooterInfo>
                       shape: BoxShape.circle,
                       color: const Color(
                         0xFF2ECC71,
-                      ).withOpacity(0.4 + glowValue * 0.3),
+                      ).withValues(alpha: 0.4 + glowValue * 0.3),
                       boxShadow: [
                         BoxShadow(
                           color: const Color(
                             0xFF2ECC71,
-                          ).withOpacity(glowValue * 0.5),
+                          ).withValues(alpha: glowValue * 0.5),
                           blurRadius: 6,
                           spreadRadius: 1,
                         ),

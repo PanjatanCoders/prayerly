@@ -52,7 +52,7 @@ class _CompassWidgetState extends State<CompassWidget>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 10,
             spreadRadius: 2,
           ),
@@ -92,7 +92,7 @@ class _CompassWidgetState extends State<CompassWidget>
               Container(
                 width: isMainDirection ? 3 : 1,
                 height: isMainDirection ? 20 : 10,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
               
               // Cardinal direction labels
@@ -140,7 +140,7 @@ class _CompassWidgetState extends State<CompassWidget>
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.amber.withOpacity(0.5),
+                        color: Colors.amber.withValues(alpha: 0.5),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -164,7 +164,7 @@ class _CompassWidgetState extends State<CompassWidget>
               color: Colors.amber,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.amber.withOpacity(0.5),
+                  color: Colors.amber.withValues(alpha: 0.5),
                   blurRadius: 4,
                 ),
               ],
@@ -186,7 +186,7 @@ class _CompassWidgetState extends State<CompassWidget>
         border: Border.all(color: Colors.green.shade800, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4,
           ),
         ],

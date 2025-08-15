@@ -79,25 +79,25 @@ class _QuranVerseCardState extends State<QuranVerseCard>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF1A1A1A).withOpacity(0.8),
-                    const Color(0xFF2C2C2C).withOpacity(0.6),
-                    const Color(0xFF1A1A1A).withOpacity(0.8),
+                    const Color(0xFF1A1A1A).withValues(alpha: 0.8),
+                    const Color(0xFF2C2C2C).withValues(alpha: 0.6),
+                    const Color(0xFF1A1A1A).withValues(alpha: 0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: const Color(0xFF2ECC71).withOpacity(0.3),
+                  color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2ECC71).withOpacity(0.1),
+                    color: const Color(0xFF2ECC71).withValues(alpha: 0.1),
                     blurRadius: 20,
                     spreadRadius: 2,
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 4),
                   ),
@@ -158,17 +158,17 @@ class _QuranVerseCardState extends State<QuranVerseCard>
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2ECC71).withOpacity(0.1),
+                      color: const Color(0xFF2ECC71).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFF2ECC71).withOpacity(0.3),
+                        color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
                     child: Text(
                       'Qur\'an 29:45',
                       style: TextStyle(
-                        color: const Color(0xFF2ECC71).withOpacity(0.9),
+                        color: const Color(0xFF2ECC71).withValues(alpha: 0.9),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1,
@@ -202,7 +202,7 @@ class _QuranVerseCardState extends State<QuranVerseCard>
             gradient: LinearGradient(
               colors: [
                 Colors.transparent,
-                const Color(0xFF2ECC71).withOpacity(0.8),
+                const Color(0xFF2ECC71).withValues(alpha: 0.8),
                 Colors.transparent,
               ],
             ),
@@ -218,7 +218,7 @@ class _QuranVerseCardState extends State<QuranVerseCard>
             gradient: LinearGradient(
               colors: [
                 Colors.transparent,
-                const Color(0xFF2ECC71).withOpacity(0.8),
+                const Color(0xFF2ECC71).withValues(alpha: 0.8),
                 Colors.transparent,
               ],
             ),
@@ -240,7 +240,7 @@ class _QuranVerseCardState extends State<QuranVerseCard>
           height: 6,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF2ECC71).withOpacity(0.4),
+            color: const Color(0xFF2ECC71).withValues(alpha: 0.4),
           ),
         );
       }),
@@ -253,10 +253,10 @@ class _QuranVerseCardState extends State<QuranVerseCard>
       height: 8,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF2ECC71).withOpacity(0.8),
+        color: const Color(0xFF2ECC71).withValues(alpha: 0.8),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2ECC71).withOpacity(0.5),
+            color: const Color(0xFF2ECC71).withValues(alpha: 0.5),
             blurRadius: 8,
             spreadRadius: 1,
           ),
@@ -270,7 +270,7 @@ class _QuranVerseCardState extends State<QuranVerseCard>
       width: 12,
       height: 12,
       child: CustomPaint(
-        painter: StarPainter(color: const Color(0xFF2ECC71).withOpacity(0.8)),
+        painter: StarPainter(color: const Color(0xFF2ECC71).withValues(alpha: 0.8)),
       ),
     );
   }

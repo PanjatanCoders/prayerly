@@ -110,9 +110,9 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,8 +273,8 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withOpacity(0.8),
-            Colors.indigo.withOpacity(0.8),
+            Colors.blue.withValues(alpha: 0.8),
+            Colors.indigo.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -302,7 +302,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
             'Calculate an approximate number of missed prayers based on your prayer history',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 14,
             ),
           ),
@@ -450,7 +450,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
                   activeTrackColor: Colors.orange,
                   inactiveTrackColor: Colors.grey[700],
                   thumbColor: Colors.orange,
-                  overlayColor: Colors.orange.withOpacity(0.2),
+                  overlayColor: Colors.orange.withValues(alpha: 0.2),
                 ),
                 child: Slider(
                   value: _missedPercentage,
@@ -526,8 +526,8 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.green.withOpacity(0.8),
-                Colors.teal.withOpacity(0.8),
+                Colors.green.withValues(alpha: 0.8),
+                Colors.teal.withValues(alpha: 0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -597,7 +597,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.5),
+          color: color.withValues(alpha: 0.5),
           width: 1.5,
         ),
       ),

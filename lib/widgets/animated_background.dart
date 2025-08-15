@@ -49,10 +49,10 @@ class AnimatedBackground extends StatelessWidget {
             height: 4 + (index % 3) * 2,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1 + (index % 3) * 0.05),
+              color: Colors.white.withValues(alpha: 0.1 + (index % 3) * 0.05),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2ECC71).withOpacity(0.3),
+                  color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
                   blurRadius: 8,
                   spreadRadius: 1,
                 ),
@@ -79,7 +79,7 @@ class AnimatedBackground extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF2ECC71).withOpacity(0.1 + pulseValue * 0.1),
+                color: const Color(0xFF2ECC71).withValues(alpha: 0.1 + pulseValue * 0.1),
                 width: 2,
               ),
             ),
@@ -107,9 +107,9 @@ class AnimatedBackground extends StatelessWidget {
             center: const Alignment(0.3, -0.5),
             radius: 1.5,
             colors: [
-              const Color(0xFF2ECC71).withOpacity(0.03),
+              const Color(0xFF2ECC71).withValues(alpha: 0.03),
               Colors.transparent,
-              const Color(0xFF1A1A1A).withOpacity(0.8),
+              const Color(0xFF1A1A1A).withValues(alpha: 0.8),
             ],
             stops: const [0.0, 0.4, 1.0],
           ),
@@ -127,7 +127,7 @@ class IslamicPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF2ECC71).withOpacity(0.05)
+      ..color = const Color(0xFF2ECC71).withValues(alpha: 0.05)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 

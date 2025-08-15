@@ -62,7 +62,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       }
     } catch (e) {
       // Fallback version if package info fails
-      print('Error fetching version: $e');
+      debugPrint('Error fetching version: $e');
       if (mounted) {
         setState(() {
           _version = '1.0.0';

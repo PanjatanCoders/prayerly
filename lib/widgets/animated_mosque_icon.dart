@@ -112,20 +112,20 @@ class _AnimatedMosqueIconState extends State<AnimatedMosqueIcon>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF2ECC71).withOpacity(0.2 * _glowAnimation.value),
-                  const Color(0xFF27AE60).withOpacity(0.1 * _glowAnimation.value),
+                  const Color(0xFF2ECC71).withValues(alpha: 0.2 * _glowAnimation.value),
+                  const Color(0xFF27AE60).withValues(alpha: 0.1 * _glowAnimation.value),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2ECC71).withOpacity(0.4 * _glowAnimation.value),
+                  color: const Color(0xFF2ECC71).withValues(alpha: 0.4 * _glowAnimation.value),
                   blurRadius: 40,
                   spreadRadius: 10,
                 ),
                 BoxShadow(
-                  color: const Color(0xFF2ECC71).withOpacity(0.2 * _glowAnimation.value),
+                  color: const Color(0xFF2ECC71).withValues(alpha: 0.2 * _glowAnimation.value),
                   blurRadius: 80,
                   spreadRadius: 20,
                 ),
@@ -141,7 +141,7 @@ class _AnimatedMosqueIconState extends State<AnimatedMosqueIcon>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF2ECC71).withOpacity(0.3 * _glowAnimation.value),
+                      color: const Color(0xFF2ECC71).withValues(alpha: 0.3 * _glowAnimation.value),
                       width: 2,
                     ),
                   ),
@@ -154,7 +154,7 @@ class _AnimatedMosqueIconState extends State<AnimatedMosqueIcon>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF2ECC71).withOpacity(0.5 * _glowAnimation.value),
+                      color: const Color(0xFF2ECC71).withValues(alpha: 0.5 * _glowAnimation.value),
                       width: 1,
                     ),
                   ),
@@ -165,9 +165,9 @@ class _AnimatedMosqueIconState extends State<AnimatedMosqueIcon>
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF2ECC71).withOpacity(0.1),
+                    color: const Color(0xFF2ECC71).withValues(alpha: 0.1),
                     border: Border.all(
-                      color: const Color(0xFF2ECC71).withOpacity(0.3),
+                      color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -203,10 +203,10 @@ class _AnimatedMosqueIconState extends State<AnimatedMosqueIcon>
           height: 6,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF2ECC71).withOpacity(0.6 * _glowAnimation.value),
+            color: const Color(0xFF2ECC71).withValues(alpha: 0.6 * _glowAnimation.value),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF2ECC71).withOpacity(0.8),
+                color: const Color(0xFF2ECC71).withValues(alpha: 0.8),
                 blurRadius: 8,
                 spreadRadius: 1,
               ),

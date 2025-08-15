@@ -1,4 +1,6 @@
 // widgets/complete_qaza_dialog.dart
+// ignore_for_file: use_build_context_synchronously, sized_box_for_whitespace
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/qaza_service.dart';
@@ -137,7 +139,7 @@ class _CompleteQazaDialogState extends State<CompleteQazaDialog>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
+                    color: Colors.green.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -180,12 +182,12 @@ class _CompleteQazaDialogState extends State<CompleteQazaDialog>
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.green.withOpacity(0.2),
-                            Colors.teal.withOpacity(0.2),
+                            Colors.green.withValues(alpha: 0.2),
+                            Colors.teal.withValues(alpha: 0.2),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         children: [
@@ -269,7 +271,7 @@ class _CompleteQazaDialogState extends State<CompleteQazaDialog>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -357,9 +359,9 @@ class _CompleteQazaDialogState extends State<CompleteQazaDialog>
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: color.withOpacity(0.5)),
+                    border: Border.all(color: color.withValues(alpha: 0.5)),
                   ),
                   child: Text(
                     'Max',
