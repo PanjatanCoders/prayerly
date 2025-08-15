@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:prayerly/screens/adhan_settings_screen.dart';
+import 'package:prayerly/screens/compass/qibla_compass_screen.dart';
 import 'package:prayerly/screens/qaza_tracker_screen.dart';
 
 import '../services/location_service.dart';
@@ -448,6 +449,13 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         tooltip: _notificationsEnabled
             ? 'Disable Notifications'
             : 'Enable Notifications',
+      ),
+      // Compass button
+      IconButton(
+        icon: const Icon(Icons.compass_calibration_outlined, color: Colors.white),
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const QiblaCompassScreen()));
+        },
       ),
       IconButton(
         icon: const Icon(Icons.refresh, color: Colors.white),
