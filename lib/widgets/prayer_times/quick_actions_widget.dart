@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:prayerly/screens/dhikr/dhikr_selection_screen.dart';
 import '../../screens/compass/qibla_compass_screen.dart';
-import '../../screens/qaza_tracker_screen.dart';
+import '../../screens/qaza/qaza_tracker_screen.dart';
 
 class QuickActionsWidget extends StatelessWidget {
   const QuickActionsWidget({super.key});

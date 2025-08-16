@@ -2,7 +2,7 @@ name: prayerly
 description: "Prayerly app"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.1.0
+version: 2.1.1
 
 environment:
   sdk: ^3.8.1
@@ -25,6 +25,8 @@ dependencies:
   provider: ^6.1.5
   package_info_plus: ^8.3.0
   flutter_compass: ^0.8.1
+  flutter_localizations:
+    sdk: flutter
   
 
 dev_dependencies:
@@ -35,6 +37,35 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # fonts:
+  #   # For Hindi (Devanagari script)
+  #   - family: NotoSansDevanagari
+  #     fonts:
+  #       - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
+  #       - asset: assets/fonts/NotoSansDevanagari-Bold.ttf
+  #         weight: 700
+
+  #   # For Urdu (Arabic-Urdu script)
+  #   - family: NotoNastaliqUrdu
+  #     fonts:
+  #       - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf
+  #       - asset: assets/fonts/NotoNastaliqUrdu-Bold.ttf
+  #         weight: 700
+
+  #   # For Bengali script
+  #   - family: NotoSansBengali
+  #     fonts:
+  #       - asset: assets/fonts/NotoSansBengali-Regular.ttf
+  #       - asset: assets/fonts/NotoSansBengali-Bold.ttf
+  #         weight: 700
+
+  #   # For Arabic (for Dhikr text)
+  #   - family: Amiri
+  #     fonts:
+  #       - asset: assets/fonts/Amiri-Regular.ttf
+  #       - asset: assets/fonts/Amiri-Bold.ttf
+  #         weight: 700
 
   assets:
     - assets/icons/icon.png

@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import '../services/qaza_service.dart';
+import '../../services/qaza_service.dart';
 
 class QazaSettingsScreen extends StatefulWidget {
   const QazaSettingsScreen({super.key});

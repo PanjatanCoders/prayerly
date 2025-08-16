@@ -1,4 +1,3 @@
-// welcome_screen.dart
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:prayerly/screens/prayer_times_screen.dart';
@@ -8,6 +7,7 @@ import 'package:prayerly/widgets/animated_title.dart';
 import 'package:prayerly/widgets/footer_info.dart';
 import 'package:prayerly/widgets/prayer_times_button.dart';
 import 'package:prayerly/widgets/quran_verse_card.dart';
+import 'package:prayerly/services/language_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -21,6 +21,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   String _version = '';
   late AnimationController _masterController;
   late AnimationController _backgroundController;
+  late AnimationController _languageController;
 
   @override
   void initState() {
@@ -40,6 +41,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       duration: const Duration(seconds: 20),
       vsync: this,
     );
+
+    _languageController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
   }
 
   void _startAnimations() {
@@ -48,6 +54,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       if (mounted) {
         _masterController.forward();
         _backgroundController.repeat();
+        // Start language animation after a slight delay
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            _languageController.forward();
+          }
+        });
       }
     });
   }
@@ -75,6 +87,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   void dispose() {
     _masterController.dispose();
     _backgroundController.dispose();
+    _languageController.dispose();
     super.dispose();
   }
 
@@ -101,64 +114,83 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               // Animated background
               AnimatedBackground(controller: _backgroundController),
 
+              // Language selector button in top-right corner
+              _buildLanguageButton(),
+
               // Main content - Now scrollable to prevent overflow
               LayoutBuilder(
                 builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 10,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Top flexible space
-                            SizedBox(height: constraints.maxHeight * 0.02),
-
-                            // Animated mosque icon
-                            AnimatedMosqueIcon(controller: _masterController),
-
-                            const SizedBox(height: 20),
-
-                            // Animated title
-                            AnimatedTitle(controller: _masterController),
-
-                            const SizedBox(height: 32),
-
-                            // Quran verse card
-                            QuranVerseCard(controller: _masterController),
-
-                            const SizedBox(height: 20),
-
-                            // Prayer times button
-                            PrayerTimesButton(
-                              controller: _masterController,
-                              onPressed: () => _navigateToPrayerTimes(context),
+                  return ValueListenableBuilder<Locale>(
+                    valueListenable: LanguageService.localeNotifier,
+                    builder: (context, locale, child) {
+                      return Directionality(
+                        textDirection: LanguageService.textDirection,
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
                             ),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 10,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Top flexible space
+                                  SizedBox(height: constraints.maxHeight * 0.02),
 
-                            // Dynamic spacing instead of Spacer
-                            // SizedBox(height: constraints.maxHeight * 0.1),
-                            SizedBox(height: 20),
+                                  // Animated mosque icon
+                                  AnimatedMosqueIcon(controller: _masterController),
 
-                            // Footer info
-                            FooterInfo(
-                              controller: _masterController,
-                              version: _version,
+                                  const SizedBox(height: 20),
+
+                                  // Animated title (keeping original)
+                                  AnimatedTitle(controller: _masterController),
+
+                                  const SizedBox(height: 16),
+
+                                  // Subtitle with localized text
+                                  _buildLocalizedSubtitle(locale.languageCode),
+
+                                  const SizedBox(height: 32),
+
+                                  // Language selection card (prominent)
+                                  _buildLanguageSelectionCard(),
+
+                                  const SizedBox(height: 24),
+
+                                  // Quran verse card
+                                  QuranVerseCard(controller: _masterController),
+
+                                  const SizedBox(height: 20),
+
+                                  // Prayer times button (keeping original)
+                                  PrayerTimesButton(
+                                    controller: _masterController,
+                                    onPressed: () => _navigateToPrayerTimes(context),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // Footer info
+                                  FooterInfo(
+                                    controller: _masterController,
+                                    version: _version,
+                                  ),
+
+                                  // Bottom padding
+                                  SizedBox(height: constraints.maxHeight * 0.02),
+                                ],
+                              ),
                             ),
-
-                            // Bottom padding
-                            SizedBox(height: constraints.maxHeight * 0.02),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -167,6 +199,324 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildLanguageButton() {
+    return Positioned(
+      top: 16,
+      right: 16,
+      child: AnimatedBuilder(
+        animation: _languageController,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: Tween<double>(begin: 0.0, end: 1.0).animate(
+              CurvedAnimation(
+                parent: _languageController,
+                curve: Curves.elasticOut,
+              ),
+            ).value,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.language,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                onPressed: _showLanguageSelection,
+                tooltip: 'Change Language',
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLocalizedSubtitle(String languageCode) {
+    return AnimatedBuilder(
+      animation: _masterController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Tween<Offset>(
+            begin: const Offset(0, 30),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(
+              parent: _masterController,
+              curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic),
+            ),
+          ).value,
+          child: Opacity(
+            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+              CurvedAnimation(
+                parent: _masterController,
+                curve: const Interval(0.3, 0.8, curve: Curves.easeOut),
+              ),
+            ).value,
+            child: Text(
+              _getSubtitleText(languageCode),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+                fontWeight: FontWeight.w300,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageSelectionCard() {
+    return AnimatedBuilder(
+      animation: _languageController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Tween<Offset>(
+            begin: const Offset(0, 50),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(
+              parent: _languageController,
+              curve: Curves.easeOutCubic,
+            ),
+          ).value,
+          child: Opacity(
+            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+              CurvedAnimation(
+                parent: _languageController,
+                curve: Curves.easeOut,
+              ),
+            ).value,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.1),
+                    Colors.white.withValues(alpha: 0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.language,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Choose Your Language',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildLanguageOptions(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOptions() {
+    return ValueListenableBuilder<Locale>(
+      valueListenable: LanguageService.localeNotifier,
+      builder: (context, currentLocale, child) {
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 3,
+          children: LanguageService.supportedLanguages.entries.map((entry) {
+            final languageName = entry.key;
+            final locale = entry.value;
+            final isSelected = currentLocale.languageCode == locale.languageCode;
+            
+            return _buildLanguageOption(
+              languageName: languageName,
+              locale: locale,
+              isSelected: isSelected,
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required String languageName,
+    required Locale locale,
+    required bool isSelected,
+  }) {
+    return InkWell(
+      onTap: () async {
+        await LanguageService.changeLanguage(locale);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected 
+            ? Colors.white.withValues(alpha: 0.2)
+            : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected 
+              ? Colors.white.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.1),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _getLanguageEmoji(locale.languageCode),
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  languageName,
+                  style: TextStyle(
+                    color: isSelected 
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.8),
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (isSelected) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Localized text methods
+  String _getSubtitleText(String languageCode) {
+    switch (languageCode) {
+      case 'hi':
+        return 'आपका व्यक्तिगत इस्लामी साथी';
+      case 'ur':
+        return 'آپ کا ذاتی اسلامی ساتھی';
+      case 'bn':
+        return 'আপনার ব্যক্তিগত ইসলামিক সঙ্গী';
+      default:
+        return 'Your Personal Islamic Companion';
+    }
+  }
+
+  void _showLanguageSelection() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF1A1A1A),
+              Color(0xFF0A0A0A),
+            ],
+          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Title
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Select Language',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Language options
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildLanguageOptions(),
+            ),
+            
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getLanguageEmoji(String languageCode) {
+    switch (languageCode) {
+      case 'en':
+        return '🇺🇸';
+      case 'hi':
+        return '🇮🇳';
+      case 'ur':
+        return '🇵🇰';
+      case 'bn':
+        return '🇧🇩';
+      default:
+        return '🌐';
+    }
   }
 
   void _navigateToPrayerTimes(BuildContext context) {

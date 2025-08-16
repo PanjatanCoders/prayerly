@@ -1,8 +1,8 @@
-// screens/dhikr_selection_screen.dart
 import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
 import 'package:prayerly/services/dhikr_data_service.dart';
 import 'package:prayerly/services/dhikr_service.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/widgets/dhikar/dhikr_text_widget.dart';
 import 'dhikr_counter_screen.dart';
 
@@ -66,22 +66,23 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Dhikr Counter',
-          style: TextStyle(
-            color: Colors.white,
+          style: AppTheme.subheadingStyle(context).copyWith(
+            color: AppTheme.white,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.green.shade700,
+        backgroundColor: AppTheme.islamicColors['dhikr'],
+        foregroundColor: AppTheme.white,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: AppTheme.white,
+          labelColor: AppTheme.white,
+          unselectedLabelColor: AppTheme.white.withValues(alpha: 0.7),
           tabs: const [
             Tab(text: 'Popular', icon: Icon(Icons.star)),
             Tab(text: 'All Dhikr', icon: Icon(Icons.list)),
@@ -116,17 +117,24 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
   Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: TextField(
+        style: AppTheme.bodyStyle(context),
         decoration: InputDecoration(
           hintText: 'Search dhikr...',
-          prefixIcon: const Icon(Icons.search),
+          hintStyle: AppTheme.bodyStyle(context).copyWith(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: Colors.grey.shade100,
+          fillColor: Theme.of(context).colorScheme.surface,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20),
         ),
         onChanged: (value) {
@@ -167,13 +175,14 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
           });
           _filterDhikr();
         },
-        backgroundColor: Colors.white,
-        selectedColor: category?.color.withValues(alpha: 0.2) ?? Colors.grey.shade200,
-        checkmarkColor: category?.color ?? Colors.grey.shade600,
-        labelStyle: TextStyle(
+        backgroundColor: Theme.of(context).cardColor,
+        selectedColor: category?.color.withValues(alpha: 0.2) ?? 
+          Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+        checkmarkColor: category?.color ?? Theme.of(context).colorScheme.primary,
+        labelStyle: AppTheme.bodyStyle(context).copyWith(
           color: isSelected 
-            ? (category?.color ?? Colors.grey.shade700) 
-            : Colors.grey.shade600,
+            ? (category?.color ?? Theme.of(context).colorScheme.primary)
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
@@ -208,29 +217,25 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
 
   Widget _buildAllDhikrTab() {
     if (_filteredDhikr.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.search_off,
               size: 64,
-              color: Colors.grey,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'No dhikr found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey,
+              style: AppTheme.subheadingStyle(context).copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             Text(
               'Try adjusting your search or filter',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: AppTheme.captionStyle(context),
             ),
           ],
         ),
@@ -268,33 +273,54 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
   Widget _buildCategorySection(DhikrCategory category, List<Dhikr> dhikrList) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      child: ExpansionTile(
-        title: Row(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: category.color,
-                shape: BoxShape.circle,
+      
+      child: Container(
+        decoration: AppTheme.cardDecoration(context),
+        child: ExpansionTile(
+          title: Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: category.color,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              category.displayName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        subtitle: Text('${dhikrList.length} dhikr available'),
-        children: dhikrList.map((dhikr) => 
-          ListTile(
-            title: Text(dhikr.transliteration),
-            subtitle: Text(dhikr.translation),
-            trailing: Text('${dhikr.targetCount}x'),
-            onTap: () => _openDhikrCounter(dhikr),
+              const SizedBox(width: 12),
+              Text(
+                category.displayName,
+                style: AppTheme.bodyStyle(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-        ).toList(),
+          subtitle: Text(
+            '${dhikrList.length} dhikr available',
+            style: AppTheme.captionStyle(context),
+          ),
+          children: dhikrList.map((dhikr) => 
+            ListTile(
+              title: Text(
+                dhikr.transliteration,
+                style: AppTheme.bodyStyle(context),
+              ),
+              subtitle: Text(
+                dhikr.translation,
+                style: AppTheme.captionStyle(context),
+              ),
+              trailing: Text(
+                '${dhikr.targetCount}x',
+                style: AppTheme.bodyStyle(context).copyWith(
+                  color: category.color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () => _openDhikrCounter(dhikr),
+            ),
+          ).toList(),
+        ),
       ),
     );
   }
@@ -308,25 +334,34 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.amber.shade100, Colors.orange.shade100],
+          colors: [
+            AppTheme.primaryAmber.withValues(alpha: 0.1),
+            AppTheme.primaryOrange.withValues(alpha: 0.1),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.primaryAmber.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.wb_sunny, color: Colors.orange.shade700),
+              Icon(
+                Icons.wb_sunny,
+                color: AppTheme.primaryAmber,
+              ),
               const SizedBox(width: 8),
               Text(
                 '$timeOfDay Recommendations',
-                style: TextStyle(
+                style: AppTheme.subheadingStyle(context).copyWith(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange.shade700,
+                  color: AppTheme.primaryAmber,
                 ),
               ),
             ],

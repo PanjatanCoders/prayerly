@@ -1,9 +1,12 @@
-// screens/dhikr_counter_screen.dart
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
 import 'package:prayerly/services/dhikr_service.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/widgets/dhikar/dhikr_counter_widget.dart';
 import 'package:prayerly/widgets/dhikar/dhikr_text_widget.dart';
+
 /// Main Dhikr counter screen
 class DhikrCounterScreen extends StatefulWidget {
   final Dhikr dhikr;
@@ -114,6 +117,7 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).dialogBackgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -121,11 +125,14 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
           children: [
             Icon(
               Icons.celebration,
-              color: widget.dhikr.category.color,
+              color: AppTheme.islamicColors['dhikr'],
               size: 28,
             ),
             const SizedBox(width: 8),
-            const Text('Dhikr Completed!'),
+            Text(
+              'Dhikr Completed!',
+              style: AppTheme.subheadingStyle(context),
+            ),
           ],
         ),
         content: Column(
@@ -133,13 +140,13 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
           children: [
             Text(
               DhikrService.getCompletionMessage(widget.dhikr),
-              style: const TextStyle(fontSize: 16),
+              style: AppTheme.bodyStyle(context).copyWith(fontSize: 16),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: widget.dhikr.category.color.withValues(alpha: 0.1),
+                color: AppTheme.islamicColors['dhikr']!.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -147,16 +154,32 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Count:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('$_count'),
+                      Text(
+                        'Count:',
+                        style: AppTheme.bodyStyle(context).copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '$_count',
+                        style: AppTheme.bodyStyle(context),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Duration:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(DhikrService.formatDuration(sessionDuration)),
+                      Text(
+                        'Duration:',
+                        style: AppTheme.bodyStyle(context).copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        DhikrService.formatDuration(sessionDuration),
+                        style: AppTheme.bodyStyle(context),
+                      ),
                     ],
                   ),
                 ],
@@ -178,7 +201,8 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
               Navigator.of(context).pop(); // Return to previous screen
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: widget.dhikr.category.color,
+              backgroundColor: AppTheme.islamicColors['dhikr'],
+              foregroundColor: AppTheme.white,
             ),
             child: const Text('Finish'),
           ),
@@ -190,15 +214,20 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(widget.dhikr.transliteration),
-        backgroundColor: widget.dhikr.category.color,
-        foregroundColor: Colors.white,
+        title: Text(
+          widget.dhikr.transliteration,
+          style: AppTheme.subheadingStyle(context).copyWith(
+            color: AppTheme.white,
+          ),
+        ),
+        backgroundColor: AppTheme.islamicColors['dhikr'],
+        foregroundColor: AppTheme.white,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: AppTheme.white),
             onPressed: _showSettings,
           ),
         ],
@@ -223,7 +252,7 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
               onTap: _incrementCount,
               onReset: _resetCount,
               onTargetEdit: _editTarget,
-              primaryColor: widget.dhikr.category.color,
+              primaryColor: AppTheme.islamicColors['dhikr']!,
             ),
             
             const SizedBox(height: 20),
@@ -246,17 +275,7 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
+      decoration: AppTheme.cardDecoration(context),
       child: Column(
         children: [
           Row(
@@ -266,19 +285,19 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
                 label: 'Remaining',
                 value: '$remaining',
                 icon: Icons.trending_up,
-                color: Colors.orange,
+                color: AppTheme.primaryOrange,
               ),
               _buildInfoItem(
                 label: 'Progress',
                 value: '${(progress * 100).toStringAsFixed(0)}%',
                 icon: Icons.percent,
-                color: Colors.blue,
+                color: AppTheme.islamicColors['quran']!,
               ),
               _buildInfoItem(
                 label: 'Duration',
                 value: DhikrService.formatDuration(sessionDuration),
                 icon: Icons.timer,
-                color: Colors.green,
+                color: AppTheme.primaryGreen,
               ),
             ],
           ),
@@ -289,22 +308,22 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: widget.dhikr.category.color.withValues(alpha: 0.1),
+              color: AppTheme.islamicColors['dhikr']!.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.favorite,
-                  color: widget.dhikr.category.color,
+                  color: AppTheme.islamicColors['dhikr'],
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     DhikrService.getEncouragementMessage(progress),
-                    style: TextStyle(
-                      color: widget.dhikr.category.color,
+                    style: AppTheme.bodyStyle(context).copyWith(
+                      color: AppTheme.islamicColors['dhikr'],
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -329,7 +348,7 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
         const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(
+          style: AppTheme.bodyStyle(context).copyWith(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: color,
@@ -337,10 +356,7 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
+          style: AppTheme.captionStyle(context),
         ),
       ],
     );
@@ -394,7 +410,11 @@ class _EditTargetDialogState extends State<_EditTargetDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Set Target Count'),
+      backgroundColor: Theme.of(context).dialogBackgroundColor,
+      title: Text(
+        'Set Target Count',
+        style: AppTheme.subheadingStyle(context),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -413,12 +433,9 @@ class _EditTargetDialogState extends State<_EditTargetDialog> {
             },
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Common targets: 33, 99, 100',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
+            style: AppTheme.captionStyle(context),
           ),
         ],
       ),
@@ -469,9 +486,9 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).bottomSheetTheme.backgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -482,20 +499,17 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           
           // Title
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'Dhikr Settings',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTheme.headingStyle(context).copyWith(fontSize: 20),
             ),
           ),
           
@@ -503,8 +517,8 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
           
           // Settings options
           SwitchListTile(
-            title: const Text('Haptic Feedback'),
-            subtitle: const Text('Vibrate on each count'),
+            title: Text('Haptic Feedback', style: AppTheme.bodyStyle(context)),
+            subtitle: Text('Vibrate on each count', style: AppTheme.captionStyle(context)),
             value: _settings.enableHapticFeedback,
             onChanged: (value) {
               _updateSettings(_settings.copyWith(enableHapticFeedback: value));
@@ -512,8 +526,8 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
           ),
           
           SwitchListTile(
-            title: const Text('Sound'),
-            subtitle: const Text('Play sound on count'),
+            title: Text('Sound', style: AppTheme.bodyStyle(context)),
+            subtitle: Text('Play sound on count', style: AppTheme.captionStyle(context)),
             value: _settings.enableSound,
             onChanged: (value) {
               _updateSettings(_settings.copyWith(enableSound: value));
@@ -521,8 +535,8 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
           ),
           
           SwitchListTile(
-            title: const Text('Show Arabic Text'),
-            subtitle: const Text('Display Arabic dhikr text'),
+            title: Text('Show Arabic Text', style: AppTheme.bodyStyle(context)),
+            subtitle: Text('Display Arabic dhikr text', style: AppTheme.captionStyle(context)),
             value: _settings.showArabicText,
             onChanged: (value) {
               _updateSettings(_settings.copyWith(showArabicText: value));
@@ -530,8 +544,8 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
           ),
           
           SwitchListTile(
-            title: const Text('Show Transliteration'),
-            subtitle: const Text('Display phonetic pronunciation'),
+            title: Text('Show Transliteration', style: AppTheme.bodyStyle(context)),
+            subtitle: Text('Display phonetic pronunciation', style: AppTheme.captionStyle(context)),
             value: _settings.showTransliteration,
             onChanged: (value) {
               _updateSettings(_settings.copyWith(showTransliteration: value));
@@ -539,8 +553,8 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
           ),
           
           SwitchListTile(
-            title: const Text('Show Translation'),
-            subtitle: const Text('Display English meaning'),
+            title: Text('Show Translation', style: AppTheme.bodyStyle(context)),
+            subtitle: Text('Display English meaning', style: AppTheme.captionStyle(context)),
             value: _settings.showTranslation,
             onChanged: (value) {
               _updateSettings(_settings.copyWith(showTranslation: value));
@@ -548,8 +562,8 @@ class _SettingsBottomSheetState extends State<_SettingsBottomSheet> {
           ),
           
           SwitchListTile(
-            title: const Text('Auto Reset'),
-            subtitle: const Text('Reset counter when target reached'),
+            title: Text('Auto Reset', style: AppTheme.bodyStyle(context)),
+            subtitle: Text('Reset counter when target reached', style: AppTheme.captionStyle(context)),
             value: _settings.autoReset,
             onChanged: (value) {
               _updateSettings(_settings.copyWith(autoReset: value));

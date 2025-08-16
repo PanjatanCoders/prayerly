@@ -1,7 +1,7 @@
 // ignore_for_file: unnecessary_brace_in_string_interps
 
 import 'package:flutter/material.dart';
-import '../services/qaza_service.dart';
+import '../../services/qaza_service.dart';
 
 class QazaStatisticsScreen extends StatefulWidget {
   const QazaStatisticsScreen({super.key});

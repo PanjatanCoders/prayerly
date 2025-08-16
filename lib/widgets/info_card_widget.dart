@@ -8,7 +8,7 @@ import '../services/elevation_service.dart';
 class InfoCardWidget extends StatelessWidget {
   final String location;
   final String islamicDate;
-  final String currentDate; // Added this missing parameter
+  final String currentDate; 
   final double? elevation;
   final bool isLoadingElevation;
 
@@ -16,7 +16,7 @@ class InfoCardWidget extends StatelessWidget {
     super.key,
     required this.location,
     required this.islamicDate,
-    required this.currentDate, // Now properly required
+    required this.currentDate,
     this.elevation,
     this.isLoadingElevation = false,
   });

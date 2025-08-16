@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:prayerly/screens/qa_history_screen.dart';
-import 'package:prayerly/screens/qaza_calculator_screen.dart';
-import 'package:prayerly/screens/qaza_settings_screen.dart';
-import 'package:prayerly/screens/qaza_statistics_screen.dart';
+import 'package:prayerly/screens/qaza/qaza_calculator_screen.dart';
+import 'package:prayerly/screens/qaza/qaza_settings_screen.dart';
+import 'package:prayerly/screens/qaza/qaza_statistics_screen.dart';
 import 'package:prayerly/widgets/add_qaza_dialog.dart';
 import 'package:prayerly/widgets/complete_qaza_dialog.dart';
 // ignore: unused_import
 import 'dart:math' as math;
-import '../services/qaza_service.dart';
+import '../../services/qaza_service.dart';
 
 class QazaTrackerScreen extends StatefulWidget {
   const QazaTrackerScreen({super.key});

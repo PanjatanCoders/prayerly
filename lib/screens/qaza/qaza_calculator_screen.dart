@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/qaza_service.dart';
+import '../../services/qaza_service.dart';
 
 class QazaCalculatorScreen extends StatefulWidget {
   const QazaCalculatorScreen({super.key});

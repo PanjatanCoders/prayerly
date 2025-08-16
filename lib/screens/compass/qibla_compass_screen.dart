@@ -1,9 +1,9 @@
-// screens/qibla_compass_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:prayerly/models/qibla_data.dart';
 import 'package:prayerly/services/qibla_service.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/widgets/compass/compass_widget.dart';
 import 'package:prayerly/widgets/compass/loading_error_widgets.dart';
 import 'package:prayerly/widgets/compass/qibla_info_widget.dart';
@@ -22,11 +22,11 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
   bool _hasError = false;
   String _errorMessage = '';
   QiblaData? _qiblaData;
-  
+
   // Stream management
   Stream<QiblaData>? _qiblaStream;
   StreamSubscription<QiblaData>? _qiblaSubscription;
-  
+
   @override
   void initState() {
     super.initState();
@@ -58,7 +58,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
       // Get initial location and Qibla data
       final position = await QiblaService.getCurrentLocation();
       final initialQiblaData = await QiblaService.getQiblaData(position);
-      
+
       setState(() {
         _qiblaData = initialQiblaData;
         _isLoading = false;
@@ -66,7 +66,6 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
 
       // Start the real-time compass stream
       _startCompassStream();
-      
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -116,7 +115,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: _buildAppBar(),
       body: _buildBody(),
     );
@@ -125,19 +124,23 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
   /// Build the app bar
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text(
+      title: Text(
         'Qibla Compass',
-        style: TextStyle(
-          color: Colors.white,
+        style: AppTheme.subheadingStyle(context).copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
           fontWeight: FontWeight.bold,
         ),
       ),
-      backgroundColor: Colors.green.shade800,
+      backgroundColor: AppTheme.islamicColors['qibla'],
+      foregroundColor: Theme.of(context).colorScheme.onPrimary,
       elevation: 0,
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh, color: Colors.white),
+          icon: Icon(
+            Icons.refresh,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
           onPressed: _isLoading ? null : _refreshCompass,
           tooltip: 'Refresh compass',
         ),
@@ -159,9 +162,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
     }
 
     if (_qiblaData == null) {
-      return const QiblaLoadingWidget(
-        message: 'Preparing compass...',
-      );
+      return const QiblaLoadingWidget(message: 'Preparing compass...');
     }
 
     return _buildCompassContent(_qiblaData!);
@@ -173,21 +174,21 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          
+
           // Main compass widget
           CompassWidget(qiblaData: qiblaData),
-          
+
           const SizedBox(height: 20),
-          
+
           // Direction banner
           QiblaDirectionBanner(qiblaData: qiblaData),
-          
+
           // Information cards
           QiblaInfoWidget(qiblaData: qiblaData),
-          
+
           // Instructions card
           _buildInstructionsCard(),
-          
+
           const SizedBox(height: 20),
         ],
       ),
@@ -198,52 +199,56 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
   Widget _buildInstructionsCard() {
     return Card(
       margin: const EdgeInsets.all(16),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.blue.shade600),
-                const SizedBox(width: 8),
-                Text(
-                  'How to Use',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade600,
+
+      child: Container(
+        decoration: AppTheme.cardDecoration(context),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            _buildInstructionItem(
-              '1. Hold your device flat (parallel to ground)',
-              Icons.phone_android,
-            ),
-            const SizedBox(height: 8),
-            
-            _buildInstructionItem(
-              '2. Rotate until the amber marker points upward',
-              Icons.rotate_right,
-            ),
-            const SizedBox(height: 8),
-            
-            _buildInstructionItem(
-              '3. Face the direction of the amber marker',
-              Icons.explore,
-            ),
-            const SizedBox(height: 8),
-            
-            _buildInstructionItem(
-              '4. You are now facing Qibla (Kaaba direction)',
-              Icons.place,
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  Text(
+                    'How to Use',
+                    style: AppTheme.subheadingStyle(context).copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              _buildInstructionItem(
+                '1. Hold your device flat (parallel to ground)',
+                Icons.phone_android,
+              ),
+              const SizedBox(height: 8),
+
+              _buildInstructionItem(
+                '2. Rotate until the amber marker points upward',
+                Icons.rotate_right,
+              ),
+              const SizedBox(height: 8),
+
+              _buildInstructionItem(
+                '3. Face the direction of the amber marker',
+                Icons.explore,
+              ),
+              const SizedBox(height: 8),
+
+              _buildInstructionItem(
+                '4. You are now facing Qibla (Kaaba direction)',
+                Icons.place,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -256,18 +261,10 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
         Icon(
           icon,
           size: 20,
-          color: Colors.grey.shade600,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade700,
-            ),
-          ),
-        ),
+        Expanded(child: Text(text, style: AppTheme.bodyStyle(context))),
       ],
     );
   }
