@@ -1,10 +1,14 @@
-// widgets/animated_title.dart
 import 'package:flutter/material.dart';
 
 class AnimatedTitle extends StatelessWidget {
   final AnimationController controller;
+  final String? subtitle; // Add optional subtitle parameter
 
-  const AnimatedTitle({super.key, required this.controller});
+  const AnimatedTitle({
+    super.key, 
+    required this.controller,
+    this.subtitle, // Optional subtitle
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,15 +67,16 @@ class AnimatedTitle extends StatelessWidget {
 
                 const SizedBox(height: 8),
 
-                // Subtitle
+                // Subtitle - now uses parameter or fallback
                 Text(
-                  'Your Spiritual Companion',
+                  subtitle ?? 'Your Spiritual Companion',
                   style: TextStyle(
                     color: const Color(0xFF2ECC71).withValues(alpha: 0.8),
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     letterSpacing: 1,
                   ),
+                  textAlign: TextAlign.center, // Center align for all languages
                 ),
 
                 const SizedBox(height: 16),

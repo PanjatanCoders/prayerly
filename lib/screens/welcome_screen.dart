@@ -1,8 +1,9 @@
+// welcome_screen.dart
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:prayerly/screens/prayer_times_screen.dart';
 import 'package:prayerly/widgets/animated_background.dart';
-import 'package:prayerly/widgets/animated_mosque_icon.dart';
+// import 'package:prayerly/widgets/animated_mosque_icon.dart';
 import 'package:prayerly/widgets/animated_title.dart';
 import 'package:prayerly/widgets/footer_info.dart';
 import 'package:prayerly/widgets/prayer_times_button.dart';
@@ -144,17 +145,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   SizedBox(height: constraints.maxHeight * 0.02),
 
                                   // Animated mosque icon
-                                  AnimatedMosqueIcon(controller: _masterController),
+                                  // AnimatedMosqueIcon(controller: _masterController),
 
-                                  const SizedBox(height: 20),
+                                  // const SizedBox(height: 20),
 
-                                  // Animated title (keeping original)
-                                  AnimatedTitle(controller: _masterController),
-
-                                  const SizedBox(height: 16),
-
-                                  // Subtitle with localized text
-                                  _buildLocalizedSubtitle(locale.languageCode),
+                                  // Animated title with localized subtitle
+                                  AnimatedTitle(
+                                    controller: _masterController,
+                                    subtitle: _getSubtitleText(locale.languageCode),
+                                  ),
 
                                   const SizedBox(height: 32),
 
@@ -237,42 +236,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           );
         },
       ),
-    );
-  }
-
-  Widget _buildLocalizedSubtitle(String languageCode) {
-    return AnimatedBuilder(
-      animation: _masterController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Tween<Offset>(
-            begin: const Offset(0, 30),
-            end: Offset.zero,
-          ).animate(
-            CurvedAnimation(
-              parent: _masterController,
-              curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic),
-            ),
-          ).value,
-          child: Opacity(
-            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(
-                parent: _masterController,
-                curve: const Interval(0.3, 0.8, curve: Curves.easeOut),
-              ),
-            ).value,
-            child: Text(
-              _getSubtitleText(languageCode),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-                fontWeight: FontWeight.w300,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -399,10 +362,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                _getLanguageEmoji(locale.languageCode),
-                style: const TextStyle(fontSize: 16),
-              ),
+              // Islamic icon instead of emoji
+              _buildLanguageIcon(locale.languageCode),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -436,13 +397,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   String _getSubtitleText(String languageCode) {
     switch (languageCode) {
       case 'hi':
-        return 'आपका व्यक्तिगत इस्लामी साथी';
+        return 'आपका आध्यात्मिक साथी';
       case 'ur':
-        return 'آپ کا ذاتی اسلامی ساتھی';
+        return 'آپ کا روحانی ساتھی';
       case 'bn':
-        return 'আপনার ব্যক্তিগত ইসলামিক সঙ্গী';
+        return 'আপনার আধ্যাত্মিক সঙ্গী';
       default:
-        return 'Your Personal Islamic Companion';
+        return 'Your Spiritual Companion';
     }
   }
 
@@ -504,19 +465,49 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 
-  String _getLanguageEmoji(String languageCode) {
+  Widget _buildLanguageIcon(String languageCode) {
+    IconData iconData;
+    Color iconColor;
+    
     switch (languageCode) {
       case 'en':
-        return '🇺🇸';
+        iconData = Icons.mosque; // Mosque for English
+        iconColor = const Color(0xFF2ECC71); // Islamic green
+        break;
       case 'hi':
-        return '🇮🇳';
+        iconData = Icons.star; // Star for Hindi
+        iconColor = const Color(0xFFFFD700); // Gold
+        break;
       case 'ur':
-        return '🇵🇰';
+        iconData = Icons.nightlight; // Crescent moon for Urdu
+        iconColor = const Color(0xFF3498DB); // Blue
+        break;
       case 'bn':
-        return '🇧🇩';
+        iconData = Icons.auto_awesome; // Sparkle/star for Bengali
+        iconColor = const Color(0xFF9B59B6); // Purple
+        break;
       default:
-        return '🌐';
+        iconData = Icons.mosque;
+        iconColor = const Color(0xFF2ECC71);
     }
+    
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        color: iconColor.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: iconColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Icon(
+        iconData,
+        size: 14,
+        color: iconColor,
+      ),
+    );
   }
 
   void _navigateToPrayerTimes(BuildContext context) {
