@@ -81,22 +81,23 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     }
   }
 
-  /// Sets up periodic timers for updates
+  /// Sets up periodic timers for updates - OPTIMIZED for performance
   void _setupTimers() {
-    _timeUpdateTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    // Update every 30 seconds instead of 1 second for better battery life
+    _timeUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) {
-        setState(() {
-          _currentTime = DateTime.now();
-          _updatePrayerStatus();
+        _currentTime = DateTime.now();
+        _updatePrayerStatus();
 
-          if (_shouldFetchNewPrayerTimes()) {
-            _fetchPrayerTimes();
-            _lastFetchDate = DateTime.now();
-          }
-        });
+        if (_shouldFetchNewPrayerTimes()) {
+          _fetchPrayerTimes();
+          _lastFetchDate = DateTime.now();
+        }
+        setState(() {});
       }
     });
 
+    // Check for day change every hour
     _dailyUpdateTimer = Timer.periodic(const Duration(hours: 1), (timer) {
       if (mounted && _shouldFetchNewPrayerTimes()) {
         debugPrint('Daily update: Fetching new prayer times');
