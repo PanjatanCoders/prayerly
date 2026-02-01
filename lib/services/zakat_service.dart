@@ -10,9 +10,9 @@ class ZakatService {
   // Zakat rate
   static const double zakatRate = 0.025; // 2.5%
 
-  // Nisab constants
-  static const double nisabGoldGrams = 85.0;    // 85 grams of gold
-  static const double nisabSilverGrams = 595.0; // 595 grams of silver
+  // Nisab constants (correct Islamic values)
+  static const double nisabGoldGrams = 87.48;     // 7.5 tola = 87.48 grams
+  static const double nisabSilverGrams = 653.184; // 653 grams 184 mg
 
   /// Save assets
   static Future<void> saveAssets(ZakatAssets assets) async {
@@ -113,19 +113,65 @@ class ZakatAssets {
   // Calculated silver value
   double get silverValue => silverWeightGrams * silverRatePerGram;
 
-  // Nisab based on gold rate (85g × gold rate)
+  // Nisab based on gold rate (7.5 tola = 87.48g × gold rate)
   double get nisabByGold => ZakatService.nisabGoldGrams * goldRatePerGram;
 
-  // Nisab based on silver rate (595g × silver rate)
+  // Nisab based on silver rate (653.184g × silver rate)
   double get nisabBySilver => ZakatService.nisabSilverGrams * silverRatePerGram;
 
-  // Use the lower of the two Nisab values (more conservative/safer)
-  // If one rate is 0, use the other
+  // Check what type of assets the person has
+  bool get _hasOnlyGold =>
+      goldWeightGrams > 0 &&
+      silverWeightGrams <= 0 &&
+      cash <= 0 &&
+      bankBalance <= 0 &&
+      investments <= 0 &&
+      businessStock <= 0 &&
+      receivables <= 0 &&
+      otherAssets <= 0;
+
+  bool get _hasOnlySilver =>
+      silverWeightGrams > 0 &&
+      goldWeightGrams <= 0 &&
+      cash <= 0 &&
+      bankBalance <= 0 &&
+      investments <= 0 &&
+      businessStock <= 0 &&
+      receivables <= 0 &&
+      otherAssets <= 0;
+
+  // Nisab calculation rules:
+  // 1. Only gold (no silver, no cash/other) → Gold Nisab (87.48g)
+  // 2. Only silver (no gold, no cash/other) → Silver Nisab (653.184g)
+  // 3. Any combination (gold+cash, silver+cash, only cash, etc.) → Silver Nisab
   double get nisab {
+    // Need at least one rate to calculate
     if (goldRatePerGram <= 0 && silverRatePerGram <= 0) return 0;
-    if (goldRatePerGram <= 0) return nisabBySilver;
-    if (silverRatePerGram <= 0) return nisabByGold;
-    return nisabByGold < nisabBySilver ? nisabByGold : nisabBySilver;
+
+    // Only gold assets → use gold nisab
+    if (_hasOnlyGold && goldRatePerGram > 0) {
+      return nisabByGold;
+    }
+
+    // Only silver assets → use silver nisab
+    if (_hasOnlySilver && silverRatePerGram > 0) {
+      return nisabBySilver;
+    }
+
+    // Any combination → use silver nisab (if silver rate available)
+    if (silverRatePerGram > 0) {
+      return nisabBySilver;
+    }
+
+    // Fallback to gold nisab if only gold rate is available
+    return nisabByGold;
+  }
+
+  // Which nisab is being used (for display)
+  String get nisabType {
+    if (_hasOnlyGold && goldRatePerGram > 0) return 'Gold';
+    if (_hasOnlySilver && silverRatePerGram > 0) return 'Silver';
+    return 'Silver'; // Default for combinations
   }
 
   double get totalWealth =>

@@ -172,31 +172,64 @@ class _ZakatScreenState extends State<ZakatScreen> {
   }
 
   Widget _buildNisabInfo() {
+    final hasRates = _assets.goldRatePerGram > 0 || _assets.silverRatePerGram > 0;
+    final usingGoldNisab = _assets.nisabType == 'Gold';
+
     return Card(
       color: Colors.amber.shade50,
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline, color: Colors.amber.shade800),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Nisab Threshold',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade900),
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.amber.shade800),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nisab Threshold',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade900),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Gold: 7.5 Tola (87.48g) = ${_currencyFormat.format(_assets.nisabByGold)}\n'
+                        'Silver: 653.184g = ${_currencyFormat.format(_assets.nisabBySilver)}',
+                        style: TextStyle(fontSize: 12, color: Colors.amber.shade800),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '85g Gold = ${_currencyFormat.format(_assets.nisabByGold)}\n'
-                    '595g Silver = ${_currencyFormat.format(_assets.nisabBySilver)}',
-                    style: TextStyle(fontSize: 12, color: Colors.amber.shade800),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+            if (hasRates) ...[
+              const Divider(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: usingGoldNisab ? Colors.amber.shade200 : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Using ${_assets.nisabType} Nisab: ${_currencyFormat.format(_assets.nisab)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: usingGoldNisab ? Colors.amber.shade900 : Colors.grey.shade800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                usingGoldNisab
+                    ? 'Only gold assets → Gold Nisab'
+                    : 'Silver Nisab applies',
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+              ),
+            ],
           ],
         ),
       ),
