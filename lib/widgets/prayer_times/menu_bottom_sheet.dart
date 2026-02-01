@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:prayerly/screens/dhikr/dhikr_selection_screen.dart';
 import '../../screens/adhan_settings_screen.dart';
 import '../../screens/qaza/qaza_tracker_screen.dart';
+import '../../screens/zakat/zakat_screen.dart';
 
 class MenuBottomSheet extends StatelessWidget {
   const MenuBottomSheet({super.key});
@@ -62,7 +63,25 @@ class MenuBottomSheet extends StatelessWidget {
               );
             },
           ),
-          
+
+          // Zakat Calculator Option
+          _buildMenuTile(
+            context: context,
+            icon: Icons.volunteer_activism,
+            iconColor: Colors.teal,
+            title: 'Zakat Calculator',
+            subtitle: 'Calculate & track Zakat',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ZakatScreen(),
+                ),
+              );
+            },
+          ),
+
           // Dhikr Counter Option - UPDATED
           _buildMenuTile(
             context: context,
