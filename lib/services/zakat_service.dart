@@ -72,11 +72,28 @@ class ZakatService {
   }
 }
 
+/// Named amount entry (for cash, bank, liabilities)
+class NamedAmount {
+  final String name;
+  final double amount;
+
+  NamedAmount({required this.name, required this.amount});
+
+  Map<String, dynamic> toJson() => {'name': name, 'amount': amount};
+
+  factory NamedAmount.fromJson(Map<String, dynamic> json) => NamedAmount(
+    name: json['name'] ?? '',
+    amount: (json['amount'] ?? 0).toDouble(),
+  );
+}
+
 /// Zakat-eligible assets with gold/silver weight and rates
 class ZakatAssets {
-  // Cash & Bank
-  final double cash;
-  final double bankBalance;
+  // Cash entries (multiple)
+  final List<NamedAmount> cashEntries;
+
+  // Bank entries (multiple)
+  final List<NamedAmount> bankEntries;
 
   // Gold - weight in grams + rate per gram
   final double goldWeightGrams;
@@ -91,11 +108,13 @@ class ZakatAssets {
   final double businessStock;
   final double receivables;
   final double otherAssets;
-  final double debts;
+
+  // Liabilities/Debts (multiple)
+  final List<NamedAmount> debtEntries;
 
   ZakatAssets({
-    this.cash = 0,
-    this.bankBalance = 0,
+    List<NamedAmount>? cashEntries,
+    List<NamedAmount>? bankEntries,
     this.goldWeightGrams = 0,
     this.goldRatePerGram = 0,
     this.silverWeightGrams = 0,
@@ -104,8 +123,15 @@ class ZakatAssets {
     this.businessStock = 0,
     this.receivables = 0,
     this.otherAssets = 0,
-    this.debts = 0,
-  });
+    List<NamedAmount>? debtEntries,
+  }) : cashEntries = cashEntries ?? [],
+       bankEntries = bankEntries ?? [],
+       debtEntries = debtEntries ?? [];
+
+  // Computed totals from entries
+  double get cash => cashEntries.fold(0.0, (sum, e) => sum + e.amount);
+  double get bankBalance => bankEntries.fold(0.0, (sum, e) => sum + e.amount);
+  double get debts => debtEntries.fold(0.0, (sum, e) => sum + e.amount);
 
   // Calculated gold value
   double get goldValue => goldWeightGrams * goldRatePerGram;
@@ -183,8 +209,8 @@ class ZakatAssets {
   double get zakatDue => isAboveNisab ? totalWealth * ZakatService.zakatRate : 0;
 
   Map<String, dynamic> toJson() => {
-    'cash': cash,
-    'bankBalance': bankBalance,
+    'cashEntries': cashEntries.map((e) => e.toJson()).toList(),
+    'bankEntries': bankEntries.map((e) => e.toJson()).toList(),
     'goldWeightGrams': goldWeightGrams,
     'goldRatePerGram': goldRatePerGram,
     'silverWeightGrams': silverWeightGrams,
@@ -193,22 +219,55 @@ class ZakatAssets {
     'businessStock': businessStock,
     'receivables': receivables,
     'otherAssets': otherAssets,
-    'debts': debts,
+    'debtEntries': debtEntries.map((e) => e.toJson()).toList(),
   };
 
-  factory ZakatAssets.fromJson(Map<String, dynamic> json) => ZakatAssets(
-    cash: (json['cash'] ?? 0).toDouble(),
-    bankBalance: (json['bankBalance'] ?? 0).toDouble(),
-    goldWeightGrams: (json['goldWeightGrams'] ?? json['goldValue'] ?? 0).toDouble(),
-    goldRatePerGram: (json['goldRatePerGram'] ?? 0).toDouble(),
-    silverWeightGrams: (json['silverWeightGrams'] ?? json['silverValue'] ?? 0).toDouble(),
-    silverRatePerGram: (json['silverRatePerGram'] ?? 0).toDouble(),
-    investments: (json['investments'] ?? 0).toDouble(),
-    businessStock: (json['businessStock'] ?? 0).toDouble(),
-    receivables: (json['receivables'] ?? 0).toDouble(),
-    otherAssets: (json['otherAssets'] ?? 0).toDouble(),
-    debts: (json['debts'] ?? 0).toDouble(),
-  );
+  factory ZakatAssets.fromJson(Map<String, dynamic> json) {
+    // Handle backward compatibility with old format
+    List<NamedAmount> parseCashEntries() {
+      if (json['cashEntries'] != null) {
+        return (json['cashEntries'] as List).map((e) => NamedAmount.fromJson(e)).toList();
+      }
+      // Migrate old format
+      final oldCash = (json['cash'] ?? 0).toDouble();
+      if (oldCash > 0) return [NamedAmount(name: 'Cash', amount: oldCash)];
+      return [];
+    }
+
+    List<NamedAmount> parseBankEntries() {
+      if (json['bankEntries'] != null) {
+        return (json['bankEntries'] as List).map((e) => NamedAmount.fromJson(e)).toList();
+      }
+      // Migrate old format
+      final oldBank = (json['bankBalance'] ?? 0).toDouble();
+      if (oldBank > 0) return [NamedAmount(name: 'Bank Account', amount: oldBank)];
+      return [];
+    }
+
+    List<NamedAmount> parseDebtEntries() {
+      if (json['debtEntries'] != null) {
+        return (json['debtEntries'] as List).map((e) => NamedAmount.fromJson(e)).toList();
+      }
+      // Migrate old format
+      final oldDebts = (json['debts'] ?? 0).toDouble();
+      if (oldDebts > 0) return [NamedAmount(name: 'Debt', amount: oldDebts)];
+      return [];
+    }
+
+    return ZakatAssets(
+      cashEntries: parseCashEntries(),
+      bankEntries: parseBankEntries(),
+      goldWeightGrams: (json['goldWeightGrams'] ?? json['goldValue'] ?? 0).toDouble(),
+      goldRatePerGram: (json['goldRatePerGram'] ?? 0).toDouble(),
+      silverWeightGrams: (json['silverWeightGrams'] ?? json['silverValue'] ?? 0).toDouble(),
+      silverRatePerGram: (json['silverRatePerGram'] ?? 0).toDouble(),
+      investments: (json['investments'] ?? 0).toDouble(),
+      businessStock: (json['businessStock'] ?? 0).toDouble(),
+      receivables: (json['receivables'] ?? 0).toDouble(),
+      otherAssets: (json['otherAssets'] ?? 0).toDouble(),
+      debtEntries: parseDebtEntries(),
+    );
+  }
 }
 
 /// Zakat payment record

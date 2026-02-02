@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/zakat_service.dart';
 import '../../utils/theme/app_theme.dart';
+import 'zakat_assets_edit_screen.dart';
 
 class ZakatScreen extends StatefulWidget {
   const ZakatScreen({super.key});
@@ -327,8 +328,18 @@ class _ZakatScreenState extends State<ZakatScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildAssetRow('Cash in Hand', _assets.cash, Icons.money),
-            _buildAssetRow('Bank Balance', _assets.bankBalance, Icons.account_balance),
+            // Cash entries
+            if (_assets.cashEntries.isEmpty)
+              _buildAssetRow('Cash in Hand', 0, Icons.money)
+            else
+              ..._assets.cashEntries.map((e) => _buildAssetRow(e.name, e.amount, Icons.money)),
+
+            // Bank entries
+            if (_assets.bankEntries.isEmpty)
+              _buildAssetRow('Bank Accounts', 0, Icons.account_balance)
+            else
+              ..._assets.bankEntries.map((e) => _buildAssetRow(e.name, e.amount, Icons.account_balance)),
+
             const Divider(),
             _buildAssetRowWithDetails(
               'Gold',
@@ -350,14 +361,20 @@ class _ZakatScreenState extends State<ZakatScreen> {
             _buildAssetRow('Receivables', _assets.receivables, Icons.receipt),
             _buildAssetRow('Other Assets', _assets.otherAssets, Icons.more_horiz),
             const Divider(),
-            _buildAssetRow('Debts (deductible)', _assets.debts, Icons.remove_circle, isDebt: true),
+
+            // Debt entries
+            if (_assets.debtEntries.isEmpty)
+              _buildAssetRow('Liabilities', 0, Icons.remove_circle, isDebt: true)
+            else
+              ..._assets.debtEntries.map((e) => _buildAssetRow(e.name, e.amount, Icons.remove_circle, isDebt: true)),
+
             const Divider(thickness: 2),
             _buildAssetRow('Total Wealth', _assets.totalWealth, Icons.calculate, isTotal: true),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _showEditAssetsDialog,
+                onPressed: _openAssetsEditor,
                 icon: const Icon(Icons.edit),
                 label: const Text('Edit Assets'),
               ),
@@ -366,6 +383,18 @@ class _ZakatScreenState extends State<ZakatScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openAssetsEditor() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ZakatAssetsEditScreen(initialAssets: _assets),
+      ),
+    );
+    if (result == true) {
+      _loadData();
+    }
   }
 
   Widget _buildAssetRow(String label, double value, IconData icon, {bool isDebt = false, bool isTotal = false}) {
@@ -520,8 +549,8 @@ class _ZakatScreenState extends State<ZakatScreen> {
           ElevatedButton(
             onPressed: () async {
               final newAssets = ZakatAssets(
-                cash: _assets.cash,
-                bankBalance: _assets.bankBalance,
+                cashEntries: _assets.cashEntries,
+                bankEntries: _assets.bankEntries,
                 goldWeightGrams: _assets.goldWeightGrams,
                 goldRatePerGram: double.tryParse(goldRateController.text) ?? 0,
                 silverWeightGrams: _assets.silverWeightGrams,
@@ -530,7 +559,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                 businessStock: _assets.businessStock,
                 receivables: _assets.receivables,
                 otherAssets: _assets.otherAssets,
-                debts: _assets.debts,
+                debtEntries: _assets.debtEntries,
               );
               await ZakatService.saveAssets(newAssets);
               Navigator.pop(ctx);
@@ -539,91 +568,6 @@ class _ZakatScreenState extends State<ZakatScreen> {
             child: const Text('Save'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showEditAssetsDialog() {
-    final controllers = {
-      'cash': TextEditingController(text: _assets.cash > 0 ? _assets.cash.toStringAsFixed(0) : ''),
-      'bank': TextEditingController(text: _assets.bankBalance > 0 ? _assets.bankBalance.toStringAsFixed(0) : ''),
-      'goldWeight': TextEditingController(text: _assets.goldWeightGrams > 0 ? _assets.goldWeightGrams.toStringAsFixed(1) : ''),
-      'silverWeight': TextEditingController(text: _assets.silverWeightGrams > 0 ? _assets.silverWeightGrams.toStringAsFixed(1) : ''),
-      'investments': TextEditingController(text: _assets.investments > 0 ? _assets.investments.toStringAsFixed(0) : ''),
-      'business': TextEditingController(text: _assets.businessStock > 0 ? _assets.businessStock.toStringAsFixed(0) : ''),
-      'receivables': TextEditingController(text: _assets.receivables > 0 ? _assets.receivables.toStringAsFixed(0) : ''),
-      'other': TextEditingController(text: _assets.otherAssets > 0 ? _assets.otherAssets.toStringAsFixed(0) : ''),
-      'debts': TextEditingController(text: _assets.debts > 0 ? _assets.debts.toStringAsFixed(0) : ''),
-    };
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit Assets'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTextField(controllers['cash']!, 'Cash in Hand'),
-              _buildTextField(controllers['bank']!, 'Bank Balance'),
-              const Divider(),
-              const Text('Gold & Silver (in grams)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-              const SizedBox(height: 8),
-              _buildTextField(controllers['goldWeight']!, 'Gold Weight (grams)'),
-              _buildTextField(controllers['silverWeight']!, 'Silver Weight (grams)'),
-              const Divider(),
-              _buildTextField(controllers['investments']!, 'Investments'),
-              _buildTextField(controllers['business']!, 'Business Stock'),
-              _buildTextField(controllers['receivables']!, 'Receivables'),
-              _buildTextField(controllers['other']!, 'Other Assets'),
-              const Divider(),
-              _buildTextField(controllers['debts']!, 'Debts (you owe)'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newAssets = ZakatAssets(
-                cash: double.tryParse(controllers['cash']!.text) ?? 0,
-                bankBalance: double.tryParse(controllers['bank']!.text) ?? 0,
-                goldWeightGrams: double.tryParse(controllers['goldWeight']!.text) ?? 0,
-                goldRatePerGram: _assets.goldRatePerGram,
-                silverWeightGrams: double.tryParse(controllers['silverWeight']!.text) ?? 0,
-                silverRatePerGram: _assets.silverRatePerGram,
-                investments: double.tryParse(controllers['investments']!.text) ?? 0,
-                businessStock: double.tryParse(controllers['business']!.text) ?? 0,
-                receivables: double.tryParse(controllers['receivables']!.text) ?? 0,
-                otherAssets: double.tryParse(controllers['other']!.text) ?? 0,
-                debts: double.tryParse(controllers['debts']!.text) ?? 0,
-              );
-              await ZakatService.saveAssets(newAssets);
-              Navigator.pop(ctx);
-              _loadData();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          isDense: true,
-        ),
       ),
     );
   }
