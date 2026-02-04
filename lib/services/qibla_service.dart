@@ -18,7 +18,7 @@ class QiblaService {
   static StreamSubscription<CompassEvent>? _compassSubscription;
   static StreamController<QiblaData>? _qiblaController;
 
-  /// Get current location with proper permission handling
+  /// Get current location with proper permission handling (foreground only)
   static Future<Position> getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -29,7 +29,7 @@ class QiblaService {
       throw Exception('Location services are disabled. Please enable GPS.');
     }
 
-    // Check location permissions
+    // Check location permissions (whileInUse only - no background)
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -43,9 +43,12 @@ class QiblaService {
     }
 
     try {
+      const LocationSettings locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.low,
+        timeLimit: Duration(seconds: 10),
+      );
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
+        locationSettings: locationSettings,
       );
     } catch (e) {
       throw Exception('Failed to get location: ${e.toString()}');

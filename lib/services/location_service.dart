@@ -8,10 +8,10 @@ class LocationService {
   static const double _defaultLongitude = 73.8567;
   static const String _defaultLocation = "Pune, Maharashtra";
 
-  /// Gets current location with proper error handling
+  /// Gets current location with proper error handling (foreground only)
   static Future<LocationData> getCurrentLocation() async {
     try {
-      // Check and request permissions
+      // Check and request permissions (whileInUse only - no background)
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -21,8 +21,8 @@ class LocationService {
           permission == LocationPermission.always) {
 
         const LocationSettings locationSettings = LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 100,
+          accuracy: LocationAccuracy.low,
+          distanceFilter: 500,
         );
 
         Position position = await Geolocator.getCurrentPosition(
