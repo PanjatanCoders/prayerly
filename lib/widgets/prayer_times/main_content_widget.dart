@@ -4,7 +4,6 @@ import '../../services/prayer_service.dart';
 import '../circular_timer_widget.dart';
 import '../info_card_widget.dart';
 import '../prayer_times_list_widget.dart';
-import 'quick_actions_widget.dart'; // ADD THIS IMPORT
 
 class MainContentWidget extends StatelessWidget {
   final LocationData locationData;
@@ -55,9 +54,6 @@ class MainContentWidget extends StatelessWidget {
           ),
           
           const SizedBox(height: 16),
-          
-          // Quick Actions Section - NEW
-          const QuickActionsWidget(),
           
           const SizedBox(height: 16),
           

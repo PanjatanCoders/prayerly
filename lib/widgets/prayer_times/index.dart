@@ -5,7 +5,6 @@ export 'main_content_widget.dart';
 export 'menu_bottom_sheet.dart';
 export 'info_dialog_widget.dart';
 export 'timer_section_widget.dart';
-export 'quick_actions_widget.dart';
 export '../../services/location_service.dart';
 export '../../services/prayer_service.dart';
 export '../../services/elevation_service.dart';
