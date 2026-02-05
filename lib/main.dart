@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -63,6 +64,7 @@ class _MyAppState extends State<MyApp> {
       builder: (context, locale, child) {
         return MaterialApp(
           title: 'Prayerly',
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           
           // Theme configuration using AppTheme
           theme: AppTheme.lightTheme,
@@ -72,7 +74,7 @@ class _MyAppState extends State<MyApp> {
           // Localization configuration
           locale: locale,
           localizationsDelegates: const [
-            // AppLocalizations.delegate, // Uncomment when you have ARB files
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
