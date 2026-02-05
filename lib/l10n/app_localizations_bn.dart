@@ -33,7 +33,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get holdDeviceFlat => 'আপনার ডিভাইসটি সমতল রাখুন (মাটির সমানে)';
 
   @override
-  String get rotateUntilMarker => 'অ্যাম্বার মার্কার উপরের দিকে না হওয়া পর্যন্ত ঘুরান';
+  String get rotateUntilMarker =>
+      'অ্যাম্বার মার্কার উপরের দিকে না হওয়া পর্যন্ত ঘুরান';
 
   @override
   String get faceDirection => 'অ্যাম্বার মার্কারের দিকে মুখ করুন';
@@ -57,7 +58,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get progress => 'অগ্রগতি';
 
   @override
-  String get continue => 'চালিয়ে যান';
+  String get continueLabel => 'চালিয়ে যান';
 
   @override
   String get finish => 'শেষ';
@@ -138,10 +139,24 @@ class AppLocalizationsBn extends AppLocalizations {
   String get noDhikrFound => 'কোন জিকির পাওয়া যায়নি';
 
   @override
-  String get adjustSearchFilter => 'আপনার অনুসন্ধান বা ফিল্টার সামঞ্জস্য করার চেষ্টা করুন';
+  String get adjustSearchFilter =>
+      'আপনার অনুসন্ধান বা ফিল্টার সামঞ্জস্য করার চেষ্টা করুন';
 
   @override
   String dhikrAvailable(int count) {
     return '$count জিকির উপলব্ধ';
   }
+
+  @override
+  String get unknownLocation => '????? ???????';
+
+  @override
+  String get notificationsDisabled => '?????????? ???? ??? ??????';
+
+  @override
+  String get notificationsEnabled => '?????????? ???? ??? ??????';
+
+  @override
+  String get notificationPermissionDenied =>
+      '???????????? ?????? ???????????? ??? ??????';
 }

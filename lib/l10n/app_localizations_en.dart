@@ -57,7 +57,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progress => 'Progress';
 
   @override
-  String get continue => 'Continue';
+  String get continueLabel => 'Continue';
 
   @override
   String get finish => 'Finish';
@@ -144,4 +144,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String dhikrAvailable(int count) {
     return '$count dhikr available';
   }
+
+  @override
+  String get unknownLocation => 'Unknown Location';
+
+  @override
+  String get notificationsDisabled => 'Notifications disabled';
+
+  @override
+  String get notificationsEnabled => 'Notifications enabled';
+
+  @override
+  String get notificationPermissionDenied => 'Notification permissions denied';
 }

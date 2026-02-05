@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide ErrorWidget;
 import 'dart:async';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:prayerly/l10n/app_localizations.dart';
 
 import '../widgets/prayer_times/index.dart';
 
@@ -198,7 +199,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       address += ', ${placemark.country}';
     }
 
-    return address.isEmpty ? 'Unknown Location' : address;
+    final l10n = AppLocalizations.of(context)!;
+    return address.isEmpty ? l10n.unknownLocation : address;
   }
 
   /// Fetches elevation data
@@ -319,13 +321,14 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
 
   /// Toggle notifications
   Future<void> _toggleNotifications() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_notificationsEnabled) {
       await AdhanService.cancelAllNotifications();
       if (mounted) {
         setState(() {
           _notificationsEnabled = false;
         });
-        _showSnackBar('Notifications disabled');
+        _showSnackBar(l10n.notificationsDisabled);
       }
     } else {
       final enabled = await NotificationService.requestPermissions();
@@ -335,9 +338,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
             _notificationsEnabled = true;
           });
           await _scheduleNotifications();
-          _showSnackBar('Notifications enabled');
+          _showSnackBar(l10n.notificationsEnabled);
         } else {
-          _showSnackBar('Notification permissions denied');
+          _showSnackBar(l10n.notificationPermissionDenied);
         }
       }
     }

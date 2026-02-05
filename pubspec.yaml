@@ -26,6 +26,7 @@ dependencies:
   flutter_compass: ^0.8.1
   flutter_localizations:
     sdk: flutter
+  flutter_gen: ^5.12.0
   
 
 dev_dependencies:
@@ -82,4 +83,8 @@ flutter_icons:
 # flutter pub run flutter_launcher_icons:main
 
 # dont remove below command
-# flutter build apk --release --target-platform android-arm64 
+
+# flutter clean
+# flutter pub get
+# flutter gen-l10n
+# flutter build apk --release --target-platform android-arm64

@@ -1,7 +1,7 @@
 // welcome_screen.dart
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:prayerly/screens/prayer_times_screen.dart';
+import 'package:prayerly/screens/home_shell.dart';
 import 'package:prayerly/widgets/animated_background.dart';
 // import 'package:prayerly/widgets/animated_mosque_icon.dart';
 import 'package:prayerly/widgets/animated_title.dart';
@@ -514,7 +514,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const PrayerTimesScreen(),
+            const HomeShell(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,

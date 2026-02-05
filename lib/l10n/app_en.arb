@@ -16,7 +16,7 @@
   "duration": "Duration",
   "remaining": "Remaining",
   "progress": "Progress",
-  "continue": "Continue",
+  "continueLabel": "Continue",
   "finish": "Finish",
   "setTargetCount": "Set Target Count",
   "targetCount": "Target Count",
@@ -45,6 +45,10 @@
   "noDhikrFound": "No dhikr found",
   "adjustSearchFilter": "Try adjusting your search or filter",
   "dhikrAvailable": "{count} dhikr available",
+  "unknownLocation": "Unknown Location",
+  "notificationsDisabled": "Notifications disabled",
+  "notificationsEnabled": "Notifications enabled",
+  "notificationPermissionDenied": "Notification permissions denied",
   "@dhikrAvailable": {
     "placeholders": {
       "count": {

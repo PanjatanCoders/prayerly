@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:prayerly/l10n/app_localizations.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';

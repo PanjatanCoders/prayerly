@@ -16,7 +16,7 @@
   "duration": "अवधि",
   "remaining": "शेष",
   "progress": "प्रगति",
-  "continue": "जारी रखें",
+  "continueLabel": "जारी रखें",
   "finish": "समाप्त",
   "setTargetCount": "लक्ष्य संख्या सेट करें",
   "targetCount": "लक्ष्य संख्या",
@@ -44,5 +44,9 @@
   "eveningRecommendations": "शाम की सिफारिशें",
   "noDhikrFound": "कोई जिक्र नहीं मिला",
   "adjustSearchFilter": "अपना खोज या फिल्टर समायोजित करने का प्रयास करें",
-  "dhikrAvailable": "{count} जिक्र उपलब्ध"
+  "dhikrAvailable": "{count} जिक्र उपलब्ध",
+  "unknownLocation": "अज्ञात स्थान",
+  "notificationsDisabled": "सूचनाएँ बंद की गईं",
+  "notificationsEnabled": "सूचनाएँ चालू की गईं",
+  "notificationPermissionDenied": "सूचना अनुमति अस्वीकृत"
 }
