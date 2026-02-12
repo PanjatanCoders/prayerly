@@ -56,7 +56,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
       }
 
       // Get initial location and Qibla data
-      final position = await QiblaService.getCurrentLocation();
+      final position = await QiblaService.getCurrentLocation(context: context);
       final initialQiblaData = await QiblaService.getQiblaData(position);
 
       setState(() {

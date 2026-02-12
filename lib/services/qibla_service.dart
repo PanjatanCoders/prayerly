@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import '../models/qibla_data.dart';
+import 'location_disclosure.dart';
 
 /// Service for calculating Qibla direction and managing compass functionality
 class QiblaService {
@@ -18,8 +19,9 @@ class QiblaService {
   static StreamSubscription<CompassEvent>? _compassSubscription;
   static StreamController<QiblaData>? _qiblaController;
 
-  /// Get current location with proper permission handling (foreground only)
-  static Future<Position> getCurrentLocation() async {
+  /// Get current location with proper permission handling (foreground only).
+  /// Pass [context] to show prominent disclosure dialog before requesting permission.
+  static Future<Position> getCurrentLocation({BuildContext? context}) async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -32,6 +34,13 @@ class QiblaService {
     // Check location permissions (whileInUse only - no background)
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
+      // Show prominent disclosure before system permission dialog
+      if (context != null && context.mounted) {
+        final consented = await LocationDisclosure.showIfNeeded(context);
+        if (!consented) {
+          throw Exception('Location permission not granted');
+        }
+      }
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         throw Exception('Location permissions are denied');

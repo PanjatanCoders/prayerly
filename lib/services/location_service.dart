@@ -2,18 +2,27 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'location_disclosure.dart';
 
 class LocationService {
   static const double _defaultLatitude = 18.5204; // Pune coordinates
   static const double _defaultLongitude = 73.8567;
   static const String _defaultLocation = "Pune, Maharashtra";
 
-  /// Gets current location with proper error handling (foreground only)
-  static Future<LocationData> getCurrentLocation() async {
+  /// Gets current location with proper error handling (foreground only).
+  /// Pass [context] to show prominent disclosure dialog before requesting permission.
+  static Future<LocationData> getCurrentLocation({BuildContext? context}) async {
     try {
-      // Check and request permissions (whileInUse only - no background)
+      // Check current permission status first
       LocationPermission permission = await Geolocator.checkPermission();
+
+      // If permission not yet granted, show disclosure then request
       if (permission == LocationPermission.denied) {
+        // Show prominent disclosure before system permission dialog
+        if (context != null && context.mounted) {
+          final consented = await LocationDisclosure.showIfNeeded(context);
+          if (!consented) return _getDefaultLocation();
+        }
         permission = await Geolocator.requestPermission();
       }
 

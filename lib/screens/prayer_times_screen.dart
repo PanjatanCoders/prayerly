@@ -145,7 +145,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     });
 
     try {
-      final locationData = await LocationService.getCurrentLocation();
+      final locationData = await LocationService.getCurrentLocation(context: context);
       if (!mounted) return;
 
       List<Placemark> placemarks = await placemarkFromCoordinates(

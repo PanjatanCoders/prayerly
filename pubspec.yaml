@@ -2,7 +2,7 @@ name: prayerly
 description: "Prayerly app"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.1.5+6
+version: 2.1.5+7
 
 environment:
   sdk: ^3.8.1
