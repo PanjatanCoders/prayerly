@@ -11,7 +11,16 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+android/build/
+android/.gradle/
+
+# Android signing material - never commit. key.properties holds the keystore
+# password in plaintext.
 *upload-keystore.jks
+*.jks
+*.keystore
+key.properties
+android/key.properties
 
 
 # IntelliJ related

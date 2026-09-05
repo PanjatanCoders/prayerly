@@ -158,4 +158,110 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notificationPermissionDenied => 'सूचना अनुमति अस्वीकृत';
+
+  @override
+  String get savedLocation => 'सहेजा गया स्थान';
+
+  @override
+  String get defaultLocation => 'ड़िफ़ॉल्ट स्थान';
+
+  @override
+  String get locationNoticeSaved =>
+      'आपके अंतिम ज्ञात स्थान के समय दिखाए जा रहे हैं।';
+
+  @override
+  String get locationNoticeDefault =>
+      'ड़िफ़ॉल्ट स्थान के समय दिखाए जा रहे हैं। सटीक समय के लिए लोकेशन चालू करें।';
+
+  @override
+  String get heading => 'दिशा';
+
+  @override
+  String get distance => 'दूरी';
+
+  @override
+  String get alignment => 'संरेखण';
+
+  @override
+  String get facingQiblaNow => 'आप किबला की ओर मुख किए हुए हैं';
+
+  @override
+  String turnRightDegrees(String degrees) {
+    return '$degrees° दाएं घूमें';
+  }
+
+  @override
+  String turnLeftDegrees(String degrees) {
+    return '$degrees° बाएं घूमें';
+  }
+
+  @override
+  String degreesFromNorth(String degrees) {
+    return 'उत्तर से $degrees°';
+  }
+
+  @override
+  String get calibrationNeeded => 'कम्पास को कैलिब्रेशन चाहिए';
+
+  @override
+  String get calibrationHint =>
+      'पढ़त स्थिर होने तक फ़ोन को 8 के आकार में घुमाएं।';
+
+  @override
+  String get compassUnavailable => 'कम्पास सेंसर नहीं है';
+
+  @override
+  String get compassUnavailableHint =>
+      'यह डिवाइस दिशा नहीं बता सकता। ऊपर दिए गए किबला बेयरिंग को किसी कम्पास के साथ उपयोग करें।';
+
+  @override
+  String get waitingForCompass => 'कम्पास पढ़ा जा रहा है…';
+
+  @override
+  String get locationUnavailable => 'स्थान उपलब्ध नहीं';
+
+  @override
+  String get locationUnavailableHint =>
+      'किबला की दिशा के लिए आपका स्थान चाहिए। लोकेशन चालू करके पुनः प्रयास करें।';
+
+  @override
+  String get locationPermissionRequired => 'लोकेशन अनुमति चाहिए';
+
+  @override
+  String get locationPermissionRequiredHint =>
+      'किबला की दिशा गणना के लिए लोकेशन की अनुमति दें।';
+
+  @override
+  String get locationPermissionBlocked => 'लोकेशन अनुमति ब्लॉक है';
+
+  @override
+  String get locationPermissionBlockedHint =>
+      'Prayerly के लिए लोकेशन बंद है। डिवाइस सेटिंग्स में चालू करें।';
+
+  @override
+  String get openSettings => 'सेटिंग्स खोलें';
+
+  @override
+  String get tryAgain => 'पुनः प्रयास करें';
+
+  @override
+  String get magneticNorthNote => 'दिशाएँ चुंबकीय उत्तर के सापेक्ष हैं।';
+
+  @override
+  String get avoidInterference => 'धातु और इलेक्ट्रॉनिक्स से दूर रहें।';
+
+  @override
+  String get accuracyHigh => 'उच्च';
+
+  @override
+  String get accuracyMedium => 'मध्यम';
+
+  @override
+  String get accuracyLow => 'कम';
+
+  @override
+  String get accuracyUnknown => 'अज्ञात';
+
+  @override
+  String get finderTitle => 'किबला की दिशा';
 }

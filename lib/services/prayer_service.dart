@@ -1,10 +1,11 @@
 // services/prayer_service.dart
 // Fully offline prayer time calculation - no API calls required
-// ignore_for_file: avoid_print
 
-import 'dart:math';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:math';
+
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PrayerService {
   static const String _cacheKey = 'cached_prayer_times';
@@ -158,9 +159,7 @@ class PrayerService {
       );
 
       // Dhuhr (solar noon + safety margin)
-      final int noonHours = solarNoon.floor();
-      final int noonMinutes = ((solarNoon - noonHours) * 60).round() + 2;
-      prayerTimes['Dhuhr'] = DateTime(date.year, date.month, date.day, noonHours, noonMinutes);
+      prayerTimes['Dhuhr'] = _timeFromHours(date, solarNoon + (2 / 60));
 
       // Asr (Hanafi method: shadow = 2x object + noon shadow)
       prayerTimes['Asr'] = _calculateAsr(
@@ -185,7 +184,7 @@ class PrayerService {
       _validateAndFixTimes(prayerTimes, date);
 
     } catch (e) {
-      print('Error in local calculation: $e');
+      debugPrint('PrayerService: local calculation failed ($e)');
       // Fallback times
       prayerTimes['Fajr'] = DateTime(date.year, date.month, date.day, 5, 0);
       prayerTimes['Sunrise'] = DateTime(date.year, date.month, date.day, 6, 30);
@@ -247,12 +246,8 @@ class PrayerService {
       }
 
       final double hourAngle = acos(cosHourAngle) * (180 / pi);
-      final double asrTime = solarNoon + hourAngle / 15;
 
-      final int hours = asrTime.floor();
-      final int minutes = ((asrTime - hours) * 60).round();
-
-      return DateTime(date.year, date.month, date.day, hours.clamp(0, 23), minutes.clamp(0, 59));
+      return _timeFromHours(date, solarNoon + hourAngle / 15);
     } catch (e) {
       return DateTime(date.year, date.month, date.day, 15, 30);
     }
@@ -282,13 +277,23 @@ class PrayerService {
         ? solarNoon - hourAngle / 15
         : solarNoon + hourAngle / 15;
 
-      final int hours = prayerTime.floor();
-      final int minutes = ((prayerTime - hours) * 60).round();
-
-      return DateTime(date.year, date.month, date.day, hours.clamp(0, 23), minutes.clamp(0, 59));
+      return _timeFromHours(date, prayerTime);
     } catch (e) {
       return DateTime(date.year, date.month, date.day, 12, 0);
     }
+  }
+
+  /// Builds a local [DateTime] from a fractional hour-of-day.
+  ///
+  /// Passing the value as minutes lets [DateTime] normalise out-of-range
+  /// results instead of clamping them: a time of -0.5h correctly becomes
+  /// 23:30 on the previous day rather than being pinned to midnight, which
+  /// matters near timezone edges and at high latitudes.
+  static DateTime _timeFromHours(DateTime date, double hours) {
+    if (!hours.isFinite) {
+      return DateTime(date.year, date.month, date.day, 12);
+    }
+    return DateTime(date.year, date.month, date.day, 0, (hours * 60).round());
   }
 
   /// Validate and fix prayer times order
@@ -374,54 +379,50 @@ class PrayerService {
     Map<String, DateTime> prayerTimes,
     DateTime currentTime,
   ) {
-    final prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
     for (int i = 0; i < prayers.length; i++) {
-      final prayerTime = prayerTimes[prayers[i]]!;
+      final prayerTime = prayerTimes[prayers[i]];
+      if (prayerTime == null) continue;
 
       if (currentTime.isBefore(prayerTime)) {
-        final timeRemaining = prayerTime.difference(currentTime);
-        final previousPrayer = i == 0 ? prayers.last : prayers[i - 1];
+        // Before the first prayer of the day the "current" prayer is Isha
+        // from *yesterday*, not the Isha still ahead of us today. Anchoring
+        // on today's Isha made the progress ring sit at zero from midnight
+        // until Fajr.
+        final previousName = i == 0 ? prayers.last : prayers[i - 1];
+        final previousTime = i == 0
+            ? prayerTimes[previousName]!.subtract(const Duration(days: 1))
+            : prayerTimes[previousName]!;
 
         return PrayerStatus(
-          currentPrayer: previousPrayer,
+          currentPrayer: previousName,
           nextPrayer: prayers[i],
-          timeRemaining: timeRemaining,
-          progress: _calculateProgress(prayerTimes, previousPrayer, prayers[i], currentTime),
+          timeRemaining: prayerTime.difference(currentTime),
+          progress: _progressBetween(previousTime, prayerTime, currentTime),
         );
       }
     }
 
-    // After Isha, next is Fajr
-    final timeToFajr = prayerTimes['Fajr']!.add(const Duration(days: 1)).difference(currentTime);
+    // After Isha: the next prayer is tomorrow's Fajr.
+    final isha = prayerTimes['Isha']!;
+    final nextFajr = prayerTimes['Fajr']!.add(const Duration(days: 1));
 
     return PrayerStatus(
       currentPrayer: 'Isha',
       nextPrayer: 'Fajr',
-      timeRemaining: timeToFajr,
-      progress: _calculateProgress(prayerTimes, 'Isha', 'Fajr', currentTime),
+      timeRemaining: nextFajr.difference(currentTime),
+      progress: _progressBetween(isha, nextFajr, currentTime),
     );
   }
 
-  /// Calculate progress between prayers
-  static double _calculateProgress(
-    Map<String, DateTime> prayerTimes,
-    String currentPrayer,
-    String nextPrayer,
-    DateTime currentTime,
-  ) {
-    final currentPrayerTime = prayerTimes[currentPrayer]!;
-    final nextPrayerTime = nextPrayer == 'Fajr' && currentPrayer == 'Isha'
-        ? prayerTimes[nextPrayer]!.add(const Duration(days: 1))
-        : prayerTimes[nextPrayer]!;
+  /// Fraction of the interval [from, to] that [now] has covered, clamped.
+  static double _progressBetween(DateTime from, DateTime to, DateTime now) {
+    final total = to.difference(from).inSeconds;
+    if (total <= 0) return 0.0;
 
-    final totalDuration = nextPrayerTime.difference(currentPrayerTime);
-    final elapsed = currentTime.difference(currentPrayerTime);
-
-    if (totalDuration.inSeconds <= 0) return 0.0;
-
-    final progress = elapsed.inSeconds / totalDuration.inSeconds;
-    return progress.clamp(0.0, 1.0);
+    final elapsed = now.difference(from).inSeconds;
+    return (elapsed / total).clamp(0.0, 1.0);
   }
 
   static String formatCurrentTime(DateTime currentTime) {

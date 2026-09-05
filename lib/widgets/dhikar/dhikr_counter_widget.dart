@@ -30,23 +30,19 @@ class DhikrCounterWidget extends StatefulWidget {
 }
 
 class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
+  /// How long the ring takes to catch up with a new count.
+  static const Duration _progressDuration = Duration(milliseconds: 300);
+
   late AnimationController _tapController;
-  late AnimationController _progressController;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _progressAnimation;
 
   @override
   void initState() {
     super.initState();
-    
+
     _tapController = AnimationController(
       duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-    
-    _progressController = AnimationController(
-      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
@@ -57,35 +53,11 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
       parent: _tapController,
       curve: Curves.easeInOut,
     ));
-
-    _progressAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeOut,
-    ));
-
-    _updateProgress();
-  }
-
-  @override
-  void didUpdateWidget(DhikrCounterWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.count != widget.count || oldWidget.targetCount != widget.targetCount) {
-      _updateProgress();
-    }
-  }
-
-  void _updateProgress() {
-    final progress = DhikrService.calculateProgress(widget.count, widget.targetCount);
-    _progressController.animateTo(progress);
   }
 
   @override
   void dispose() {
     _tapController.dispose();
-    _progressController.dispose();
     super.dispose();
   }
 
@@ -134,15 +106,24 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Progress circle
+                      // Progress circle.
+                      //
+                      // The curve belongs to the animation's *time*, not to
+                      // the progress value: easing the value itself made the
+                      // ring run ahead of the count (33 of 100 drew a ring
+                      // at 48%). TweenAnimationBuilder interpolates from the
+                      // previous progress to the current one, so the arc
+                      // always lands on count / target.
                       if (widget.showProgress)
-                        AnimatedBuilder(
-                          animation: _progressAnimation,
-                          builder: (context, child) {
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0.0, end: progress),
+                          duration: _progressDuration,
+                          curve: Curves.easeOut,
+                          builder: (context, animatedProgress, child) {
                             return CustomPaint(
                               size: const Size(260, 260),
-                              painter: CircularProgressPainter(
-                                progress: _progressAnimation.value,
+                              painter: _DhikrProgressPainter(
+                                progress: animatedProgress,
                                 color: widget.primaryColor,
                                 strokeWidth: 8,
                               ),
@@ -302,13 +283,16 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
   }
 }
 
-/// Custom painter for circular progress indicator
-class CircularProgressPainter extends CustomPainter {
+/// Circular progress ring for the counter.
+///
+/// Named distinctly from the unrelated `CircularProgressPainter` in
+/// `utils/circular_progress_painter.dart`, which has different geometry.
+class _DhikrProgressPainter extends CustomPainter {
   final double progress;
   final Color color;
   final double strokeWidth;
 
-  CircularProgressPainter({
+  _DhikrProgressPainter({
     required this.progress,
     required this.color,
     this.strokeWidth = 8.0,
@@ -350,7 +334,7 @@ class CircularProgressPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CircularProgressPainter oldDelegate) {
+  bool shouldRepaint(_DhikrProgressPainter oldDelegate) {
     return oldDelegate.progress != progress ||
            oldDelegate.color != color ||
            oldDelegate.strokeWidth != strokeWidth;

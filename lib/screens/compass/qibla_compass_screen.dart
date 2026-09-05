@@ -1,271 +1,302 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:prayerly/models/qibla_data.dart';
-import 'package:prayerly/services/qibla_service.dart';
-import 'package:prayerly/utils/theme/app_theme.dart';
-import 'package:prayerly/widgets/compass/compass_widget.dart';
-import 'package:prayerly/widgets/compass/loading_error_widgets.dart';
-import 'package:prayerly/widgets/compass/qibla_info_widget.dart';
+import 'package:flutter/material.dart';
 
-/// Main Qibla compass screen with real-time updates
+import '../../l10n/app_localizations.dart';
+import '../../models/location_data.dart';
+import '../../models/qibla_data.dart';
+import '../../services/compass_service.dart';
+import '../../services/qibla_service.dart';
+import '../../utils/theme/app_theme.dart';
+import '../../widgets/compass/compass_widget.dart';
+import '../../widgets/compass/loading_error_widgets.dart';
+import '../../widgets/compass/qibla_info_widget.dart';
+
+/// Qibla compass.
+///
+/// Lifecycle rules that the previous version got wrong:
+///
+///  * the location is resolved **once** per session, not twice (it used to be
+///    fetched for the initial reading and again inside the stream);
+///  * the sensor is only subscribed while the screen is actually on top, so
+///    sitting on another tab of the [IndexedStack] no longer keeps the
+///    magnetometer running;
+///  * a missing compass degrades to a bearing read-out instead of an error.
 class QiblaCompassScreen extends StatefulWidget {
-  const QiblaCompassScreen({super.key});
+  /// Whether this screen is the visible tab. The shell keeps every tab alive
+  /// in an [IndexedStack], so without this the sensor would never stop.
+  final bool isActive;
+
+  const QiblaCompassScreen({super.key, this.isActive = true});
 
   @override
   State<QiblaCompassScreen> createState() => _QiblaCompassScreenState();
 }
 
-class _QiblaCompassScreenState extends State<QiblaCompassScreen> {
-  // State variables
+class _QiblaCompassScreenState extends State<QiblaCompassScreen>
+    with WidgetsBindingObserver {
+  QiblaReading? _reading;
+  QiblaFailure? _failure;
   bool _isLoading = true;
-  bool _hasError = false;
-  String _errorMessage = '';
-  QiblaData? _qiblaData;
 
-  // Stream management
-  Stream<QiblaData>? _qiblaStream;
-  StreamSubscription<QiblaData>? _qiblaSubscription;
+  LocationData? _location;
+  StreamSubscription<QiblaReading>? _subscription;
+
+  /// Set once the sensor has been silent long enough to call it missing.
+  bool _compassTimedOut = false;
+  Timer? _compassWatchdog;
+
+  bool _isForeground = true;
 
   @override
   void initState() {
     super.initState();
-    _initializeCompass();
+    WidgetsBinding.instance.addObserver(this);
+    _initialize();
+  }
+
+  @override
+  void didUpdateWidget(covariant QiblaCompassScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActive != widget.isActive) {
+      _syncSubscription();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    _isForeground = state == AppLifecycleState.resumed;
+    _syncSubscription();
   }
 
   @override
   void dispose() {
-    _qiblaSubscription?.cancel();
-    QiblaService.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _compassWatchdog?.cancel();
+    _subscription?.cancel();
     super.dispose();
   }
 
-  /// Initialize the Qibla compass
-  Future<void> _initializeCompass() async {
+  bool get _shouldListen => widget.isActive && _isForeground;
+
+  Future<void> _initialize({bool forceRefresh = false}) async {
+    setState(() {
+      _isLoading = true;
+      _failure = null;
+    });
+
     try {
-      setState(() {
-        _isLoading = true;
-        _hasError = false;
-        _errorMessage = '';
-      });
-
-      // Check if compass is available
-      final isCompassAvailable = await QiblaService.isCompassAvailable();
-      if (!isCompassAvailable) {
-        throw Exception('Compass sensor is not available on this device');
-      }
-
-      // Get initial location and Qibla data
-      final position = await QiblaService.getCurrentLocation(context: context);
-      final initialQiblaData = await QiblaService.getQiblaData(position);
-
-      setState(() {
-        _qiblaData = initialQiblaData;
-        _isLoading = false;
-      });
-
-      // Start the real-time compass stream
-      _startCompassStream();
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-          _errorMessage = e.toString();
-        });
-      }
-    }
-  }
-
-  /// Start listening to compass updates
-  void _startCompassStream() {
-    try {
-      _qiblaStream = QiblaService.startQiblaCompass();
-      _qiblaSubscription = _qiblaStream!.listen(
-        (qiblaData) {
-          if (mounted) {
-            setState(() {
-              _qiblaData = qiblaData;
-            });
-          }
-        },
-        onError: (error) {
-          if (mounted) {
-            setState(() {
-              _hasError = true;
-              _errorMessage = error.toString();
-            });
-          }
-        },
+      final location = await QiblaService.resolveLocation(
+        context: mounted ? context : null,
+        forceRefresh: forceRefresh,
       );
-    } catch (e) {
+      if (!mounted) return;
+
+      _location = location;
+      setState(() => _isLoading = false);
+      _syncSubscription();
+    } on QiblaException catch (e) {
+      if (!mounted) return;
       setState(() {
-        _hasError = true;
-        _errorMessage = e.toString();
+        _isLoading = false;
+        _failure = e.failure;
+      });
+    } catch (e) {
+      debugPrint('QiblaCompassScreen: initialization failed ($e)');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _failure = QiblaFailure.locationUnavailable;
       });
     }
   }
 
-  /// Refresh the compass data
-  Future<void> _refreshCompass() async {
-    await _qiblaSubscription?.cancel();
-    await _initializeCompass();
+  /// Starts or stops the sensor to match visibility.
+  void _syncSubscription() {
+    final location = _location;
+
+    if (!_shouldListen || location == null) {
+      _subscription?.cancel();
+      _subscription = null;
+      _compassWatchdog?.cancel();
+      return;
+    }
+
+    if (_subscription != null) return;
+
+    _subscription = QiblaService.watch(location).listen((reading) {
+      if (!mounted) return;
+      if (reading.hasHeading) {
+        _compassWatchdog?.cancel();
+        if (_compassTimedOut) _compassTimedOut = false;
+      }
+
+      // Re-subscribing (returning to the tab) starts with a heading-less
+      // frame. Carry the last known heading over so the dial does not flash
+      // back to "reading compass" for one frame.
+      final previous = _reading;
+      final next = !reading.hasHeading && (previous?.hasHeading ?? false)
+          ? reading.copyWith(
+              heading: previous!.heading,
+              accuracy: previous.accuracy,
+            )
+          : reading;
+
+      setState(() => _reading = next);
+    });
+
+    // If nothing arrives in this window the device almost certainly has no
+    // usable magnetometer. Watching the real stream is more reliable than the
+    // old approach of opening a second probe subscription just to find out.
+    if (!CompassService.isSupported) {
+      _compassTimedOut = true;
+    } else {
+      _compassWatchdog?.cancel();
+      _compassWatchdog = Timer(const Duration(seconds: 4), () {
+        if (!mounted || (_reading?.hasHeading ?? false)) return;
+        setState(() => _compassTimedOut = true);
+      });
+    }
+  }
+
+  Future<void> _refresh() async {
+    _subscription?.cancel();
+    _subscription = null;
+    _compassWatchdog?.cancel();
+    _compassTimedOut = false;
+    await _initialize(forceRefresh: true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: _buildAppBar(),
-      body: _buildBody(),
-    );
-  }
-
-  /// Build the app bar
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: Text(
-        'Qibla Compass',
-        style: AppTheme.subheadingStyle(context).copyWith(
-          color: Theme.of(context).colorScheme.onPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      backgroundColor: AppTheme.islamicColors['qibla'],
-      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-      elevation: 0,
-      centerTitle: true,
-      actions: [
-        IconButton(
-          icon: Icon(
-            Icons.refresh,
+      appBar: AppBar(
+        title: Text(
+          l10n.qiblaCompass,
+          style: AppTheme.subheadingStyle(context).copyWith(
             color: Theme.of(context).colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
           ),
-          onPressed: _isLoading ? null : _refreshCompass,
-          tooltip: 'Refresh compass',
         ),
-      ],
+        backgroundColor: AppTheme.islamicColors['qibla'],
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        elevation: 0,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _isLoading ? null : _refresh,
+            tooltip: l10n.refresh,
+          ),
+        ],
+      ),
+      body: _buildBody(l10n),
     );
   }
 
-  /// Build the main body content
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) {
-      return const QiblaLoadingWidget();
+      return QiblaLoadingWidget(message: l10n.finderTitle);
     }
 
-    if (_hasError) {
-      return QiblaErrorWidget(
-        errorMessage: _errorMessage,
-        onRetry: _refreshCompass,
-      );
+    final failure = _failure;
+    if (failure != null) {
+      return QiblaErrorWidget(failure: failure, onRetry: _refresh);
     }
 
-    if (_qiblaData == null) {
-      return const QiblaLoadingWidget(message: 'Preparing compass...');
+    final reading = _reading;
+    if (reading == null) {
+      return QiblaLoadingWidget(message: l10n.waitingForCompass);
     }
 
-    return _buildCompassContent(_qiblaData!);
-  }
-
-  /// Build the main compass content
-  Widget _buildCompassContent(QiblaData qiblaData) {
-    return SingleChildScrollView(
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(top: 16, bottom: 32),
         children: [
+          if (_compassTimedOut) const CompassUnavailableBanner(),
+          if (reading.needsCalibration) const CompassCalibrationBanner(),
+
+          Center(child: CompassWidget(reading: reading)),
           const SizedBox(height: 20),
 
-          // Main compass widget
-          CompassWidget(qiblaData: qiblaData),
+          QiblaGuidanceBanner(reading: reading),
+          QiblaInfoWidget(reading: reading),
 
-          const SizedBox(height: 20),
-
-          // Direction banner
-          QiblaDirectionBanner(qiblaData: qiblaData),
-
-          // Information cards
-          QiblaInfoWidget(qiblaData: qiblaData),
-
-          // Instructions card
-          _buildInstructionsCard(),
-
-          const SizedBox(height: 20),
+          _InstructionsCard(showSensorSteps: !_compassTimedOut),
         ],
       ),
     );
   }
+}
 
-  /// Build instructions card for users
-  Widget _buildInstructionsCard() {
+class _InstructionsCard extends StatelessWidget {
+  final bool showSensorSteps;
+
+  const _InstructionsCard({required this.showSensorSteps});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    final steps = <(IconData, String)>[
+      if (showSensorSteps) ...[
+        (Icons.phone_android, l10n.holdDeviceFlat),
+        (Icons.rotate_right, l10n.rotateUntilMarker),
+        (Icons.explore, l10n.faceDirection),
+        (Icons.place, l10n.facingQibla),
+      ],
+      (Icons.sensors_off, l10n.avoidInterference),
+    ];
+
     return Card(
-      margin: const EdgeInsets.all(16),
-
-      child: Container(
-        decoration: AppTheme.cardDecoration(context),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.howToUse,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (final (icon, text) in steps) ...[
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
+                    icon,
+                    size: 20,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'How to Use',
-                    style: AppTheme.subheadingStyle(context).copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 16,
-                    ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(text, style: theme.textTheme.bodyMedium),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-
-              _buildInstructionItem(
-                '1. Hold your device flat (parallel to ground)',
-                Icons.phone_android,
-              ),
-              const SizedBox(height: 8),
-
-              _buildInstructionItem(
-                '2. Rotate until the amber marker points upward',
-                Icons.rotate_right,
-              ),
-              const SizedBox(height: 8),
-
-              _buildInstructionItem(
-                '3. Face the direction of the amber marker',
-                Icons.explore,
-              ),
-              const SizedBox(height: 8),
-
-              _buildInstructionItem(
-                '4. You are now facing Qibla (Kaaba direction)',
-                Icons.place,
-              ),
+              const SizedBox(height: 10),
             ],
-          ),
+          ],
         ),
       ),
-    );
-  }
-
-  /// Build individual instruction item
-  Widget _buildInstructionItem(String text, IconData icon) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 20,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-        ),
-        const SizedBox(width: 12),
-        Expanded(child: Text(text, style: AppTheme.bodyStyle(context))),
-      ],
     );
   }
 }

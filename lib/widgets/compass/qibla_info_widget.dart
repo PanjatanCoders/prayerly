@@ -1,68 +1,154 @@
-// widgets/qibla_info_widget.dart
+// widgets/compass/qibla_info_widget.dart
+
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
+import '../../models/location_data.dart';
 import '../../models/qibla_data.dart';
+import '../../services/compass_service.dart';
 import '../../services/qibla_service.dart';
 
-/// Widget displaying Qibla information in cards
-class QiblaInfoWidget extends StatelessWidget {
-  final QiblaData qiblaData;
+/// The primary read-out: how far the user still has to turn.
+///
+/// This replaces the old "Accuracy" tile, which reported perfect alignment at
+/// a 180 degree offset - that is, while facing directly away from the Kaaba.
+class QiblaGuidanceBanner extends StatelessWidget {
+  final QiblaReading reading;
 
-  const QiblaInfoWidget({
-    super.key,
-    required this.qiblaData,
-  });
+  const QiblaGuidanceBanner({super.key, required this.reading});
 
   @override
   Widget build(BuildContext context) {
-    final accuracy = QiblaService.getAccuracyStatus(qiblaData.bearing);
-    final direction = QiblaService.getDirectionString(qiblaData.direction);
-    
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    final turn = reading.turnAngle;
+    final aligned = reading.isAligned;
+
+    final String label;
+    final IconData icon;
+    if (turn == null) {
+      label = l10n.waitingForCompass;
+      icon = Icons.sensors;
+    } else if (aligned) {
+      label = l10n.facingQiblaNow;
+      icon = Icons.check_circle;
+    } else {
+      final degrees = turn.abs().round().toString();
+      label = turn > 0
+          ? l10n.turnRightDegrees(degrees)
+          : l10n.turnLeftDegrees(degrees);
+      // Rotation icons rather than turn arrows: they read the same way
+      // in LTR and RTL layouts.
+      icon = turn > 0 ? Icons.rotate_right : Icons.rotate_left;
+    }
+
+    final background = aligned
+        ? const Color(0xFF2E9E5B)
+        : theme.colorScheme.surfaceContainerHighest;
+    final foreground =
+        aligned ? Colors.white : theme.colorScheme.onSurface;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: foreground, size: 24),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Supporting detail: bearing, heading, distance and sensor confidence.
+class QiblaInfoWidget extends StatelessWidget {
+  final QiblaReading reading;
+
+  const QiblaInfoWidget({super.key, required this.reading});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final heading = reading.heading;
+
     return Card(
       margin: const EdgeInsets.all(16),
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // First row: Direction and Distance
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildInfoItem(
-                  icon: Icons.explore,
-                  title: 'Direction',
-                  value: direction,
-                  color: Colors.blue,
+                Expanded(
+                  child: _Tile(
+                    icon: Icons.explore,
+                    label: l10n.finderTitle,
+                    value:
+                        '${reading.qiblaBearing.round()}° ${QiblaService.cardinalFor(reading.qiblaBearing)}',
+                  ),
                 ),
-                _buildInfoItem(
-                  icon: Icons.straighten,
-                  title: 'Distance',
-                  value: '${qiblaData.distance.toStringAsFixed(0)} km',
-                  color: Colors.orange,
+                Expanded(
+                  child: _Tile(
+                    icon: Icons.navigation,
+                    label: l10n.heading,
+                    value: heading == null
+                        ? '—'
+                        : '${heading.round()}° ${QiblaService.cardinalFor(heading)}',
+                  ),
                 ),
               ],
             ),
-            
-            const SizedBox(height: 16),
-            
-            // Second row: Accuracy and Time
+            const SizedBox(height: 18),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildInfoItem(
-                  icon: Icons.gps_fixed,
-                  title: 'Accuracy',
-                  value: accuracy,
-                  color: _getAccuracyColor(accuracy),
+                Expanded(
+                  child: _Tile(
+                    icon: Icons.straighten,
+                    label: l10n.distance,
+                    value: _formatDistance(reading.distanceKm),
+                  ),
                 ),
-                _buildInfoItem(
-                  icon: Icons.schedule,
-                  title: 'Updated',
-                  value: _formatTime(qiblaData.calculatedAt),
-                  color: Colors.green,
+                Expanded(
+                  child: _Tile(
+                    icon: Icons.gps_fixed,
+                    label: l10n.alignment,
+                    value: _accuracyLabel(l10n, reading.accuracy),
+                    valueColor: _accuracyColor(theme, reading.accuracy),
+                  ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            _LocationLine(location: reading.location),
+            const SizedBox(height: 8),
+            Text(
+              l10n.magneticNorthNote,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -70,102 +156,168 @@ class QiblaInfoWidget extends StatelessWidget {
     );
   }
 
-  /// Build individual info item with icon, title, and value
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
+  static String _formatDistance(double km) {
+    if (km < 10) return '${km.toStringAsFixed(1)} km';
+    return '${km.round()} km';
+  }
+
+  static String _accuracyLabel(
+    AppLocalizations l10n,
+    CompassAccuracy accuracy,
+  ) {
+    switch (accuracy) {
+      case CompassAccuracy.high:
+        return l10n.accuracyHigh;
+      case CompassAccuracy.medium:
+        return l10n.accuracyMedium;
+      case CompassAccuracy.low:
+        return l10n.accuracyLow;
+      case CompassAccuracy.unknown:
+        return l10n.accuracyUnknown;
+    }
+  }
+
+  static Color _accuracyColor(ThemeData theme, CompassAccuracy accuracy) {
+    switch (accuracy) {
+      case CompassAccuracy.high:
+        return const Color(0xFF2E9E5B);
+      case CompassAccuracy.medium:
+        return const Color(0xFFEF8B23);
+      case CompassAccuracy.low:
+        return theme.colorScheme.error;
+      case CompassAccuracy.unknown:
+        return theme.colorScheme.onSurfaceVariant;
+    }
+  }
+}
+
+class _Tile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _Tile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
+        Icon(icon, size: 22, color: theme.colorScheme.primary),
+        const SizedBox(height: 6),
         Text(
-          title,
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 12,
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: valueColor ?? theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
   }
-
-  /// Get color based on accuracy status
-  Color _getAccuracyColor(String accuracy) {
-    switch (accuracy) {
-      case 'Perfect Alignment':
-        return Colors.green;
-      case 'Very Good':
-        return Colors.lightGreen;
-      case 'Good':
-        return Colors.yellow.shade700;
-      case 'Fair':
-        return Colors.orange;
-      default:
-        return Colors.red;
-    }
-  }
-
-  /// Format time for display
-  String _formatTime(DateTime dateTime) {
-    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-  }
 }
 
-/// Widget for displaying Qibla direction banner
-class QiblaDirectionBanner extends StatelessWidget {
-  final QiblaData qiblaData;
+/// Names the position the bearing was calculated from, and flags it when that
+/// position is not a live fix.
+class _LocationLine extends StatelessWidget {
+  final LocationData location;
 
-  const QiblaDirectionBanner({
-    super.key,
-    required this.qiblaData,
-  });
+  const _LocationLine({required this.location});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green.shade800,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.shade800.withValues(alpha: 0.3),
-            blurRadius: 8,
-            spreadRadius: 1,
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isLive = location.isTrustworthy;
+
+    final label = location.address.isNotEmpty
+        ? location.address
+        : location.formattedCoordinates;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          isLive ? Icons.location_on : Icons.history,
+          size: 16,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            isLive ? label : '$label · ${l10n.savedLocation}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Shown only while the magnetometer reports a disturbed reading.
+class CompassCalibrationBanner extends StatelessWidget {
+  const CompassCalibrationBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            QiblaService.getDirectionIcon(qiblaData.direction),
-            style: const TextStyle(fontSize: 24),
+          Icon(
+            Icons.rotate_90_degrees_ccw,
+            size: 20,
+            color: theme.colorScheme.onErrorContainer,
           ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              'Qibla is ${qiblaData.direction.toStringAsFixed(1)}° ${QiblaService.getDirectionString(qiblaData.direction)}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.calibrationNeeded,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.onErrorContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.calibrationHint,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onErrorContainer,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

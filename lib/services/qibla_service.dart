@@ -1,241 +1,198 @@
 // services/qibla_service.dart
-// ignore_for_file: deprecated_member_use
+//
+// Qibla domain logic: pure geodesy, plus the composition of a location and a
+// heading stream into renderable [QiblaReading]s.
+//
+// Deliberate split of responsibilities:
+//   * LocationService  - where the user is (offline-capable, never throws)
+//   * CompassService   - which way the device points (smoothed, throttled)
+//   * QiblaService     - the maths, and the join of the two above
+//
+// A note on north: Android reports headings relative to *magnetic* north,
+// while the Qibla bearing computed here is a true (geodetic) bearing. The two
+// differ by the local magnetic declination - under 3 degrees across South
+// Asia, but up to ~20 degrees elsewhere. Until a declination model is added,
+// [magneticDeclinationDegrees] is the single seam to correct it, and the UI
+// states which north it is showing.
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:flutter_compass/flutter_compass.dart';
-import '../models/qibla_data.dart';
-import 'location_disclosure.dart';
 
-/// Service for calculating Qibla direction and managing compass functionality
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart' show LocationPermission;
+
+import '../models/qibla_data.dart';
+import 'compass_service.dart';
+import 'location_service.dart';
+
+/// Why the compass could not be shown. Typed so the UI can render the right
+/// remedy instead of pattern-matching on exception text.
+enum QiblaFailure {
+  locationPermissionDenied,
+  locationPermissionDeniedForever,
+  locationUnavailable,
+  compassUnavailable,
+}
+
+class QiblaException implements Exception {
+  final QiblaFailure failure;
+
+  const QiblaException(this.failure);
+
+  @override
+  String toString() => 'QiblaException(${failure.name})';
+}
+
 class QiblaService {
-  /// Kaaba coordinates (Mecca, Saudi Arabia)
+  /// Kaaba coordinates (Masjid al-Haram, Makkah).
   static const double kaabaLatitude = 21.4225;
   static const double kaabaLongitude = 39.8262;
 
-  // Private variables for managing streams
-  static StreamSubscription<CompassEvent>? _compassSubscription;
-  static StreamController<QiblaData>? _qiblaController;
+  static const double _earthRadiusKm = 6371.0088;
 
-  /// Get current location with proper permission handling (foreground only).
-  /// Pass [context] to show prominent disclosure dialog before requesting permission.
-  static Future<Position> getCurrentLocation({BuildContext? context}) async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  /// Correction applied to raw sensor headings to convert magnetic north to
+  /// true north. Zero until a declination model is wired in; kept as a single
+  /// named seam so that change touches one line.
+  static const double magneticDeclinationDegrees = 0.0;
 
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw Exception('Location services are disabled. Please enable GPS.');
-    }
+  // ---------------------------------------------------------------------------
+  // Geodesy
+  // ---------------------------------------------------------------------------
 
-    // Check location permissions (whileInUse only - no background)
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      // Show prominent disclosure before system permission dialog
-      if (context != null && context.mounted) {
-        final consented = await LocationDisclosure.showIfNeeded(context);
-        if (!consented) {
-          throw Exception('Location permission not granted');
-        }
-      }
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw Exception('Location permissions are denied');
-      }
-    }
+  /// Initial great-circle bearing from a point to the Kaaba, 0-360 clockwise
+  /// from north.
+  static double bearingToKaaba(double latitude, double longitude) {
+    final lat1 = _rad(latitude);
+    final lat2 = _rad(kaabaLatitude);
+    final deltaLng = _rad(kaabaLongitude - longitude);
 
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception('Location permissions are permanently denied. Please enable in settings.');
-    }
+    final y = math.sin(deltaLng) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(deltaLng);
 
-    try {
-      const LocationSettings locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.low,
-        timeLimit: Duration(seconds: 10),
-      );
-      return await Geolocator.getCurrentPosition(
-        locationSettings: locationSettings,
-      );
-    } catch (e) {
-      throw Exception('Failed to get location: ${e.toString()}');
-    }
+    return CompassService.normalize(_deg(math.atan2(y, x)));
   }
 
-  /// Calculate Qibla direction using Great Circle bearing formula
-  static double calculateQiblaDirection(double userLatitude, double userLongitude) {
-    // Convert degrees to radians
-    final userLatRad = _degreesToRadians(userLatitude);
-    final userLngRad = _degreesToRadians(userLongitude);
-    final kaabaLatRad = _degreesToRadians(kaabaLatitude);
-    final kaabaLngRad = _degreesToRadians(kaabaLongitude);
+  /// Great-circle distance to the Kaaba in kilometres (haversine).
+  static double distanceToKaabaKm(double latitude, double longitude) {
+    final lat1 = _rad(latitude);
+    final lat2 = _rad(kaabaLatitude);
+    final dLat = _rad(kaabaLatitude - latitude);
+    final dLng = _rad(kaabaLongitude - longitude);
 
-    // Calculate difference in longitude
-    final deltaLng = kaabaLngRad - userLngRad;
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) * math.cos(lat2) * math.sin(dLng / 2) * math.sin(dLng / 2);
 
-    // Calculate bearing using Great Circle formula
-    final y = math.sin(deltaLng) * math.cos(kaabaLatRad);
-    final x = math.cos(userLatRad) * math.sin(kaabaLatRad) -
-        math.sin(userLatRad) * math.cos(kaabaLatRad) * math.cos(deltaLng);
-
-    // Calculate initial bearing
-    final initialBearing = math.atan2(y, x);
-
-    // Convert to degrees and normalize to 0-360
-    final bearing = _radiansToDegrees(initialBearing);
-    return (bearing + 360) % 360;
+    return _earthRadiusKm * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
-  /// Calculate distance to Kaaba in kilometers
-  static double calculateDistanceToKaaba(double userLatitude, double userLongitude) {
-    try {
-      return Geolocator.distanceBetween(
-          userLatitude,
-          userLongitude,
-          kaabaLatitude,
-          kaabaLongitude
-      ) / 1000; // Convert meters to kilometers
-    } catch (e) {
-      debugPrint('Error calculating distance to Kaaba: $e');
-      return 0.0;
-    }
-  }
-
-  /// Check if compass is available on this device
-  static Future<bool> isCompassAvailable() async {
-    try {
-      final events = FlutterCompass.events;
-      if (events == null) return false;
-      
-      // Try to get one compass reading to verify it works
-      final completer = Completer<bool>();
-      late StreamSubscription subscription;
-      
-      subscription = events.timeout(const Duration(seconds: 3)).listen(
-        (event) {
-          subscription.cancel();
-          completer.complete(event.heading != null);
-        },
-        onError: (error) {
-          subscription.cancel();
-          completer.complete(false);
-        },
-      );
-      
-      return await completer.future;
-    } catch (e) {
-      debugPrint('Error checking compass availability: $e');
-      return false;
-    }
-  }
-
-  /// Get static Qibla information for a specific location
-  static Future<QiblaData> getQiblaData(Position position) async {
-    final qiblaDirection = calculateQiblaDirection(position.latitude, position.longitude);
-    final distance = calculateDistanceToKaaba(position.latitude, position.longitude);
-
-    return QiblaData(
-      direction: qiblaDirection,
-      distance: distance,
-      bearing: qiblaDirection, // Initial bearing without compass
-      calculatedAt: DateTime.now(),
-    );
-  }
-
-  /// Start real-time Qibla compass stream
-  static Stream<QiblaData> startQiblaCompass() async* {
-    try {
-      // Get user location first
-      final position = await getCurrentLocation();
-      final qiblaDirection = calculateQiblaDirection(position.latitude, position.longitude);
-      final distance = calculateDistanceToKaaba(position.latitude, position.longitude);
-
-      // Check if compass is available
-      final compassEvents = FlutterCompass.events;
-      if (compassEvents == null) {
-        throw Exception('Compass not available on this device');
-      }
-
-      // Listen to compass updates and yield Qibla data
-      await for (final compassEvent in compassEvents) {
-        final compassHeading = compassEvent.heading;
-        if (compassHeading == null) continue;
-
-        // Calculate bearing relative to Qibla direction
-        final qiblaBearing = (qiblaDirection - compassHeading + 360) % 360;
-
-        yield QiblaData(
-          direction: qiblaDirection,
-          distance: distance,
-          bearing: qiblaBearing,
-          calculatedAt: DateTime.now(),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error in Qibla compass stream: $e');
-      rethrow;
-    }
-  }
-
-  /// Get formatted direction string (N, NE, E, etc.)
-  static String getDirectionString(double bearing) {
-    const directions = [
+  /// 16-point compass label for a bearing.
+  static String cardinalFor(double bearing) {
+    const points = [
       'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
-      'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+      'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
     ];
-
-    final index = ((bearing + 11.25) / 22.5).floor() % 16;
-    return directions[index];
+    final index =
+        ((CompassService.normalize(bearing) + 11.25) / 22.5).floor() % 16;
+    return points[index];
   }
 
-  /// Get Qibla accuracy status based on bearing alignment
-  static String getAccuracyStatus(double bearing) {
-    // Calculate how close the bearing is to perfect alignment (180°)
-    final accuracy = (bearing - 180).abs();
+  // ---------------------------------------------------------------------------
+  // Composition
+  // ---------------------------------------------------------------------------
 
-    if (accuracy <= 2) {
-      return 'Perfect Alignment';
-    } else if (accuracy <= 5) {
-      return 'Very Good';
-    } else if (accuracy <= 10) {
-      return 'Good';
-    } else if (accuracy <= 15) {
-      return 'Fair';
-    } else {
-      return 'Poor';
+  /// Resolves the location to calculate the Qibla from.
+  ///
+  /// Delegates to [LocationService], so the compass inherits the same offline
+  /// behaviour as the prayer screen: a cached or last-known fix is used when
+  /// no live one is available. Throws [QiblaException] only when there is no
+  /// usable position at all.
+  static Future<LocationData> resolveLocation({
+    BuildContext? context,
+    bool forceRefresh = false,
+  }) async {
+    final location = await LocationService.resolve(
+      context: context,
+      forceRefresh: forceRefresh,
+    );
+
+    if (location.source == LocationSource.fallback) {
+      // A hard-coded fallback would point the user at the wrong sky; for a
+      // compass that is worse than an honest error.
+      throw QiblaException(await _diagnoseLocationFailure());
+    }
+
+    return location;
+  }
+
+  /// Distinguishes "you said no" from "the fix never arrived" so the error
+  /// screen can offer the right remedy.
+  static Future<QiblaFailure> _diagnoseLocationFailure() async {
+    try {
+      final permission = await LocationService.getLocationPermission();
+      switch (permission) {
+        case LocationPermission.deniedForever:
+          return QiblaFailure.locationPermissionDeniedForever;
+        case LocationPermission.denied:
+          return QiblaFailure.locationPermissionDenied;
+        default:
+          return QiblaFailure.locationUnavailable;
+      }
+    } catch (_) {
+      return QiblaFailure.locationUnavailable;
     }
   }
 
-  /// Get emoji icon for cardinal direction
-  static String getDirectionIcon(double bearing) {
-    if (bearing >= 337.5 || bearing < 22.5) return '⬆️'; // N
-    if (bearing >= 22.5 && bearing < 67.5) return '↗️'; // NE
-    if (bearing >= 67.5 && bearing < 112.5) return '➡️'; // E
-    if (bearing >= 112.5 && bearing < 157.5) return '↘️'; // SE
-    if (bearing >= 157.5 && bearing < 202.5) return '⬇️'; // S
-    if (bearing >= 202.5 && bearing < 247.5) return '↙️'; // SW
-    if (bearing >= 247.5 && bearing < 292.5) return '⬅️'; // W
-    if (bearing >= 292.5 && bearing < 337.5) return '↖️'; // NW
-    return '⬆️'; // Default
+  /// A stream of Qibla state for [location].
+  ///
+  /// Emits one heading-less frame immediately so the bearing and distance
+  /// render without waiting for the sensor, then one frame per smoothed
+  /// compass sample.
+  static Stream<QiblaReading> watch(LocationData location) {
+    final bearing = bearingToKaaba(location.latitude, location.longitude);
+    final distance = distanceToKaabaKm(location.latitude, location.longitude);
+
+    QiblaReading frame(HeadingReading? sample) => QiblaReading(
+          qiblaBearing: bearing,
+          distanceKm: distance,
+          heading: sample == null
+              ? null
+              : CompassService.normalize(
+                  sample.degrees + magneticDeclinationDegrees,
+                ),
+          accuracy: sample?.accuracy ?? CompassAccuracy.unknown,
+          location: location,
+          timestamp: DateTime.now(),
+        );
+
+    final controller = StreamController<QiblaReading>();
+    StreamSubscription<HeadingReading>? subscription;
+
+    controller.onListen = () {
+      controller.add(frame(null));
+
+      if (!CompassService.isSupported) return;
+
+      subscription = CompassService.headings().listen(
+        (sample) => controller.add(frame(sample)),
+        onError: (Object error, StackTrace stackTrace) {
+          debugPrint('QiblaService: compass stream error ($error)');
+          // A sensor hiccup must not tear down the screen: the bearing and
+          // distance are still valid, so keep the stream alive.
+        },
+        cancelOnError: false,
+      );
+    };
+
+    controller.onCancel = () async {
+      await subscription?.cancel();
+      subscription = null;
+    };
+
+    return controller.stream;
   }
 
-  /// Convert degrees to radians
-  static double _degreesToRadians(double degrees) {
-    return degrees * (math.pi / 180);
-  }
+  static double _rad(double degrees) => degrees * math.pi / 180;
 
-  /// Convert radians to degrees
-  static double _radiansToDegrees(double radians) {
-    return radians * (180 / math.pi);
-  }
-
-  /// Clean up resources and stop compass updates
-  static void dispose() {
-    _compassSubscription?.cancel();
-    _compassSubscription = null;
-    _qiblaController?.close();
-    _qiblaController = null;
-  }
+  static double _deg(double radians) => radians * 180 / math.pi;
 }

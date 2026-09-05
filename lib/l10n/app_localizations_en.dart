@@ -156,4 +156,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationPermissionDenied => 'Notification permissions denied';
+
+  @override
+  String get savedLocation => 'Saved location';
+
+  @override
+  String get defaultLocation => 'Default location';
+
+  @override
+  String get locationNoticeSaved =>
+      'Showing times for your last known location.';
+
+  @override
+  String get locationNoticeDefault =>
+      'Showing times for a default location. Turn on location access for accurate times.';
+
+  @override
+  String get heading => 'Heading';
+
+  @override
+  String get distance => 'Distance';
+
+  @override
+  String get alignment => 'Alignment';
+
+  @override
+  String get facingQiblaNow => 'You are facing the Qibla';
+
+  @override
+  String turnRightDegrees(String degrees) {
+    return 'Turn right $degrees°';
+  }
+
+  @override
+  String turnLeftDegrees(String degrees) {
+    return 'Turn left $degrees°';
+  }
+
+  @override
+  String degreesFromNorth(String degrees) {
+    return '$degrees° from North';
+  }
+
+  @override
+  String get calibrationNeeded => 'Compass needs calibration';
+
+  @override
+  String get calibrationHint =>
+      'Move your phone in a figure-8 until the reading settles.';
+
+  @override
+  String get compassUnavailable => 'No compass sensor';
+
+  @override
+  String get compassUnavailableHint =>
+      'This device cannot detect direction. Use the Qibla bearing above with a physical compass.';
+
+  @override
+  String get waitingForCompass => 'Reading compass…';
+
+  @override
+  String get locationUnavailable => 'Location unavailable';
+
+  @override
+  String get locationUnavailableHint =>
+      'The Qibla direction needs your position. Turn on location and try again.';
+
+  @override
+  String get locationPermissionRequired => 'Location permission required';
+
+  @override
+  String get locationPermissionRequiredHint =>
+      'Allow location access so the Qibla direction can be calculated.';
+
+  @override
+  String get locationPermissionBlocked => 'Location permission blocked';
+
+  @override
+  String get locationPermissionBlockedHint =>
+      'Location access is turned off for Prayerly. Enable it in your device settings.';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String get magneticNorthNote => 'Directions are relative to magnetic north.';
+
+  @override
+  String get avoidInterference =>
+      'Keep away from metal objects and electronics.';
+
+  @override
+  String get accuracyHigh => 'High';
+
+  @override
+  String get accuracyMedium => 'Medium';
+
+  @override
+  String get accuracyLow => 'Low';
+
+  @override
+  String get accuracyUnknown => 'Unknown';
+
+  @override
+  String get finderTitle => 'Qibla direction';
 }

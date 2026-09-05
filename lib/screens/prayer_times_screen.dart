@@ -1,11 +1,21 @@
-import 'package:flutter/material.dart' hide ErrorWidget;
 import 'dart:async';
+
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:prayerly/l10n/app_localizations.dart';
 
 import '../widgets/prayer_times/index.dart';
 
+/// Prayer times screen.
+///
+/// Everything on this screen is computed on-device. The load sequence is
+/// ordered so that a network outage can only ever degrade the *labels*, never
+/// the times themselves:
+///
+///   1. paint immediately from the last persisted location (if any)
+///   2. resolve a location - guaranteed to succeed, possibly from cache
+///   3. calculate prayer times locally
+///   4. best-effort extras (address text, elevation) that may fail silently
 class PrayerTimesScreen extends StatefulWidget {
   const PrayerTimesScreen({super.key});
 
@@ -14,10 +24,10 @@ class PrayerTimesScreen extends StatefulWidget {
 }
 
 class _PrayerTimesScreenState extends State<PrayerTimesScreen>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
+    with WidgetsBindingObserver {
   // Timers
-  late Timer _timeUpdateTimer;
-  late Timer _dailyUpdateTimer;
+  Timer? _timeUpdateTimer;
+  Timer? _dailyUpdateTimer;
 
   // Data
   LocationData? _locationData;
@@ -25,7 +35,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   PrayerStatus? _prayerStatus;
   double? _elevation;
   DateTime _currentTime = DateTime.now();
-  DateTime _lastFetchDate = DateTime.now();
+  DateTime? _lastCalculatedFor;
 
   // State
   bool _isLoading = true;
@@ -37,16 +47,16 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeServices();
     _setupTimers();
+    _initializeServices();
     _initializeApp();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timeUpdateTimer.cancel();
-    _dailyUpdateTimer.cancel();
+    _timeUpdateTimer?.cancel();
+    _dailyUpdateTimer?.cancel();
     super.dispose();
   }
 
@@ -54,10 +64,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      _refreshCurrentTime();
-      if (_shouldFetchNewPrayerTimes()) {
-        _fetchPrayerTimes();
-      }
+      _tick();
     }
   }
 
@@ -73,9 +80,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
 
       final enabled = await NotificationService.areNotificationsEnabled();
       if (mounted) {
-        setState(() {
-          _notificationsEnabled = enabled;
-        });
+        setState(() => _notificationsEnabled = enabled);
       }
     } catch (e) {
       debugPrint('Error initializing services: $e');
@@ -84,139 +89,103 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
 
   /// Sets up periodic timers for updates - OPTIMIZED for performance
   void _setupTimers() {
-    // Update every 30 seconds instead of 1 second for better battery life
-    _timeUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (mounted) {
-        _currentTime = DateTime.now();
-        _updatePrayerStatus();
+    // 30s is enough granularity for a countdown shown to the minute.
+    _timeUpdateTimer =
+        Timer.periodic(const Duration(seconds: 30), (_) => _tick());
 
-        if (_shouldFetchNewPrayerTimes()) {
-          _fetchPrayerTimes();
-          _lastFetchDate = DateTime.now();
-        }
-        setState(() {});
-      }
-    });
-
-    // Check for day change every hour
-    _dailyUpdateTimer = Timer.periodic(const Duration(hours: 1), (timer) {
-      if (mounted && _shouldFetchNewPrayerTimes()) {
-        debugPrint('Daily update: Fetching new prayer times');
-        _fetchPrayerTimes();
-        _lastFetchDate = DateTime.now();
-      }
-    });
+    // Cheap safety net in case the app is left open across midnight.
+    _dailyUpdateTimer =
+        Timer.periodic(const Duration(hours: 1), (_) => _tick());
   }
 
-  /// Initializes the app by loading all necessary data
-  Future<void> _initializeApp() async {
+  /// Advances the clock, and recalculates when the day has rolled over.
+  void _tick() {
     if (!mounted) return;
 
-    try {
-      await _getCurrentLocation();
-      await _fetchPrayerTimes();
-      
-      if (_locationData != null) {
-        await _fetchElevation();
-      }
+    setState(() => _currentTime = DateTime.now());
+    _updatePrayerStatus();
 
-      _updatePrayerStatus();
-
-      if (_prayerTimesData != null && _notificationsEnabled) {
-        await _scheduleNotifications();
-      }
-    } catch (e) {
-      debugPrint('Error initializing app: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    if (_needsRecalculation()) {
+      _calculatePrayerTimes();
     }
   }
 
-  /// Gets current location using LocationService
-  Future<void> _getCurrentLocation() async {
+  /// Loads all data. Only the first two steps can affect whether the screen
+  /// renders; the rest are decorative and are allowed to fail.
+  Future<void> _initializeApp({bool forceRefresh = false}) async {
     if (!mounted) return;
 
-    setState(() {
-      _isLoadingLocation = true;
-    });
+    setState(() => _isLoadingLocation = true);
+
+    // Paint with whatever we already know before touching the GPS.
+    if (!forceRefresh && _locationData == null) {
+      final cached = await LocationService.cachedLocation();
+      if (cached != null && mounted) {
+        setState(() => _locationData = cached);
+        await _calculatePrayerTimes();
+      }
+    }
 
     try {
-      final locationData = await LocationService.getCurrentLocation(context: context);
-      if (!mounted) return;
-
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        locationData.latitude,
-        locationData.longitude,
+      final location = await LocationService.resolve(
+        context: mounted ? context : null,
+        forceRefresh: forceRefresh,
       );
-
       if (!mounted) return;
-
-      final placemark = placemarks.first;
-      String address = _buildAddressString(placemark);
 
       setState(() {
-        _locationData = locationData.copyWith(address: address);
+        _locationData = location;
         _isLoadingLocation = false;
       });
+
+      // Critical path ends here: we have coordinates, so we have times.
+      await _calculatePrayerTimes();
     } catch (e) {
-      debugPrint('Error getting location or address: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingLocation = false;
-        });
-      }
+      // resolve() is contractually non-throwing; this is belt and braces.
+      debugPrint('Error resolving location: $e');
+      if (mounted) setState(() => _isLoadingLocation = false);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
+
+    // Best-effort enrichment. Failures here never reach the user.
+    unawaited(_resolveAddress());
+    unawaited(_fetchElevation());
   }
 
-  /// Build address string from placemark
-  String _buildAddressString(Placemark placemark) {
-    String address = '';
-
-    if (placemark.subLocality != null && placemark.subLocality!.isNotEmpty) {
-      address = placemark.subLocality!;
-      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-        address += ', ${placemark.locality}';
-      }
-    } else if (placemark.thoroughfare != null && placemark.thoroughfare!.isNotEmpty) {
-      address = placemark.thoroughfare!;
-      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-        address += ', ${placemark.locality}';
-      }
-    } else if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-      address = placemark.locality!;
-      if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
-        address += ', ${placemark.administrativeArea}';
-      }
-    } else if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
-      address = placemark.administrativeArea!;
-    }
-
-    if (placemark.country != null && placemark.country!.isNotEmpty) {
-      address += ', ${placemark.country}';
-    }
+  /// Reverse geocoding runs off the critical path: it needs a network, and a
+  /// failure must not cost us the prayer times. This is the fix for the screen
+  /// showing an error state while offline.
+  Future<void> _resolveAddress() async {
+    final location = _locationData;
+    if (location == null || !mounted) return;
+    if (location.source == LocationSource.fallback) return;
 
     final l10n = AppLocalizations.of(context)!;
-    return address.isEmpty ? l10n.unknownLocation : address;
+    final enriched = await LocationService.withAddress(
+      location,
+      unknownLabel: l10n.unknownLocation,
+    );
+
+    if (!mounted) return;
+    // Guard against a refresh having replaced the location mid-lookup.
+    if (_locationData?.coarseKey != location.coarseKey) return;
+
+    setState(() => _locationData = enriched);
   }
 
-  /// Fetches elevation data
+  /// Fetches elevation data (cached/offline; contributes to display only)
   Future<void> _fetchElevation() async {
-    if (_locationData == null || !mounted) return;
+    final location = _locationData;
+    if (location == null || !mounted) return;
 
-    setState(() {
-      _isLoadingElevation = true;
-    });
+    setState(() => _isLoadingElevation = true);
 
     try {
       final elevation = await ElevationService.getElevation(
-        _locationData!.latitude,
-        _locationData!.longitude,
+        location.latitude,
+        location.longitude,
       );
-
       if (mounted) {
         setState(() {
           _elevation = elevation;
@@ -225,35 +194,34 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       }
     } catch (e) {
       debugPrint('Error fetching elevation: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingElevation = false;
-        });
-      }
+      if (mounted) setState(() => _isLoadingElevation = false);
     }
   }
 
-  /// Fetches prayer times using PrayerService
-  Future<void> _fetchPrayerTimes() async {
-    if (_locationData == null || !mounted) return;
+  /// Calculates prayer times locally for the resolved location.
+  Future<void> _calculatePrayerTimes() async {
+    final location = _locationData;
+    if (location == null || !mounted) return;
 
     try {
-      final prayerTimesData = await PrayerService.getPrayerTimes(
-        latitude: _locationData!.latitude,
-        longitude: _locationData!.longitude,
+      final data = await PrayerService.getPrayerTimes(
+        latitude: location.latitude,
+        longitude: location.longitude,
       );
+      if (!mounted) return;
 
-      if (mounted) {
-        setState(() {
-          _prayerTimesData = prayerTimesData;
-        });
+      setState(() {
+        _prayerTimesData = data;
+        _lastCalculatedFor = DateTime.now();
+      });
 
-        if (_notificationsEnabled) {
-          await _scheduleNotifications();
-        }
+      _updatePrayerStatus();
+
+      if (_notificationsEnabled) {
+        await _scheduleNotifications();
       }
     } catch (e) {
-      debugPrint('Error fetching prayer times: $e');
+      debugPrint('Error calculating prayer times: $e');
     }
   }
 
@@ -275,48 +243,31 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
 
   /// Updates current prayer status
   void _updatePrayerStatus() {
-    if (_prayerTimesData?.prayerTimes.isEmpty ?? true) return;
+    final times = _prayerTimesData?.prayerTimes;
+    if (times == null || times.isEmpty || !mounted) return;
 
-    final status = PrayerService.getCurrentPrayerStatus(
-      _prayerTimesData!.prayerTimes,
-      _currentTime,
-    );
-
-    if (mounted) {
-      setState(() {
-        _prayerStatus = status;
-      });
-    }
+    final status = PrayerService.getCurrentPrayerStatus(times, _currentTime);
+    setState(() => _prayerStatus = status);
   }
 
-  /// Force refresh current time
-  void _refreshCurrentTime() {
-    if (mounted) {
-      setState(() {
-        _currentTime = DateTime.now();
-        _updatePrayerStatus();
-      });
-    }
-  }
+  /// True when the calculated day no longer matches today.
+  bool _needsRecalculation() {
+    if (_prayerTimesData?.prayerTimes.isEmpty ?? true) return true;
 
-  /// Checks if new prayer times should be fetched
-  bool _shouldFetchNewPrayerTimes() {
+    final last = _lastCalculatedFor;
+    if (last == null) return true;
+
     final now = DateTime.now();
-    final lastFetch = _lastFetchDate;
-
-    return now.day != lastFetch.day ||
-        now.month != lastFetch.month ||
-        now.year != lastFetch.year ||
-        (_prayerTimesData?.prayerTimes.isEmpty ?? true);
+    return now.day != last.day ||
+        now.month != last.month ||
+        now.year != last.year;
   }
 
-  /// Refreshes all data
+  /// Refreshes all data, forcing a new location fix.
   Future<void> _refreshData() async {
     if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-    });
-    await _initializeApp();
+    setState(() => _isLoading = true);
+    await _initializeApp(forceRefresh: true);
   }
 
   /// Toggle notifications
@@ -325,38 +276,33 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     if (_notificationsEnabled) {
       await AdhanService.cancelAllNotifications();
       if (mounted) {
-        setState(() {
-          _notificationsEnabled = false;
-        });
+        setState(() => _notificationsEnabled = false);
         _showSnackBar(l10n.notificationsDisabled);
       }
     } else {
       final enabled = await NotificationService.requestPermissions();
-      if (mounted) {
-        if (enabled) {
-          setState(() {
-            _notificationsEnabled = true;
-          });
-          await _scheduleNotifications();
-          _showSnackBar(l10n.notificationsEnabled);
-        } else {
-          _showSnackBar(l10n.notificationPermissionDenied);
-        }
+      if (!mounted) return;
+
+      if (enabled) {
+        setState(() => _notificationsEnabled = true);
+        await _scheduleNotifications();
+        if (mounted) _showSnackBar(l10n.notificationsEnabled);
+      } else {
+        _showSnackBar(l10n.notificationPermissionDenied);
       }
     }
   }
 
   /// Show snackbar message
   void _showSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.grey[800],
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.grey[800],
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   /// Show custom menu
@@ -403,28 +349,33 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   }
 
   Widget _buildBody() {
+    final location = _locationData;
+    final times = _prayerTimesData;
+    final status = _prayerStatus;
+
+    if (location != null && times != null && status != null) {
+      return RefreshIndicator(
+        onRefresh: _refreshData,
+        child: MainContentWidget(
+          locationData: location,
+          prayerTimesData: times,
+          prayerStatus: status,
+          currentTime: _currentTime,
+          formattedCurrentDate: _formattedCurrentDate,
+          elevation: _elevation,
+          isLoadingElevation: _isLoadingElevation,
+        ),
+      );
+    }
+
     if (_isLoading) {
-      return LoadingWidget(
-        isLoadingLocation: _isLoadingLocation,
-      );
+      return LoadingWidget(isLoadingLocation: _isLoadingLocation);
     }
 
-    if (_locationData == null || _prayerTimesData == null || _prayerStatus == null) {
-      return ErrorWidget(
-        locationData: _locationData,
-        prayerTimesData: _prayerTimesData,
-        onRetry: _refreshData,
-      );
-    }
-
-    return MainContentWidget(
-      locationData: _locationData!,
-      prayerTimesData: _prayerTimesData!,
-      prayerStatus: _prayerStatus!,
-      currentTime: _currentTime,
-      formattedCurrentDate: _formattedCurrentDate,
-      elevation: _elevation,
-      isLoadingElevation: _isLoadingElevation,
+    return ErrorWidget(
+      locationData: location,
+      prayerTimesData: times,
+      onRetry: _refreshData,
     );
   }
 }

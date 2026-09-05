@@ -1,5 +1,6 @@
 // widgets/prayer_times/info_dialog_widget.dart
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../services/location_service.dart';
 import '../../services/prayer_service.dart';
 import '../../services/elevation_service.dart';
@@ -53,7 +54,7 @@ class InfoDialogWidget extends StatelessWidget {
             ),
             _buildInfoItem(
               'Juristic Method',
-              'Standard (Shafi, Maliki, Hanbali)',
+              'Hanafi (Asr at twice the shadow length)',
               Icons.school,
             ),
             
@@ -61,11 +62,15 @@ class InfoDialogWidget extends StatelessWidget {
             _buildSectionTitle('Location'),
             _buildInfoItem(
               'Location Source',
-              locationData?.isDefault == true
-                  ? 'Default (Permission denied)'
-                  : 'GPS Location',
+              _locationSourceLabel(locationData?.source),
               Icons.location_on,
             ),
+            if (locationData != null)
+              _buildInfoItem(
+                'Coordinates',
+                locationData!.formattedCoordinates,
+                Icons.my_location,
+              ),
             if (elevation != null)
               _buildInfoItem(
                 'Elevation',
@@ -77,8 +82,8 @@ class InfoDialogWidget extends StatelessWidget {
             _buildSectionTitle('Data'),
             _buildInfoItem(
               'Prayer Times Source',
-              prayerTimesData?.isDefault == true ? 'Fallback Data' : 'API Data',
-              Icons.cloud,
+              'Calculated on this device (no internet needed)',
+              Icons.calculate_outlined,
             ),
             _buildInfoItem(
               'Notifications',
@@ -88,15 +93,29 @@ class InfoDialogWidget extends StatelessWidget {
             
             const SizedBox(height: 16),
             _buildSectionTitle('App Version'),
-            _buildInfoItem(
-              'Version',
-              '1.0.0',
-              Icons.info,
-            ),
-            _buildInfoItem(
-              'Last Update',
-              DateTime.now().toString().split(' ')[0],
-              Icons.update,
+            // Read from the package rather than hard-coded: the literal here
+            // said 1.0.0 while the app shipped as 2.x, and "Last Update" was
+            // DateTime.now(), so it always claimed to have been updated today.
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final info = snapshot.data;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildInfoItem(
+                      'Version',
+                      info?.version ?? '...',
+                      Icons.info,
+                    ),
+                    _buildInfoItem(
+                      'Build',
+                      info?.buildNumber ?? '...',
+                      Icons.numbers,
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -137,6 +156,23 @@ class InfoDialogWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Describes which tier of the location fallback chain was used, so the
+  /// user can tell a live fix from a replayed one.
+  static String _locationSourceLabel(LocationSource? source) {
+    switch (source) {
+      case LocationSource.gps:
+        return 'GPS / device location';
+      case LocationSource.lastKnown:
+        return 'Last known device fix';
+      case LocationSource.cache:
+        return 'Saved location (offline)';
+      case LocationSource.fallback:
+        return 'Default location (no fix available)';
+      case null:
+        return 'Unknown';
+    }
   }
 
   Widget _buildInfoItem(String label, String? value, IconData icon) {

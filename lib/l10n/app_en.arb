@@ -55,5 +55,57 @@
         "type": "int"
       }
     }
+  },
+  "savedLocation": "Saved location",
+  "defaultLocation": "Default location",
+  "locationNoticeSaved": "Showing times for your last known location.",
+  "locationNoticeDefault": "Showing times for a default location. Turn on location access for accurate times.",
+  "heading": "Heading",
+  "distance": "Distance",
+  "alignment": "Alignment",
+  "facingQiblaNow": "You are facing the Qibla",
+  "turnRightDegrees": "Turn right {degrees}°",
+  "turnLeftDegrees": "Turn left {degrees}°",
+  "degreesFromNorth": "{degrees}° from North",
+  "calibrationNeeded": "Compass needs calibration",
+  "calibrationHint": "Move your phone in a figure-8 until the reading settles.",
+  "compassUnavailable": "No compass sensor",
+  "compassUnavailableHint": "This device cannot detect direction. Use the Qibla bearing above with a physical compass.",
+  "waitingForCompass": "Reading compass…",
+  "locationUnavailable": "Location unavailable",
+  "locationUnavailableHint": "The Qibla direction needs your position. Turn on location and try again.",
+  "locationPermissionRequired": "Location permission required",
+  "locationPermissionRequiredHint": "Allow location access so the Qibla direction can be calculated.",
+  "locationPermissionBlocked": "Location permission blocked",
+  "locationPermissionBlockedHint": "Location access is turned off for Prayerly. Enable it in your device settings.",
+  "openSettings": "Open Settings",
+  "tryAgain": "Try Again",
+  "magneticNorthNote": "Directions are relative to magnetic north.",
+  "avoidInterference": "Keep away from metal objects and electronics.",
+  "accuracyHigh": "High",
+  "accuracyMedium": "Medium",
+  "accuracyLow": "Low",
+  "accuracyUnknown": "Unknown",
+  "finderTitle": "Qibla direction",
+  "@turnRightDegrees": {
+    "placeholders": {
+      "degrees": {
+        "type": "String"
+      }
+    }
+  },
+  "@turnLeftDegrees": {
+    "placeholders": {
+      "degrees": {
+        "type": "String"
+      }
+    }
+  },
+  "@degreesFromNorth": {
+    "placeholders": {
+      "degrees": {
+        "type": "String"
+      }
+    }
   }
 }

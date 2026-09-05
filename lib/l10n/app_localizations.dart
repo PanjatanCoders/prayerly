@@ -395,6 +395,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notification permissions denied'**
   String get notificationPermissionDenied;
+
+  /// No description provided for @savedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved location'**
+  String get savedLocation;
+
+  /// No description provided for @defaultLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Default location'**
+  String get defaultLocation;
+
+  /// No description provided for @locationNoticeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing times for your last known location.'**
+  String get locationNoticeSaved;
+
+  /// No description provided for @locationNoticeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing times for a default location. Turn on location access for accurate times.'**
+  String get locationNoticeDefault;
+
+  /// No description provided for @heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get heading;
+
+  /// No description provided for @distance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get distance;
+
+  /// No description provided for @alignment.
+  ///
+  /// In en, this message translates to:
+  /// **'Alignment'**
+  String get alignment;
+
+  /// No description provided for @facingQiblaNow.
+  ///
+  /// In en, this message translates to:
+  /// **'You are facing the Qibla'**
+  String get facingQiblaNow;
+
+  /// No description provided for @turnRightDegrees.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn right {degrees}°'**
+  String turnRightDegrees(String degrees);
+
+  /// No description provided for @turnLeftDegrees.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn left {degrees}°'**
+  String turnLeftDegrees(String degrees);
+
+  /// No description provided for @degreesFromNorth.
+  ///
+  /// In en, this message translates to:
+  /// **'{degrees}° from North'**
+  String degreesFromNorth(String degrees);
+
+  /// No description provided for @calibrationNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Compass needs calibration'**
+  String get calibrationNeeded;
+
+  /// No description provided for @calibrationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move your phone in a figure-8 until the reading settles.'**
+  String get calibrationHint;
+
+  /// No description provided for @compassUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No compass sensor'**
+  String get compassUnavailable;
+
+  /// No description provided for @compassUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This device cannot detect direction. Use the Qibla bearing above with a physical compass.'**
+  String get compassUnavailableHint;
+
+  /// No description provided for @waitingForCompass.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading compass…'**
+  String get waitingForCompass;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unavailable'**
+  String get locationUnavailable;
+
+  /// No description provided for @locationUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The Qibla direction needs your position. Turn on location and try again.'**
+  String get locationUnavailableHint;
+
+  /// No description provided for @locationPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission required'**
+  String get locationPermissionRequired;
+
+  /// No description provided for @locationPermissionRequiredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location access so the Qibla direction can be calculated.'**
+  String get locationPermissionRequiredHint;
+
+  /// No description provided for @locationPermissionBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission blocked'**
+  String get locationPermissionBlocked;
+
+  /// No description provided for @locationPermissionBlockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Location access is turned off for Prayerly. Enable it in your device settings.'**
+  String get locationPermissionBlockedHint;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// No description provided for @magneticNorthNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions are relative to magnetic north.'**
+  String get magneticNorthNote;
+
+  /// No description provided for @avoidInterference.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep away from metal objects and electronics.'**
+  String get avoidInterference;
+
+  /// No description provided for @accuracyHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get accuracyHigh;
+
+  /// No description provided for @accuracyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get accuracyMedium;
+
+  /// No description provided for @accuracyLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get accuracyLow;
+
+  /// No description provided for @accuracyUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get accuracyUnknown;
+
+  /// No description provided for @finderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Qibla direction'**
+  String get finderTitle;
 }
 
 class _AppLocalizationsDelegate

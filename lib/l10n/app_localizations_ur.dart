@@ -158,4 +158,110 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get notificationPermissionDenied => '????????? ?? ????? ?????';
+
+  @override
+  String get savedLocation => 'محفوظ مقام';
+
+  @override
+  String get defaultLocation => 'طے شدہ مقام';
+
+  @override
+  String get locationNoticeSaved =>
+      'آپ کے آخری معلوم مقام کے اوقات دکھائے جا رہے ہیں۔';
+
+  @override
+  String get locationNoticeDefault =>
+      'طے شدہ مقام کے اوقات دکھائے جا رہے ہیں۔ درست اوقات کے لیے لوکیشن آن کریں۔';
+
+  @override
+  String get heading => 'رخ';
+
+  @override
+  String get distance => 'فاصلہ';
+
+  @override
+  String get alignment => 'سمت ملاپ';
+
+  @override
+  String get facingQiblaNow => 'آپ قبلہ کی طرف رخ کیے ہوئے ہیں';
+
+  @override
+  String turnRightDegrees(String degrees) {
+    return '$degrees° دائیں مڑیں';
+  }
+
+  @override
+  String turnLeftDegrees(String degrees) {
+    return '$degrees° بائیں مڑیں';
+  }
+
+  @override
+  String degreesFromNorth(String degrees) {
+    return 'شمال سے $degrees°';
+  }
+
+  @override
+  String get calibrationNeeded => 'کمپاس کی کیلیبریشن درکار ہے';
+
+  @override
+  String get calibrationHint =>
+      'پڑھت مستحکم ہونے تک فون کو 8 کی شکل میں گھمائیں۔';
+
+  @override
+  String get compassUnavailable => 'کمپاس سینسر نہیں';
+
+  @override
+  String get compassUnavailableHint =>
+      'یہ آلہ سمت معلوم نہیں کر سکتا۔ اوپر دیا گیا قبلہ زاویہ کسی کمپاس کے ساتھ استعمال کریں۔';
+
+  @override
+  String get waitingForCompass => 'کمپاس پڑھا جا رہا ہے…';
+
+  @override
+  String get locationUnavailable => 'مقام دستیاب نہیں';
+
+  @override
+  String get locationUnavailableHint =>
+      'قبلہ کی سمت کے لیے آپ کا مقام درکار ہے۔ لوکیشن آن کرکے دوبارہ کوشش کریں۔';
+
+  @override
+  String get locationPermissionRequired => 'لوکیشن کی اجازت درکار ہے';
+
+  @override
+  String get locationPermissionRequiredHint =>
+      'قبلہ کی سمت معلوم کرنے کے لیے لوکیشن کی اجازت دیں۔';
+
+  @override
+  String get locationPermissionBlocked => 'لوکیشن کی اجازت بلاک ہے';
+
+  @override
+  String get locationPermissionBlockedHint =>
+      'Prayerly کے لیے لوکیشن بند ہے۔ آلے کی ترتیبات میں آن کریں۔';
+
+  @override
+  String get openSettings => 'ترتیبات کھولیں';
+
+  @override
+  String get tryAgain => 'دوبارہ کوشش کریں';
+
+  @override
+  String get magneticNorthNote => 'سمتیں مقناطیسی شمال کے لحاظ سے ہیں۔';
+
+  @override
+  String get avoidInterference => 'دھات اور بجلی کے آلات سے دور رہیں۔';
+
+  @override
+  String get accuracyHigh => 'بلند';
+
+  @override
+  String get accuracyMedium => 'درمیانہ';
+
+  @override
+  String get accuracyLow => 'کم';
+
+  @override
+  String get accuracyUnknown => 'نامعلوم';
+
+  @override
+  String get finderTitle => 'قبلہ کی سمت';
 }

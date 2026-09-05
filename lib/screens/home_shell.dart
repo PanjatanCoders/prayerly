@@ -15,13 +15,15 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  late final List<Widget> _pages = const [
-    PrayerTimesScreen(),
-    QiblaCompassScreen(),
-    DhikrSelectionScreen(),
-    QazaTrackerScreen(),
-    ZakatScreen(),
-  ];
+  // Rebuilt each frame rather than cached, so the compass tab is told when it
+  // stops being the visible one and can release the magnetometer.
+  List<Widget> get _pages => [
+        const PrayerTimesScreen(),
+        QiblaCompassScreen(isActive: _index == 1),
+        const DhikrSelectionScreen(),
+        const QazaTrackerScreen(),
+        const ZakatScreen(),
+      ];
 
   @override
   Widget build(BuildContext context) {

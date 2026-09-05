@@ -29,8 +29,8 @@ class ErrorWidget extends StatelessWidget {
       errorIcon = Icons.location_off;
     } else if (prayerTimesData == null) {
       errorTitle = 'Prayer Times Error';
-      errorMessage = 'Unable to fetch prayer times. Please check your internet connection and try again.';
-      errorIcon = Icons.cloud_off;
+      errorMessage = 'Unable to calculate prayer times for this location. Try refreshing.';
+      errorIcon = Icons.error_outline;
     } else {
       errorTitle = 'Calculation Error';
       errorMessage = 'Unable to calculate prayer status. Please try refreshing the data.';
@@ -108,15 +108,14 @@ class ErrorWidget extends StatelessWidget {
       tips = [
         'Enable location services in device settings',
         'Grant location permission to this app',
-        'Ensure you\'re not in airplane mode',
         'Try moving to an area with better GPS signal',
+        'Once a location has been found it is saved for offline use',
       ];
     } else if (prayerTimesData == null) {
       tips = [
-        'Check your internet connection',
-        'Try connecting to Wi-Fi',
+        'Prayer times are calculated on your device - no internet is needed',
+        'Refresh to recalculate for your current location',
         'Restart the app if problems persist',
-        'Contact support if issue continues',
       ];
     }
 

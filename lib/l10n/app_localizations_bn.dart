@@ -159,4 +159,111 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get notificationPermissionDenied =>
       '???????????? ?????? ???????????? ??? ??????';
+
+  @override
+  String get savedLocation => 'সংরক্ষিত অবস্থান';
+
+  @override
+  String get defaultLocation => 'ডিফল্ট অবস্থান';
+
+  @override
+  String get locationNoticeSaved =>
+      'আপনার সর্বশেষ জানা অবস্থানের সময় দেখানো হচ্ছে।';
+
+  @override
+  String get locationNoticeDefault =>
+      'ডিফল্ট অবস্থানের সময় দেখানো হচ্ছে। সঠিক সময়ের জন্য লোকেশন চালু করুন।';
+
+  @override
+  String get heading => 'মুখের দিক';
+
+  @override
+  String get distance => 'দূরত্ব';
+
+  @override
+  String get alignment => 'সারিবদ্ধতা';
+
+  @override
+  String get facingQiblaNow => 'আপনি কিবলার দিকে মুখ করে আছেন';
+
+  @override
+  String turnRightDegrees(String degrees) {
+    return 'ডানে $degrees° ঘুরুন';
+  }
+
+  @override
+  String turnLeftDegrees(String degrees) {
+    return 'বামে $degrees° ঘুরুন';
+  }
+
+  @override
+  String degreesFromNorth(String degrees) {
+    return 'উত্তর থেকে $degrees°';
+  }
+
+  @override
+  String get calibrationNeeded => 'কম্পাস ক্যালিব্রেশন প্রয়োজন';
+
+  @override
+  String get calibrationHint =>
+      'পাঠ স্থির না হওয়া পর্যন্ত ফোনটি 8 আকারে ঘোরান।';
+
+  @override
+  String get compassUnavailable => 'কম্পাস সেন্সর নেই';
+
+  @override
+  String get compassUnavailableHint =>
+      'এই ডিভাইস দিক নির্ণয় করতে পারে না। উপরের কিবলা বিয়ারিং একটি সাধারণ কম্পাসে ব্যবহার করুন।';
+
+  @override
+  String get waitingForCompass => 'কম্পাস পড়া হচ্ছে…';
+
+  @override
+  String get locationUnavailable => 'অবস্থান পাওয়া যায়নি';
+
+  @override
+  String get locationUnavailableHint =>
+      'কিবলার দিক নির্ণয়ে আপনার অবস্থান প্রয়োজন। লোকেশন চালু করে আবার চেষ্টা করুন।';
+
+  @override
+  String get locationPermissionRequired => 'লোকেশন অনুমতি প্রয়োজন';
+
+  @override
+  String get locationPermissionRequiredHint =>
+      'কিবলার দিক নির্ণয়ের জন্য লোকেশন অনুমতি দিন।';
+
+  @override
+  String get locationPermissionBlocked => 'লোকেশন অনুমতি বন্ধ';
+
+  @override
+  String get locationPermissionBlockedHint =>
+      'Prayerly-এর জন্য লোকেশন বন্ধ আছে। ডিভাইস সেটিংস থেকে চালু করুন।';
+
+  @override
+  String get openSettings => 'সেটিংস খুলুন';
+
+  @override
+  String get tryAgain => 'আবার চেষ্টা করুন';
+
+  @override
+  String get magneticNorthNote =>
+      'দিকসমূহ চুম্বকীয় উত্তর অনুসারে দেখানো হয়েছে।';
+
+  @override
+  String get avoidInterference => 'ধাতব বস্তু ও ইলেকট্রনিকস থেকে দূরে থাকুন।';
+
+  @override
+  String get accuracyHigh => 'উচ্চ';
+
+  @override
+  String get accuracyMedium => 'মধ্যম';
+
+  @override
+  String get accuracyLow => 'কম';
+
+  @override
+  String get accuracyUnknown => 'অজানা';
+
+  @override
+  String get finderTitle => 'কিবলার দিক';
 }
