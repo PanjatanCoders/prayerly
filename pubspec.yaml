@@ -69,6 +69,7 @@ flutter:
 
   assets:
     - assets/icons/icon.png
+    - assets/icons/icon_foreground.png
     - assets/audio/adhan/azan1.mp3
     - assets/audio/adhan/azan2.mp3
     - assets/audio/adhan/azan3.mp3
@@ -77,8 +78,8 @@ flutter:
 flutter_icons:
   android: true
   image_path: "assets/icons/icon.png"
-  adaptive_icon_foreground: "assets/icons/icon.png"
-  adaptive_icon_background: "#7cfc00"
+  adaptive_icon_foreground: "assets/icons/icon_foreground.png"
+  adaptive_icon_background: "#0A0A0A"
 # flutter pub run flutter_launcher_icons:main
 
 # dont remove below command
