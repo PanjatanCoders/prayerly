@@ -21,31 +21,20 @@ class AdhanSettingsScreen extends StatelessWidget {
     final provider = Provider.of<AdhanSettingsProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Adhan Settings',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(title: const Text('Adhan Settings')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildAutoPlaySection(provider),
+            _buildAutoPlaySection(context, provider),
             const SizedBox(height: 24),
             _buildVolumeSection(context, provider),
             const SizedBox(height: 24),
-            _buildAdhanTypeSection(provider),
+            _buildAdhanTypeSection(context, provider),
             const SizedBox(height: 24),
-            _buildPrayerNotificationsSection(provider),
+            _buildPrayerNotificationsSection(context, provider),
             const SizedBox(height: 24),
             _buildTestSection(context),
           ],
@@ -54,11 +43,12 @@ class AdhanSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAutoPlaySection(AdhanSettingsProvider provider) {
+  Widget _buildAutoPlaySection(BuildContext context, AdhanSettingsProvider provider) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -66,12 +56,12 @@ class AdhanSettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.play_circle_fill, color: Colors.white, size: 20),
+              Icon(Icons.play_circle_fill, color: onSurface, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Auto-Play Settings',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -80,16 +70,16 @@ class AdhanSettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           SwitchListTile(
-            title: const Text(
+            title: Text(
               'Auto-play Adhan',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: onSurface),
             ),
             subtitle: Text(
-              provider.autoPlayEnabled 
+              provider.autoPlayEnabled
                   ? 'Adhan will play automatically when prayer time arrives'
                   : 'Tap notification to play adhan manually',
               style: TextStyle(
-                color: provider.autoPlayEnabled ? Colors.green : Colors.grey,
+                color: provider.autoPlayEnabled ? Colors.green : onSurface.withValues(alpha: 0.6),
                 fontSize: 12,
               ),
             ),
@@ -97,7 +87,6 @@ class AdhanSettingsScreen extends StatelessWidget {
             onChanged: (value) {
               provider.setAutoPlayEnabled(value);
             },
-            activeColor: Colors.amber,
             contentPadding: EdgeInsets.zero,
           ),
         ],
@@ -109,10 +98,11 @@ class AdhanSettingsScreen extends StatelessWidget {
     BuildContext context,
     AdhanSettingsProvider provider,
   ) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -120,12 +110,12 @@ class AdhanSettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.volume_up, color: Colors.white, size: 20),
+              Icon(Icons.volume_up, color: onSurface, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Adhan Volume',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -145,7 +135,7 @@ class AdhanSettingsScreen extends StatelessWidget {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: Colors.amber,
-              inactiveTrackColor: Colors.grey[700],
+              inactiveTrackColor: onSurface.withValues(alpha: 0.15),
               thumbColor: Colors.amber,
               overlayColor: Colors.amber.withValues(alpha: 0.2),
             ),
@@ -162,11 +152,12 @@ class AdhanSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAdhanTypeSection(AdhanSettingsProvider provider) {
+  Widget _buildAdhanTypeSection(BuildContext context, AdhanSettingsProvider provider) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -174,12 +165,12 @@ class AdhanSettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.music_note, color: Colors.white, size: 20),
+              Icon(Icons.music_note, color: onSurface, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Adhan Style',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -191,7 +182,7 @@ class AdhanSettingsScreen extends StatelessWidget {
             return RadioListTile<String>(
               title: Text(
                 entry.value,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: onSurface),
               ),
               value: entry.key,
               groupValue: provider.adhanType,
@@ -209,11 +200,12 @@ class AdhanSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPrayerNotificationsSection(AdhanSettingsProvider provider) {
+  Widget _buildPrayerNotificationsSection(BuildContext context, AdhanSettingsProvider provider) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -221,12 +213,12 @@ class AdhanSettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.notifications, color: Colors.white, size: 20),
+              Icon(Icons.notifications, color: onSurface, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Prayer Notifications',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -235,26 +227,26 @@ class AdhanSettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            provider.autoPlayEnabled 
+            provider.autoPlayEnabled
                 ? 'Choose which prayers should automatically play adhan'
                 : 'Choose which prayers should send notifications',
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12),
           ),
           const SizedBox(height: 16),
           ...provider.notificationSettings.entries.map((entry) {
             return SwitchListTile(
               title: Text(
                 entry.key,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: onSurface),
               ),
               subtitle: Text(
-                entry.value 
-                    ? (provider.autoPlayEnabled 
-                        ? 'Adhan will play automatically' 
+                entry.value
+                    ? (provider.autoPlayEnabled
+                        ? 'Adhan will play automatically'
                         : 'Notification will be sent')
                     : 'No notification',
                 style: TextStyle(
-                  color: entry.value ? Colors.green : Colors.grey,
+                  color: entry.value ? Colors.green : onSurface.withValues(alpha: 0.6),
                   fontSize: 12,
                 ),
               ),
@@ -262,7 +254,6 @@ class AdhanSettingsScreen extends StatelessWidget {
               onChanged: (value) {
                 provider.toggleNotification(entry.key, value);
               },
-              activeColor: Colors.amber,
               contentPadding: EdgeInsets.zero,
             );
           }),
@@ -272,10 +263,11 @@ class AdhanSettingsScreen extends StatelessWidget {
   }
 
   Widget _buildTestSection(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -283,12 +275,12 @@ class AdhanSettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.play_circle, color: Colors.white, size: 20),
+              Icon(Icons.play_circle, color: onSurface, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Test Adhan',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -296,9 +288,9 @@ class AdhanSettingsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Test the selected adhan with current volume settings',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
+            style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12),
           ),
           const SizedBox(height: 16),
           SizedBox(

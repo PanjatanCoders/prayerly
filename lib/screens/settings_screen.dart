@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
+import 'package:prayerly/utils/theme/app_transitions.dart';
+import 'package:prayerly/widgets/theme_switch_widget.dart';
 import '../services/language_service.dart';
 import '../widgets/language_selector.dart';
+import 'adhan_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -24,42 +27,26 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Other Settings
+          // App Settings
+          _buildSectionHeader(context, 'App Settings'),
+          const SizedBox(height: 8),
+          const ThemeSwitchWidget(showLabel: false),
+
+          const SizedBox(height: 24),
+
+          // Prayer Settings
           _buildSectionHeader(context, 'Prayer Settings'),
           const SizedBox(height: 8),
           _buildSettingsCard(
             context,
-            icon: Icons.notifications,
-            title: 'Prayer Notifications',
-            subtitle: 'Manage prayer time notifications',
-            onTap: () {
-              // Navigate to notification settings
-            },
-          ),
-
-          const SizedBox(height: 12),
-          _buildSettingsCard(
-            context,
             icon: Icons.volume_up,
-            title: 'Adhan Sound',
-            subtitle: 'Configure call to prayer audio',
+            title: 'Adhan Sound & Notifications',
+            subtitle: 'Configure call to prayer audio and reminders',
             onTap: () {
-              // Navigate to adhan settings
-            },
-          ),
-
-          const SizedBox(height: 24),
-
-          // App Settings
-          _buildSectionHeader(context, 'App Settings'),
-          const SizedBox(height: 8),
-          _buildSettingsCard(
-            context,
-            icon: Icons.dark_mode,
-            title: 'Theme',
-            subtitle: 'Light, Dark, or System',
-            onTap: () {
-              // Show theme selection
+              Navigator.push(
+                context,
+                AppTransitions.slideIn(const AdhanSettingsScreen()),
+              );
             },
           ),
 
@@ -68,9 +55,15 @@ class SettingsScreen extends StatelessWidget {
             context,
             icon: Icons.location_on,
             title: 'Location',
-            subtitle: 'Set your prayer location',
+            subtitle: 'Location is detected automatically for prayer times',
             onTap: () {
-              // Navigate to location settings
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Location is resolved automatically from device GPS or last known fix.',
+                  ),
+                ),
+              );
             },
           ),
         ],

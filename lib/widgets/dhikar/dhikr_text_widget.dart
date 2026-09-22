@@ -17,11 +17,12 @@ class DhikrTextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: EdgeInsets.all(isCompact ? 12 : 16),
       margin: EdgeInsets.all(isCompact ? 8 : 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: dhikr.category.color.withValues(alpha: 0.3),
@@ -71,30 +72,30 @@ class DhikrTextWidget extends StatelessWidget {
                 ),
             ],
           ),
-          
+
           SizedBox(height: isCompact ? 8 : 12),
-          
+
           // Arabic text
           if (settings.showArabicText)
-            _buildArabicText(),
-          
+            _buildArabicText(onSurface),
+
           // Transliteration
           if (settings.showTransliteration)
             _buildTransliterationText(),
-          
+
           // Translation
           if (settings.showTranslation)
-            _buildTranslationText(),
-          
+            _buildTranslationText(onSurface),
+
           // Meaning (only in full mode)
           if (!isCompact && dhikr.meaning.isNotEmpty)
-            _buildMeaningText(),
+            _buildMeaningText(onSurface),
         ],
       ),
     );
   }
 
-  Widget _buildArabicText() {
+  Widget _buildArabicText(Color onSurface) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
@@ -102,7 +103,7 @@ class DhikrTextWidget extends StatelessWidget {
         style: TextStyle(
           fontSize: isCompact ? 18 : 24,
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: onSurface,
           height: 1.5,
         ),
         textAlign: TextAlign.center,
@@ -127,7 +128,7 @@ class DhikrTextWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTranslationText() {
+  Widget _buildTranslationText(Color onSurface) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
@@ -135,18 +136,18 @@ class DhikrTextWidget extends StatelessWidget {
         style: TextStyle(
           fontSize: isCompact ? 12 : 14,
           fontWeight: FontWeight.w500,
-          color: Colors.grey.shade700,
+          color: onSurface.withValues(alpha: 0.75),
         ),
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  Widget _buildMeaningText() {
+  Widget _buildMeaningText(Color onSurface) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: dhikr.category.color.withValues(alpha: 0.05),
+        color: dhikr.category.color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -175,7 +176,7 @@ class DhikrTextWidget extends StatelessWidget {
             dhikr.meaning,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: onSurface.withValues(alpha: 0.7),
               height: 1.3,
             ),
           ),
@@ -200,14 +201,15 @@ class DhikrCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       elevation: isSelected ? 8 : 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isSelected 
-            ? dhikr.category.color 
+          color: isSelected
+            ? dhikr.category.color
             : dhikr.category.color.withValues(alpha: 0.2),
           width: isSelected ? 2 : 1,
         ),
@@ -246,27 +248,27 @@ class DhikrCardWidget extends StatelessWidget {
                     'Target: ${dhikr.targetCount}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade600,
+                      color: onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Arabic text
               Text(
                 dhikr.arabic,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: onSurface,
                 ),
                 textDirection: TextDirection.rtl,
               ),
-              
+
               const SizedBox(height: 6),
-              
+
               // Transliteration
               Text(
                 dhikr.transliteration,
@@ -277,15 +279,15 @@ class DhikrCardWidget extends StatelessWidget {
                   fontStyle: FontStyle.italic,
                 ),
               ),
-              
+
               const SizedBox(height: 4),
-              
+
               // Translation
               Text(
                 dhikr.translation,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey.shade600,
+                  color: onSurface.withValues(alpha: 0.6),
                 ),
               ),
               
@@ -333,11 +335,12 @@ class DhikrDisplayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -356,17 +359,17 @@ class DhikrDisplayWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20 + settings.fontSize,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: onSurface,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
             ),
-          
-          if (settings.showArabicText && 
+
+          if (settings.showArabicText &&
               (settings.showTransliteration || settings.showTranslation))
             const SizedBox(height: 12),
-          
+
           // Transliteration
           if (settings.showTransliteration)
             Text(
@@ -379,17 +382,17 @@ class DhikrDisplayWidget extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-          
+
           if (settings.showTransliteration && settings.showTranslation)
             const SizedBox(height: 8),
-          
+
           // Translation
           if (settings.showTranslation)
             Text(
               dhikr.translation,
               style: TextStyle(
                 fontSize: 12 + (settings.fontSize * 0.5),
-                color: Colors.grey.shade700,
+                color: onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),

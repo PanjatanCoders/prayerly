@@ -61,28 +61,24 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Qaza Statistics', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      backgroundColor: Colors.black,
+      appBar: AppBar(title: const Text('Qaza Statistics')),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.green))
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Overall completion
-                  _buildCompletionCard(),
+                  _buildCompletionCard(onSurface),
 
                   const SizedBox(height: 28),
 
                   // Per prayer breakdown
-                  Text('Breakdown By Prayer', style: _sectionHeaderStyle()),
+                  Text('Breakdown By Prayer', style: _sectionHeaderStyle(onSurface)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -100,10 +96,10 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
                   const SizedBox(height: 28),
 
                   // Streak section
-                  Text('Consistency Streaks', style: _sectionHeaderStyle()),
+                  Text('Consistency Streaks', style: _sectionHeaderStyle(onSurface)),
                   const SizedBox(height: 6),
                   _streak == null
-                      ? const Text('No streak data.', style: TextStyle(color: Colors.white54))
+                      ? Text('No streak data.', style: TextStyle(color: onSurface.withValues(alpha: 0.6)))
                       : Row(
                           children: [
                             _buildStreakBox('Current', _streak!.current, Colors.green),
@@ -115,22 +111,22 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
                   const SizedBox(height: 28),
 
                   // Qaza Activity Summary
-                  Text('Qaza Activity (last 7 days)', style: _sectionHeaderStyle()),
+                  Text('Qaza Activity (last 7 days)', style: _sectionHeaderStyle(onSurface)),
                   const SizedBox(height: 6),
-                  _buildActivityBarChart(),
+                  _buildActivityBarChart(onSurface),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildCompletionCard() {
+  Widget _buildCompletionCard(Color onSurface) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey[800]!),
+        border: Border.all(color: onSurface.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -146,7 +142,7 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
               Expanded(
                 child: Text(
                   'completed (${_totalQaza} to go)',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(color: onSurface, fontSize: 16),
                 ),
               ),
             ],
@@ -154,7 +150,7 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
           const SizedBox(height: 16),
           LinearProgressIndicator(
             value: _completionPercentage / 100,
-            backgroundColor: Colors.grey[800],
+            backgroundColor: onSurface.withValues(alpha: 0.1),
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
             minHeight: 8,
           ),
@@ -180,7 +176,7 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
     );
   }
 
-  Widget _buildActivityBarChart() {
+  Widget _buildActivityBarChart(Color onSurface) {
     final today = DateTime.now();
     // Prepare daily completed count for last 7 days
     List<int> completedPerDay = List.generate(7, (i) {
@@ -198,9 +194,9 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[800]!),
+        border: Border.all(color: onSurface.withValues(alpha: 0.1)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -215,14 +211,14 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
                   height: 70 * completed / maxCompleted,
                   width: 16,
                   decoration: BoxDecoration(
-                    color: completed > 0 ? Colors.green : Colors.grey[700],
+                    color: completed > 0 ? Colors.green : onSurface.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   dayName,
-                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                  style: TextStyle(color: onSurface, fontSize: 11),
                 ),
                 Text(
                   completed.toString(),
@@ -241,8 +237,8 @@ class _QazaStatisticsScreenState extends State<QazaStatisticsScreen> {
     return days[date.weekday - 1];
   }
 
-  TextStyle _sectionHeaderStyle() => const TextStyle(
-        color: Colors.grey,
+  TextStyle _sectionHeaderStyle(Color onSurface) => TextStyle(
+        color: onSurface.withValues(alpha: 0.7),
         fontSize: 18,
         fontWeight: FontWeight.bold,
         height: 3,

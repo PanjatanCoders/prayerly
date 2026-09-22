@@ -49,19 +49,15 @@ class _QazaHistoryScreenState extends State<QazaHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Qaza History', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      backgroundColor: Colors.black,
+      appBar: AppBar(title: const Text('Qaza History')),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: FutureBuilder<List<QazaHistoryEntry>>(
         future: _historyFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.green));
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
@@ -70,10 +66,10 @@ class _QazaHistoryScreenState extends State<QazaHistoryScreen> {
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'No Qaza history available',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                style: TextStyle(color: onSurface.withValues(alpha: 0.7), fontSize: 16),
               ),
             );
           }
@@ -85,7 +81,7 @@ class _QazaHistoryScreenState extends State<QazaHistoryScreen> {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: history.length,
-            separatorBuilder: (_, __) => const Divider(color: Colors.grey),
+            separatorBuilder: (_, __) => Divider(color: onSurface.withValues(alpha: 0.15)),
             itemBuilder: (context, index) {
               final entry = history[index];
               final dateString = _formatDate(entry.timestamp);
@@ -95,7 +91,7 @@ class _QazaHistoryScreenState extends State<QazaHistoryScreen> {
               return Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[900],
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: actionColor.withValues(alpha: 0.7), width: 1.5),
                 ),
@@ -111,7 +107,7 @@ class _QazaHistoryScreenState extends State<QazaHistoryScreen> {
                           style: TextStyle(color: actionColor, fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         const Spacer(),
-                        Text(dateString, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text(dateString, style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12)),
                       ],
                     ),
                     const SizedBox(height: 8),

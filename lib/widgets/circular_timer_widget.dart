@@ -22,6 +22,7 @@ class CircularTimerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       key: ValueKey('timer_${currentTime.millisecondsSinceEpoch}'),
       width: size,
@@ -60,8 +61,8 @@ class CircularTimerWidget extends StatelessWidget {
               Text(
                 _formatTimeRemaining(timeRemaining),
                 key: ValueKey('remaining_${timeRemaining.inSeconds}'),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -73,8 +74,8 @@ class CircularTimerWidget extends StatelessWidget {
               Text(
                 PrayerService.formatCurrentTime(currentTime),
                 key: ValueKey('current_${currentTime.millisecondsSinceEpoch}'),
-                style: const TextStyle(
-                  color: Colors.grey,
+                style: TextStyle(
+                  color: onSurface.withValues(alpha: 0.6),
                   fontSize: 12,
                 ),
               ),

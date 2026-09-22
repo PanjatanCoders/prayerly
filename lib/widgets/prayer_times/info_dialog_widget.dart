@@ -23,8 +23,8 @@ class InfoDialogWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return AlertDialog(
-      backgroundColor: Colors.grey[900],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -35,9 +35,9 @@ class InfoDialogWidget extends StatelessWidget {
             color: Colors.blue[400],
           ),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'App Information',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: onSurface),
           ),
         ],
       ),
@@ -48,49 +48,56 @@ class InfoDialogWidget extends StatelessWidget {
           children: [
             _buildSectionTitle('Prayer Calculation'),
             _buildInfoItem(
+              context,
               'Calculation Method',
               'University of Islamic Sciences, Karachi',
               Icons.calculate,
             ),
             _buildInfoItem(
+              context,
               'Juristic Method',
               'Hanafi (Asr at twice the shadow length)',
               Icons.school,
             ),
-            
+
             const SizedBox(height: 16),
             _buildSectionTitle('Location'),
             _buildInfoItem(
+              context,
               'Location Source',
               _locationSourceLabel(locationData?.source),
               Icons.location_on,
             ),
             if (locationData != null)
               _buildInfoItem(
+                context,
                 'Coordinates',
                 locationData!.formattedCoordinates,
                 Icons.my_location,
               ),
             if (elevation != null)
               _buildInfoItem(
+                context,
                 'Elevation',
                 ElevationService.formatElevationWithBothUnits(elevation),
                 Icons.height,
               ),
-            
+
             const SizedBox(height: 16),
             _buildSectionTitle('Data'),
             _buildInfoItem(
+              context,
               'Prayer Times Source',
               'Calculated on this device (no internet needed)',
               Icons.calculate_outlined,
             ),
             _buildInfoItem(
+              context,
               'Notifications',
               notificationsEnabled ? 'Enabled (Auto Adhan)' : 'Disabled',
               notificationsEnabled ? Icons.notifications_active : Icons.notifications_off,
             ),
-            
+
             const SizedBox(height: 16),
             _buildSectionTitle('App Version'),
             // Read from the package rather than hard-coded: the literal here
@@ -104,11 +111,13 @@ class InfoDialogWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildInfoItem(
+                      context,
                       'Version',
                       info?.version ?? '...',
                       Icons.info,
                     ),
                     _buildInfoItem(
+                      context,
                       'Build',
                       info?.buildNumber ?? '...',
                       Icons.numbers,
@@ -135,10 +144,7 @@ class InfoDialogWidget extends StatelessWidget {
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text(
-            'Close',
-            style: TextStyle(color: Colors.white),
-          ),
+          child: const Text('Close'),
         ),
       ],
     );
@@ -175,7 +181,8 @@ class InfoDialogWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildInfoItem(String label, String? value, IconData icon) {
+  Widget _buildInfoItem(BuildContext context, String label, String? value, IconData icon) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -184,7 +191,7 @@ class InfoDialogWidget extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: Colors.grey[400],
+            color: onSurface.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -193,8 +200,8 @@ class InfoDialogWidget extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: onSurface,
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
                   ),
@@ -203,7 +210,7 @@ class InfoDialogWidget extends StatelessWidget {
                 Text(
                   value ?? 'Not available',
                   style: TextStyle(
-                    color: Colors.grey[400],
+                    color: onSurface.withValues(alpha: 0.6),
                     fontSize: 12,
                   ),
                 ),

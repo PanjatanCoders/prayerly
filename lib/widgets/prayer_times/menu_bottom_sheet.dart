@@ -1,8 +1,9 @@
 // widgets/prayer_times/menu_bottom_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:prayerly/screens/dhikr/dhikr_selection_screen.dart';
-import '../../screens/adhan_settings_screen.dart';
+import 'package:prayerly/utils/theme/app_transitions.dart';
 import '../../screens/qaza/qaza_tracker_screen.dart';
+import '../../screens/settings_screen.dart';
 import '../../screens/zakat/zakat_screen.dart';
 
 class MenuBottomSheet extends StatelessWidget {
@@ -10,9 +11,11 @@ class MenuBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).bottomSheetTheme.backgroundColor ??
+            Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -24,28 +27,28 @@ class MenuBottomSheet extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.grey[600],
+              color: onSurface.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Menu title
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               'Menu',
               style: TextStyle(
-                color: Colors.white,
+                color: onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Qaza Tracker Option
           _buildMenuTile(
             context: context,
@@ -57,9 +60,7 @@ class MenuBottomSheet extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const QazaTrackerScreen(),
-                ),
+                AppTransitions.slideIn(const QazaTrackerScreen()),
               );
             },
           ),
@@ -75,9 +76,7 @@ class MenuBottomSheet extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ZakatScreen(),
-                ),
+                AppTransitions.slideIn(const ZakatScreen()),
               );
             },
           ),
@@ -93,27 +92,23 @@ class MenuBottomSheet extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const DhikrSelectionScreen(),
-                ),
+                AppTransitions.slideIn(const DhikrSelectionScreen()),
               );
             },
           ),
-          
+
           // Settings Option
           _buildMenuTile(
             context: context,
             icon: Icons.settings,
             iconColor: Colors.blue,
             title: 'Settings',
-            subtitle: 'Adhan & notifications',
+            subtitle: 'Theme, language & adhan',
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const AdhanSettingsScreen(),
-                ),
+                AppTransitions.slideIn(const SettingsScreen()),
               );
             },
           ),
@@ -151,6 +146,7 @@ class MenuBottomSheet extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -166,21 +162,21 @@ class MenuBottomSheet extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: onSurface,
           fontWeight: FontWeight.w500,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: Colors.grey,
+        style: TextStyle(
+          color: onSurface.withValues(alpha: 0.6),
           fontSize: 12,
         ),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.arrow_forward_ios,
-        color: Colors.grey,
+        color: onSurface.withValues(alpha: 0.6),
         size: 16,
       ),
       onTap: onTap,

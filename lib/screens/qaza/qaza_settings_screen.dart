@@ -89,23 +89,19 @@ class _QazaSettingsScreenState extends State<QazaSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Qaza Settings', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      backgroundColor: Colors.black,
+      appBar: AppBar(title: const Text('Qaza Settings')),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.green))
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Daily Target
-                  Text('Daily Qaza Target', style: _sectionHeaderStyle()),
+                  Text('Daily Qaza Target', style: _sectionHeaderStyle(onSurface)),
                   Row(
                     children: [
                       Expanded(
@@ -116,15 +112,13 @@ class _QazaSettingsScreenState extends State<QazaSettingsScreen> {
                           label: _settings.dailyTarget.toString(),
                           divisions: 19,
                           onChanged: (value) => _changeDailyTarget(value.toInt()),
-                          activeColor: Colors.green,
-                          inactiveColor: Colors.grey[800],
                         ),
                       ),
                       SizedBox(
                         width: 48,
                         child: Text(
                           '${_settings.dailyTarget}',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: onSurface),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -133,13 +127,11 @@ class _QazaSettingsScreenState extends State<QazaSettingsScreen> {
                   const SizedBox(height: 24),
 
                   // Reminders
-                  Text('Prayer Reminders', style: _sectionHeaderStyle()),
+                  Text('Prayer Reminders', style: _sectionHeaderStyle(onSurface)),
                   SwitchListTile(
                     value: _settings.enableReminders,
                     onChanged: _toggleReminders,
-                    title: const Text('Enable Reminders', style: TextStyle(color: Colors.white)),
-                    activeColor: Colors.green,
-                    inactiveThumbColor: Colors.grey,
+                    title: Text('Enable Reminders', style: TextStyle(color: onSurface)),
                   ),
                   if (_settings.enableReminders) ...[
                     Column(
@@ -150,18 +142,16 @@ class _QazaSettingsScreenState extends State<QazaSettingsScreen> {
                             children: [
                               Text(
                                 "Time ${i + 1}: ",
-                                style: const TextStyle(color: Colors.white),
+                                style: TextStyle(color: onSurface),
                               ),
                               DropdownButton<int>(
                                 value: _settings.reminderTimes[i],
-                                dropdownColor: Colors.grey[900],
                                 items: List.generate(
                                   24,
                                   (index) => DropdownMenuItem(
                                     value: index,
                                     child: Text(
                                       TimeOfDay(hour: index, minute: 0).format(context),
-                                      style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 ),
@@ -186,42 +176,35 @@ class _QazaSettingsScreenState extends State<QazaSettingsScreen> {
                   const SizedBox(height: 24),
 
                   // Motivational Messages
-                  Text('Motivational Messages', style: _sectionHeaderStyle()),
+                  Text('Motivational Messages', style: _sectionHeaderStyle(onSurface)),
                   SwitchListTile(
                     value: _settings.showMotivationalMessages,
                     onChanged: _toggleMotivational,
-                    title: const Text('Show Motivational Messages', style: TextStyle(color: Colors.white)),
-                    activeColor: Colors.green,
+                    title: Text('Show Motivational Messages', style: TextStyle(color: onSurface)),
                   ),
                   const SizedBox(height: 24),
 
                   // Calculation Method
-                  Text('Calculation Method', style: _sectionHeaderStyle()),
+                  Text('Calculation Method', style: _sectionHeaderStyle(onSurface)),
                   DropdownButton<String>(
                     value: _settings.preferredCalculationMethod,
                     items: const [
-                      DropdownMenuItem(value: 'hanafi', child: Text('Hanafi', style: TextStyle(color: Colors.white))),
-                      DropdownMenuItem(value: 'shafi', child: Text('Shafi', style: TextStyle(color: Colors.white))),
-                      DropdownMenuItem(value: 'other', child: Text('Other', style: TextStyle(color: Colors.white))),
+                      DropdownMenuItem(value: 'hanafi', child: Text('Hanafi')),
+                      DropdownMenuItem(value: 'shafi', child: Text('Shafi')),
+                      DropdownMenuItem(value: 'other', child: Text('Other')),
                     ],
                     onChanged: (val) {
                       if (val != null) _changeCalculationMethod(val);
                     },
-                    dropdownColor: Colors.grey[900],
                   ),
                   const SizedBox(height: 32),
 
                   // Save Button
                   Center(
                     child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 13),
-                      ),
                       onPressed: _saveSettings,
-                      icon: const Icon(Icons.save, color: Colors.white),
-                      label: const Text('Save Settings', style: TextStyle(color: Colors.white, fontSize: 16)),
+                      icon: const Icon(Icons.save),
+                      label: const Text('Save Settings', style: TextStyle(fontSize: 16)),
                     ),
                   )
                 ],
@@ -230,8 +213,8 @@ class _QazaSettingsScreenState extends State<QazaSettingsScreen> {
     );
   }
 
-  TextStyle _sectionHeaderStyle() => const TextStyle(
-        color: Colors.grey,
+  TextStyle _sectionHeaderStyle(Color onSurface) => TextStyle(
+        color: onSurface.withValues(alpha: 0.7),
         fontSize: 18,
         fontWeight: FontWeight.bold,
         height: 3,

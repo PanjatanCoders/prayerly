@@ -11,17 +11,18 @@ class LoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: Colors.white),
+          const CircularProgressIndicator(),
           const SizedBox(height: 16),
           Text(
             isLoadingLocation
                 ? 'Getting your location...'
                 : 'Loading prayer times...',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: onSurface),
           ),
           const SizedBox(height: 8),
           Text(
@@ -29,7 +30,7 @@ class LoadingWidget extends StatelessWidget {
                 ? 'Please ensure location permissions are enabled'
                 : 'Calculating prayer times for your location',
             style: TextStyle(
-              color: Colors.grey[400],
+              color: onSurface.withValues(alpha: 0.6),
               fontSize: 12,
             ),
             textAlign: TextAlign.center,

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class InfoCardWidget extends StatelessWidget {
   final String location;
   final String islamicDate;
-  final String currentDate; 
+  final String currentDate;
   final double? elevation;
   final bool isLoadingElevation;
 
@@ -20,10 +20,11 @@ class InfoCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -33,6 +34,7 @@ class InfoCardWidget extends StatelessWidget {
           _buildInfoRow(
             icon: Icons.location_on,
             text: location,
+            onSurface: onSurface,
             maxLines: 2,
           ),
 
@@ -42,6 +44,7 @@ class InfoCardWidget extends StatelessWidget {
           _buildInfoRow(
             icon: Icons.calendar_today,
             text: currentDate,
+            onSurface: onSurface,
           ),
 
           const SizedBox(height: 12),
@@ -50,12 +53,13 @@ class InfoCardWidget extends StatelessWidget {
           _buildInfoRow(
             icon: Icons.nightlight_round,
             text: islamicDate,
+            onSurface: onSurface,
           ),
 
           const SizedBox(height: 12),
 
           // Elevation info
-          _buildElevationRow(),
+          _buildElevationRow(onSurface),
         ],
       ),
     );
@@ -65,17 +69,18 @@ class InfoCardWidget extends StatelessWidget {
   Widget _buildInfoRow({
     required IconData icon,
     required String text,
+    required Color onSurface,
     int maxLines = 1,
   }) {
     return Row(
       children: [
-        Icon(icon, color: Colors.white, size: 16),
+        Icon(icon, color: onSurface, size: 16),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: onSurface,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -88,10 +93,11 @@ class InfoCardWidget extends StatelessWidget {
   }
 
   /// Builds the elevation row with loading state
-  Widget _buildElevationRow() {
+  Widget _buildElevationRow(Color onSurface) {
+    final mutedColor = onSurface.withValues(alpha: 0.6);
     return Row(
       children: [
-        const Icon(Icons.filter_hdr, color: Colors.white, size: 16),
+        Icon(Icons.filter_hdr, color: onSurface, size: 16),
         const SizedBox(width: 4),
         Expanded(
           child: isLoadingElevation
@@ -102,14 +108,14 @@ class InfoCardWidget extends StatelessWidget {
                       height: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                        valueColor: AlwaysStoppedAnimation<Color>(mutedColor),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       "Loading elevation...",
                       style: TextStyle(
-                        color: Colors.grey,
+                        color: mutedColor,
                         fontSize: 10,
                       ),
                     ),
@@ -117,8 +123,8 @@ class InfoCardWidget extends StatelessWidget {
                 )
               : Text(
                   _formatElevationWithFeet(elevation),
-                  style: const TextStyle(
-                    color: Colors.grey,
+                  style: TextStyle(
+                    color: mutedColor,
                     fontSize: 10,
                   ),
                 ),
@@ -155,10 +161,12 @@ class CompactInfoCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final mutedColor = onSurface.withValues(alpha: 0.6);
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -167,13 +175,13 @@ class CompactInfoCardWidget extends StatelessWidget {
           // Location - truncated for compact view
           Row(
             children: [
-              const Icon(Icons.location_on, color: Colors.white, size: 14),
+              Icon(Icons.location_on, color: onSurface, size: 14),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   _truncateLocation(location),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: onSurface,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
@@ -189,13 +197,13 @@ class CompactInfoCardWidget extends StatelessWidget {
           // Current date
           Row(
             children: [
-              const Icon(Icons.calendar_today, color: Colors.white, size: 14),
+              Icon(Icons.calendar_today, color: onSurface, size: 14),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   currentDate,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: onSurface,
                     fontSize: 11,
                   ),
                 ),
@@ -208,14 +216,13 @@ class CompactInfoCardWidget extends StatelessWidget {
           // Islamic date
           Row(
             children: [
-              const Icon(Icons.nightlight_outlined,
-                  color: Colors.white, size: 14),
+              Icon(Icons.nightlight_outlined, color: onSurface, size: 14),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   islamicDate,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: onSurface,
                     fontSize: 11,
                   ),
                 ),
@@ -229,12 +236,12 @@ class CompactInfoCardWidget extends StatelessWidget {
             // Elevation
             Row(
               children: [
-                const Icon(Icons.filter_hdr, color: Colors.white, size: 14),
+                Icon(Icons.filter_hdr, color: onSurface, size: 14),
                 const SizedBox(width: 4),
                 Text(
                   _formatElevationWithFeet(elevation),
-                  style: const TextStyle(
-                    color: Colors.grey,
+                  style: TextStyle(
+                    color: mutedColor,
                     fontSize: 10,
                   ),
                 ),

@@ -105,7 +105,7 @@ class _LocationNotice extends StatelessWidget {
           Icon(
             isFallback ? Icons.location_off : Icons.history,
             size: 18,
-            color: isFallback ? Colors.orange[300] : Colors.blueGrey[200],
+            color: isFallback ? Colors.orange[300] : Colors.blueGrey,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -114,7 +114,7 @@ class _LocationNotice extends StatelessWidget {
                   ? l10n.locationNoticeDefault
                   : l10n.locationNoticeSaved,
               style: TextStyle(
-                color: Colors.grey[300],
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                 fontSize: 12,
                 height: 1.3,
               ),

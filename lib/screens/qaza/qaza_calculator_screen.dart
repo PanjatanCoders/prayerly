@@ -93,19 +93,15 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text(
-          'Calculation Details',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Calculation Details'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailRow('Total years of prayer obligation:', '$totalYears years'),
-            _buildDetailRow('Years with irregular prayers:', '$irregularYears years'),
-            _buildDetailRow('Days with irregular prayers:', '$irregularDays days'),
-            _buildDetailRow('Estimated missed percentage:', '${_missedPercentage.round()}%'),
+            _buildDetailRow(context, 'Total years of prayer obligation:', '$totalYears years'),
+            _buildDetailRow(context, 'Years with irregular prayers:', '$irregularYears years'),
+            _buildDetailRow(context, 'Days with irregular prayers:', '$irregularDays days'),
+            _buildDetailRow(context, 'Estimated missed percentage:', '${_missedPercentage.round()}%'),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -128,7 +124,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
                   Text(
                     'This is an estimation. For exact count, consult with a knowledgeable scholar. The calculation assumes equal distribution of missed prayers.',
                     style: TextStyle(
-                      color: Colors.grey[300],
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -140,14 +136,15 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: Colors.white)),
+            child: const Text('OK'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -155,11 +152,11 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 14),
           ),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(color: onSurface, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -170,19 +167,15 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
         title: const Text(
           'Input Error',
           style: TextStyle(color: Colors.red),
         ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.white),
-        ),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: Colors.white)),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -220,22 +213,13 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Qaza Calculator',
-          style: TextStyle(color: Colors.white),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        title: const Text('Qaza Calculator'),
         actions: [
           if (_showResults)
             IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white),
+              icon: const Icon(Icons.refresh),
               onPressed: _resetCalculation,
               tooltip: 'Reset',
             ),
@@ -312,13 +296,14 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
   }
 
   Widget _buildInputSection() {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Prayer History',
           style: TextStyle(
-            color: Colors.white,
+            color: onSurface,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -356,13 +341,14 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
     required String hint,
     required IconData icon,
   }) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: onSurface,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -375,21 +361,10 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(2),
           ],
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: onSurface),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey[400]),
-            prefixIcon: Icon(icon, color: Colors.grey[400]),
-            filled: true,
-            fillColor: Colors.grey[900],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.blue),
-            ),
+            prefixIcon: Icon(icon),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -407,13 +382,14 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
   }
 
   Widget _buildPercentageSlider() {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Estimated percentage of prayers missed during irregular years',
           style: TextStyle(
-            color: Colors.white,
+            color: onSurface,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -422,7 +398,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.grey[900],
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -430,9 +406,9 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Missed prayers:',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: onSurface),
                   ),
                   Text(
                     '${_missedPercentage.round()}%',
@@ -448,7 +424,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: Colors.orange,
-                  inactiveTrackColor: Colors.grey[700],
+                  inactiveTrackColor: onSurface.withValues(alpha: 0.15),
                   thumbColor: Colors.orange,
                   overlayColor: Colors.orange.withValues(alpha: 0.2),
                 ),
@@ -469,11 +445,11 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
                 children: [
                   Text(
                     'Rarely (0%)',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                    style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12),
                   ),
                   Text(
                     'Always (100%)',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                    style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12),
                   ),
                 ],
               ),
@@ -507,14 +483,15 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
 
   Widget _buildResultsSection() {
     final totalQaza = _calculatedQaza.values.fold(0, (sum, count) => sum + count);
-    
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Calculated Results',
           style: TextStyle(
-            color: Colors.white,
+            color: onSurface,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -590,11 +567,12 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
 
   Widget _buildResultCard(String prayer, int count) {
     final color = _getPrayerColor(prayer);
-    
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: color.withValues(alpha: 0.5),
@@ -612,8 +590,8 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
           const SizedBox(height: 8),
           Text(
             prayer,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: onSurface,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -666,8 +644,8 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
           child: OutlinedButton(
             onPressed: _resetCalculation,
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Colors.grey),
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              side: BorderSide(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

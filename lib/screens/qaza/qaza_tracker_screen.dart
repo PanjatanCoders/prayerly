@@ -6,6 +6,7 @@ import 'package:prayerly/screens/qaza/qaza_settings_screen.dart';
 import 'package:prayerly/screens/qaza/qaza_statistics_screen.dart';
 import 'package:prayerly/widgets/add_qaza_dialog.dart';
 import 'package:prayerly/widgets/complete_qaza_dialog.dart';
+import 'package:prayerly/utils/theme/app_transitions.dart';
 // ignore: unused_import
 import 'dart:math' as math;
 import '../../services/qaza_service.dart';
@@ -133,14 +134,14 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   void _showQazaCalculator() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const QazaCalculatorScreen()),
+      AppTransitions.slideIn(const QazaCalculatorScreen()),
     );
   }
 
   void _showStatistics() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const QazaStatisticsScreen()),
+      AppTransitions.slideIn(const QazaStatisticsScreen()),
     );
   }
 
@@ -158,7 +159,7 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: _buildAppBar(),
       body: _isLoading ? _buildLoadingScreen() : _buildMainContent(),
       floatingActionButton: _buildFloatingActionButtons(),
@@ -166,51 +167,47 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      title: const Text(
+      title: Text(
         'Qaza Tracker',
         style: TextStyle(
-          color: Colors.white,
+          color: onSurface,
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: onSurface),
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.calculate, color: Colors.white),
+          icon: Icon(Icons.calculate, color: onSurface),
           onPressed: _showQazaCalculator,
           tooltip: 'Qaza Calculator',
         ),
         IconButton(
-          icon: const Icon(Icons.analytics, color: Colors.white),
+          icon: Icon(Icons.analytics, color: onSurface),
           onPressed: _showStatistics,
           tooltip: 'Statistics',
         ),
         PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.white),
-          color: Colors.grey[900],
+          icon: Icon(Icons.more_vert, color: onSurface),
           onSelected: (value) {
             switch (value) {
               case 'settings':
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const QazaSettingsScreen(),
-                  ),
+                  AppTransitions.slideIn(const QazaSettingsScreen()),
                 );
                 break;
               case 'history':
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const QazaHistoryScreen(),
-                  ),
+                  AppTransitions.slideIn(const QazaHistoryScreen()),
                 );
                 break;
               case 'export':
@@ -221,44 +218,44 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
                 break;
             }
           },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
+          itemBuilder: (context) => const [
+            PopupMenuItem(
               value: 'settings',
               child: Row(
                 children: [
-                  Icon(Icons.settings, color: Colors.white),
+                  Icon(Icons.settings),
                   SizedBox(width: 8),
-                  Text('Settings', style: TextStyle(color: Colors.white)),
+                  Text('Settings'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'history',
               child: Row(
                 children: [
-                  Icon(Icons.history, color: Colors.white),
+                  Icon(Icons.history),
                   SizedBox(width: 8),
-                  Text('History', style: TextStyle(color: Colors.white)),
+                  Text('History'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'export',
               child: Row(
                 children: [
-                  Icon(Icons.download, color: Colors.white),
+                  Icon(Icons.download),
                   SizedBox(width: 8),
-                  Text('Export Data', style: TextStyle(color: Colors.white)),
+                  Text('Export Data'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'import',
               child: Row(
                 children: [
-                  Icon(Icons.upload, color: Colors.white),
+                  Icon(Icons.upload),
                   SizedBox(width: 8),
-                  Text('Import Data', style: TextStyle(color: Colors.white)),
+                  Text('Import Data'),
                 ],
               ),
             ),
@@ -269,15 +266,16 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   }
 
   Widget _buildLoadingScreen() {
-    return const Center(
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: Colors.green),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: Colors.green),
+          const SizedBox(height: 16),
           Text(
             'Loading your Qaza tracker...',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: onSurface),
           ),
         ],
       ),
@@ -352,23 +350,24 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   }
 
   Widget _buildProgressCard() {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[800]!),
+        border: Border.all(color: onSurface.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Overall Progress',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -389,7 +388,7 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
             builder: (context, child) {
               return LinearProgressIndicator(
                 value: (_completionPercentage / 100) * _progressAnimation.value,
-                backgroundColor: Colors.grey[800],
+                backgroundColor: onSurface.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(_getProgressColor()),
                 minHeight: 8,
               );
@@ -417,19 +416,20 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   }
 
   Widget _buildProgressItem(String label, String value, IconData icon) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Column(
       children: [
-        Icon(icon, color: Colors.grey[400], size: 20),
+        Icon(icon, color: onSurface.withValues(alpha: 0.6), size: 20),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: onSurface,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
-        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+        Text(label, style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12)),
       ],
     );
   }
@@ -499,13 +499,14 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   }
 
   Widget _buildQazaCountsGrid() {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Prayer Counts',
           style: TextStyle(
-            color: Colors.white,
+            color: onSurface,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -533,14 +534,15 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
 
   Widget _buildPrayerCard(String prayer, int count) {
     final color = _getPrayerColor(prayer);
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: count > 0 ? color.withValues(alpha: 0.5) : Colors.grey[800]!,
+          color: count > 0 ? color.withValues(alpha: 0.5) : onSurface.withValues(alpha: 0.1),
           width: 1.5,
         ),
       ),
@@ -549,14 +551,14 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
         children: [
           Icon(
             _getPrayerIcon(prayer),
-            color: count > 0 ? color : Colors.grey[600],
+            color: count > 0 ? color : onSurface.withValues(alpha: 0.4),
             size: 28,
           ),
           const SizedBox(height: 8),
           Text(
             prayer,
             style: TextStyle(
-              color: count > 0 ? Colors.white : Colors.grey[400],
+              color: count > 0 ? onSurface : onSurface.withValues(alpha: 0.6),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -565,7 +567,7 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
           Text(
             count.toString(),
             style: TextStyle(
-              color: count > 0 ? color : Colors.grey[600],
+              color: count > 0 ? color : onSurface.withValues(alpha: 0.4),
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),

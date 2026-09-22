@@ -20,46 +20,47 @@ class PrayerTimesListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AdhanSettingsProvider>(context);
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(onSurface),
           const SizedBox(height: 16),
           ...prayerTimes.entries.map((entry) {
             final hasNotification = provider.notificationSettings[entry.key] ?? false;
-            return _buildPrayerTimeItem(entry.key, entry.value, hasNotification);
+            return _buildPrayerTimeItem(entry.key, entry.value, hasNotification, onSurface);
           }).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(Color onSurface) {
     return Row(
       children: [
-        const Icon(Icons.schedule, color: Colors.white, size: 20),
+        Icon(Icons.schedule, color: onSurface, size: 20),
         const SizedBox(width: 8),
-        const Text(
+        Text(
           'Prayer Times',
           style: TextStyle(
-            color: Colors.white,
+            color: onSurface,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
         const Spacer(),
-        Icon(Icons.access_time, color: Colors.grey[600], size: 16),
+        Icon(Icons.access_time, color: onSurface.withValues(alpha: 0.5), size: 16),
       ],
     );
   }
 
-  Widget _buildPrayerTimeItem(String prayer, DateTime time, bool hasNotification) {
+  Widget _buildPrayerTimeItem(String prayer, DateTime time, bool hasNotification, Color onSurface) {
     bool isCurrentPrayer = prayer == currentPrayer;
     bool isNextPrayer = prayer == nextPrayer;
 
@@ -91,12 +92,12 @@ class PrayerTimesListWidget extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _buildPrayerInfo(prayer, isCurrentPrayer, isNextPrayer),
+            child: _buildPrayerInfo(prayer, isCurrentPrayer, isNextPrayer, onSurface),
           ),
           Text(
             PrayerService.formatTime(time),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -112,14 +113,14 @@ class PrayerTimesListWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildPrayerInfo(String prayer, bool isCurrentPrayer, bool isNextPrayer) {
+  Widget _buildPrayerInfo(String prayer, bool isCurrentPrayer, bool isNextPrayer, Color onSurface) {
     List<Widget> children = [];
 
     List<Widget> nameRowChildren = [
       Text(
         prayer,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: onSurface,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),

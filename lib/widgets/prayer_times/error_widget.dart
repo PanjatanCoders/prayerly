@@ -19,6 +19,7 @@ class ErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     String errorTitle;
     String errorMessage;
     IconData errorIcon;
@@ -45,42 +46,40 @@ class ErrorWidget extends StatelessWidget {
           children: [
             Icon(
               errorIcon,
-              color: Colors.white,
+              color: onSurface,
               size: 64,
             ),
             const SizedBox(height: 20),
-            
+
             Text(
               errorTitle,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: onSurface,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             Text(
               errorMessage,
               style: TextStyle(
-                color: Colors.grey[400],
+                color: onSurface.withValues(alpha: 0.7),
                 fontSize: 16,
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
               label: const Text('Try Again'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[800],
-                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
@@ -90,18 +89,19 @@ class ErrorWidget extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Troubleshooting tips
-            _buildTroubleshootingTips(),
+            _buildTroubleshootingTips(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTroubleshootingTips() {
+  Widget _buildTroubleshootingTips(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     List<String> tips = [];
     
     if (locationData == null) {
@@ -124,9 +124,9 @@ class ErrorWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900]?.withValues(alpha: 0.5),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[700]!),
+        border: Border.all(color: onSurface.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,14 +143,14 @@ class ErrorWidget extends StatelessWidget {
                 'Troubleshooting Tips:',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[300],
+                  color: onSurface.withValues(alpha: 0.85),
                   fontSize: 14,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          
+
           ...tips.map((tip) => Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
@@ -159,7 +159,7 @@ class ErrorWidget extends StatelessWidget {
                 Text(
                   '• ',
                   style: TextStyle(
-                    color: Colors.grey[400],
+                    color: onSurface.withValues(alpha: 0.6),
                     fontSize: 12,
                   ),
                 ),
@@ -167,7 +167,7 @@ class ErrorWidget extends StatelessWidget {
                   child: Text(
                     tip,
                     style: TextStyle(
-                      color: Colors.grey[400],
+                      color: onSurface.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),

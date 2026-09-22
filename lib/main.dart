@@ -8,8 +8,10 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'services/notification_service.dart';
 import 'services/adhan_service.dart';
 import 'services/language_service.dart';
-import 'screens/welcome_screen.dart';
+import 'screens/splash_screen.dart';
 import 'providers/adhan_settings_provider.dart';
+import 'providers/theme_provider.dart';
+
 // import 'l10n/app_localizations.dart';
 
 void main() async {
@@ -20,9 +22,15 @@ void main() async {
   await AdhanService.initialize();
   await LanguageService.initialize();
 
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AdhanSettingsProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AdhanSettingsProvider()),
+        ChangeNotifierProvider.value(value: themeProvider),
+      ],
       child: const MyApp(),
     ),
   );
@@ -62,56 +70,61 @@ class _MyAppState extends State<MyApp> {
     return ValueListenableBuilder<Locale>(
       valueListenable: LanguageService.localeNotifier,
       builder: (context, locale, child) {
-        return MaterialApp(
-          title: 'Prayerly',
-          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-          
-          // Theme configuration using AppTheme
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.system,
-          
-          // Localization configuration
-          locale: locale,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: LanguageService.supportedLocales,
-          
-          // Locale resolution callback
-          localeResolutionCallback: (locale, supportedLocales) {
-            if (locale != null) {
-              for (final supportedLocale in supportedLocales) {
-                if (supportedLocale.languageCode == locale.languageCode) {
-                  return supportedLocale;
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            return MaterialApp(
+              title: 'Prayerly',
+              onGenerateTitle: (context) =>
+                  AppLocalizations.of(context)!.appTitle,
+
+              // Theme configuration using AppTheme
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.themeMode,
+
+              // Localization configuration
+              locale: locale,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: LanguageService.supportedLocales,
+
+              // Locale resolution callback
+              localeResolutionCallback: (locale, supportedLocales) {
+                if (locale != null) {
+                  for (final supportedLocale in supportedLocales) {
+                    if (supportedLocale.languageCode == locale.languageCode) {
+                      return supportedLocale;
+                    }
+                  }
                 }
-              }
-            }
-            return const Locale('en'); // Default to English
-          },
-          
-          // RTL support for Urdu and text scaling
-          builder: (context, child) {
-            return Directionality(
-              textDirection: LanguageService.textDirection,
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  // Ensure proper text scaling
-                  textScaler: MediaQuery.of(context).textScaler.clamp(
-                    minScaleFactor: 0.8, 
-                    maxScaleFactor: 1.5,
+                return const Locale('en'); // Default to English
+              },
+
+              // RTL support for Urdu and text scaling
+              builder: (context, child) {
+                return Directionality(
+                  textDirection: LanguageService.textDirection,
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      // Ensure proper text scaling
+                      textScaler: MediaQuery.of(context).textScaler.clamp(
+                        minScaleFactor: 0.8,
+                        maxScaleFactor: 1.5,
+                      ),
+                    ),
+                    child: child!,
                   ),
-                ),
-                child: child!,
-              ),
+                );
+              },
+
+              home: const SplashScreen(),
+              debugShowCheckedModeBanner: false,
             );
           },
-          
-          home: const WelcomeScreen(),
-          debugShowCheckedModeBanner: false,
         );
       },
     );

@@ -336,7 +336,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: PrayerTimesAppBar(
         notificationsEnabled: _notificationsEnabled,
         onToggleNotifications: _toggleNotifications,

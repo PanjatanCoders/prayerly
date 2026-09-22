@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/zakat_service.dart';
 import '../../utils/theme/app_theme.dart';
+import '../../utils/theme/app_transitions.dart';
 import 'zakat_assets_edit_screen.dart';
 
 class ZakatScreen extends StatefulWidget {
@@ -388,9 +389,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
   Future<void> _openAssetsEditor() async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (context) => ZakatAssetsEditScreen(initialAssets: _assets),
-      ),
+      AppTransitions.slideIn(ZakatAssetsEditScreen(initialAssets: _assets)),
     );
     if (result == true) {
       _loadData();

@@ -83,8 +83,8 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return AlertDialog(
-      backgroundColor: Colors.grey[900],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -103,10 +103,10 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Add Qaza Prayers',
             style: TextStyle(
-              color: Colors.white,
+              color: onSurface,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -121,12 +121,12 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
             Text(
               'Enter the number of missed prayers for each type',
               style: TextStyle(
-                color: Colors.grey[400],
+                color: onSurface.withValues(alpha: 0.6),
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 20),
-            ...QazaService.prayerTypes.map((prayer) => _buildPrayerInput(prayer)),
+            ...QazaService.prayerTypes.map((prayer) => _buildPrayerInput(prayer, onSurface)),
             if (_hasValidInput) ...[
               const SizedBox(height: 16),
               Container(
@@ -164,10 +164,7 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: Colors.grey),
-          ),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _hasValidInput ? _onAdd : null,
@@ -184,9 +181,9 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
     );
   }
 
-  Widget _buildPrayerInput(String prayer) {
+  Widget _buildPrayerInput(String prayer, Color onSurface) {
     final color = _getPrayerColor(prayer);
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -208,8 +205,8 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
           Expanded(
             child: Text(
               prayer,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -220,11 +217,11 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
             children: [
               IconButton(
                 onPressed: () => _decrementCount(prayer),
-                icon: const Icon(Icons.remove, color: Colors.grey),
+                icon: const Icon(Icons.remove),
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 padding: EdgeInsets.zero,
               ),
-              Container(
+              SizedBox(
                 width: 60,
                 child: TextField(
                   controller: _controllers[prayer],
@@ -234,34 +231,24 @@ class _AddQazaDialogState extends State<AddQazaDialog> {
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(4),
                   ],
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[700]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[700]!),
-                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: color),
+                      borderSide: BorderSide(color: color, width: 2),
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[800],
                   ),
                   onChanged: (value) => _updateCount(prayer, value),
                 ),
               ),
               IconButton(
                 onPressed: () => _incrementCount(prayer),
-                icon: const Icon(Icons.add, color: Colors.grey),
+                icon: const Icon(Icons.add),
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 padding: EdgeInsets.zero,
               ),
