@@ -5,6 +5,8 @@ import '../../services/prayer_service.dart';
 import '../circular_timer_widget.dart';
 import '../info_card_widget.dart';
 import '../prayer_times_list_widget.dart';
+import 'greeting_header_widget.dart';
+import 'occasion_banner_widget.dart';
 
 class MainContentWidget extends StatelessWidget {
   final LocationData locationData;
@@ -35,10 +37,17 @@ class MainContentWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          GreetingHeaderWidget(hijriDate: prayerTimesData.islamicDate),
+          const SizedBox(height: 12),
+
+          const OccasionBannerWidget(),
+
           if (!locationData.isTrustworthy) ...[
-            _LocationNotice(locationData: locationData),
             const SizedBox(height: 12),
+            _LocationNotice(locationData: locationData),
           ],
+
+          const SizedBox(height: 16),
 
           // Top section with circular timer and info
           Row(

@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/qaza_service.dart';
+import '../utils/theme/app_theme.dart';
 
 class CompleteQazaDialog extends StatefulWidget {
   final Map<String, int> currentCounts;
@@ -257,7 +258,7 @@ class _CompleteQazaDialogState extends State<CompleteQazaDialog>
   }
 
   Widget _buildPrayerInput(String prayer, Color onSurface) {
-    final color = _getPrayerColor(prayer);
+    final color = AppTheme.legibleAccent(context, _getPrayerColor(prayer));
     final maxCount = widget.currentCounts[prayer] ?? 0;
 
     return Padding(

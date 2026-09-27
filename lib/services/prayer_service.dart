@@ -311,22 +311,27 @@ class PrayerService {
     }
   }
 
+  static const hijriMonthNames = [
+    'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
+    'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Shaban',
+    'Ramadan', 'Shawwal', 'Dhul Qadah', 'Dhul Hijjah'
+  ];
+
   /// Calculate Islamic (Hijri) date - OFFLINE
   static String _calculateIslamicDate(DateTime date) {
     // Umm al-Qura calendar approximation
     // Reference: 1 Muharram 1 AH = July 16, 622 CE (Julian)
-
-    final int jd = _gregorianToJulianDay(date);
-    final hijri = _julianDayToHijri(jd);
-
-    final months = [
-      'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
-      'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Shaban',
-      'Ramadan', 'Shawwal', 'Dhul Qadah', 'Dhul Hijjah'
-    ];
-
-    final monthName = months[(hijri['month']! - 1).clamp(0, 11)];
+    final hijri = _julianDayToHijri(_gregorianToJulianDay(date));
+    final monthName = hijriMonthNames[(hijri['month']! - 1).clamp(0, 11)];
     return '${hijri['day']} $monthName ${hijri['year']}';
+  }
+
+  /// Raw Hijri day/month/year for [date] - OFFLINE, same Kuwaiti-algorithm
+  /// approximation as [_calculateIslamicDate], exposed for callers that need
+  /// the components (e.g. detecting Ramadan or the White Days) rather than
+  /// the formatted string.
+  static Map<String, int> hijriComponents(DateTime date) {
+    return _julianDayToHijri(_gregorianToJulianDay(date));
   }
 
   /// Convert Gregorian date to Julian Day number

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 import 'package:prayerly/services/dhikr_service.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 
 /// Main counter widget with circular progress and tap area
 class DhikrCounterWidget extends StatefulWidget {
@@ -72,7 +73,11 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
   Widget build(BuildContext context) {
     final progress = DhikrService.calculateProgress(widget.count, widget.targetCount);
     final isComplete = DhikrService.isTargetReached(widget.count, widget.targetCount);
-    
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    // The count/ring color as given is tuned for light backgrounds; lighten
+    // it in dark mode so it stays legible against the dark surface.
+    final accentColor = AppTheme.legibleAccent(context, widget.primaryColor);
+
     return Column(
       children: [
         // Main counter circle
@@ -124,13 +129,13 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
                               size: const Size(260, 260),
                               painter: _DhikrProgressPainter(
                                 progress: animatedProgress,
-                                color: widget.primaryColor,
+                                color: accentColor,
                                 strokeWidth: 8,
                               ),
                             );
                           },
                         ),
-                      
+
                       // Counter display
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -141,21 +146,21 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
                             style: TextStyle(
                               fontSize: 48,
                               fontWeight: FontWeight.bold,
-                              color: widget.primaryColor,
+                              color: accentColor,
                             ),
                           ),
-                          
+
                           // Target indicator
                           Text(
                             'of ${DhikrService.formatCount(widget.targetCount)}',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey.shade600,
+                              color: onSurface.withValues(alpha: 0.6),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 8),
-                          
+
                           // Progress percentage
                           if (widget.showProgress)
                             Text(
@@ -163,7 +168,7 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: widget.primaryColor,
+                                color: accentColor,
                               ),
                             ),
                           
@@ -200,7 +205,7 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: onSurface.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -209,14 +214,14 @@ class _DhikrCounterWidgetState extends State<DhikrCounterWidget>
                               Icon(
                                 Icons.touch_app,
                                 size: 16,
-                                color: Colors.grey.shade600,
+                                color: onSurface.withValues(alpha: 0.6),
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 'Tap to count',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey.shade600,
+                                  color: onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],

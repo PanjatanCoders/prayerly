@@ -55,8 +55,6 @@ class _ZakatScreenState extends State<ZakatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Zakat Calculator'),
-        backgroundColor: AppTheme.primaryGreen,
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -244,7 +242,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
       style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: AppTheme.primaryGreen,
+        color: AppTheme.legibleAccent(context, AppTheme.primaryGreen),
       ),
     );
   }
@@ -397,11 +395,12 @@ class _ZakatScreenState extends State<ZakatScreen> {
   }
 
   Widget _buildAssetRow(String label, double value, IconData icon, {bool isDebt = false, bool isTotal = false}) {
+    final totalColor = AppTheme.legibleAccent(context, AppTheme.primaryGreen);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: isDebt ? Colors.red : (isTotal ? AppTheme.primaryGreen : Colors.grey)),
+          Icon(icon, size: 20, color: isDebt ? Colors.red : (isTotal ? totalColor : Colors.grey)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -416,7 +415,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
             _currencyFormat.format(value),
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isDebt ? Colors.red : (isTotal ? AppTheme.primaryGreen : null),
+              color: isDebt ? Colors.red : (isTotal ? totalColor : null),
               fontSize: isTotal ? 16 : 14,
             ),
           ),
@@ -477,7 +476,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
           ..._payments.take(5).map((payment) => ListTile(
             leading: CircleAvatar(
               backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
-              child: Icon(Icons.check, color: AppTheme.primaryGreen),
+              child: Icon(Icons.check, color: AppTheme.legibleAccent(context, AppTheme.primaryGreen)),
             ),
             title: Text(_currencyFormat.format(payment.amount)),
             subtitle: Text(
@@ -708,7 +707,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                      child: Icon(Icons.check, color: AppTheme.primaryGreen),
+                      child: Icon(Icons.check, color: AppTheme.legibleAccent(context, AppTheme.primaryGreen)),
                     ),
                     title: Text(_currencyFormat.format(payment.amount)),
                     subtitle: Text(

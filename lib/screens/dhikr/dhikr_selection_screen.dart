@@ -112,17 +112,22 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
           'Dhikr Counter',
           style: AppTheme.subheadingStyle(
             context,
-          ).copyWith(color: AppTheme.white, fontWeight: FontWeight.bold),
+          ).copyWith(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: AppTheme.islamicColors['dhikr'],
-        foregroundColor: AppTheme.white,
-        elevation: 0,
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          indicatorColor: AppTheme.white,
-          labelColor: AppTheme.white,
-          unselectedLabelColor: AppTheme.white.withValues(alpha: 0.7),
+          indicatorColor: AppTheme.legibleAccent(
+            context,
+            AppTheme.islamicColors['dhikr']!,
+          ),
+          labelColor: AppTheme.legibleAccent(
+            context,
+            AppTheme.islamicColors['dhikr']!,
+          ),
+          unselectedLabelColor: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.6),
           tabs: const [
             Tab(text: 'Popular', icon: Icon(Icons.star)),
             Tab(text: 'All Dhikr', icon: Icon(Icons.list)),
@@ -239,11 +244,16 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
         selectedColor:
             category?.color.withValues(alpha: 0.2) ??
             Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-        checkmarkColor:
-            category?.color ?? Theme.of(context).colorScheme.primary,
+        checkmarkColor: AppTheme.legibleAccent(
+          context,
+          category?.color ?? Theme.of(context).colorScheme.primary,
+        ),
         labelStyle: AppTheme.bodyStyle(context).copyWith(
           color: isSelected
-              ? (category?.color ?? Theme.of(context).colorScheme.primary)
+              ? AppTheme.legibleAccent(
+                  context,
+                  category?.color ?? Theme.of(context).colorScheme.primary,
+                )
               : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
@@ -437,7 +447,7 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: category.color,
+                  color: AppTheme.legibleAccent(context, category.color),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -468,7 +478,7 @@ class _DhikrSelectionScreenState extends State<DhikrSelectionScreen>
                   trailing: Text(
                     '${dhikr.targetCount}x',
                     style: AppTheme.bodyStyle(context).copyWith(
-                      color: category.color,
+                      color: AppTheme.legibleAccent(context, category.color),
                       fontWeight: FontWeight.bold,
                     ),
                   ),

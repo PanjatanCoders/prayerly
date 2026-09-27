@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/adhan_settings_provider.dart';
+import '../providers/reminder_settings_provider.dart';
 import '../services/adhan_service.dart';
 
 class AdhanSettingsScreen extends StatelessWidget {
@@ -19,6 +20,7 @@ class AdhanSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AdhanSettingsProvider>(context);
+    final reminderProvider = Provider.of<ReminderSettingsProvider>(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -35,6 +37,8 @@ class AdhanSettingsScreen extends StatelessWidget {
             _buildAdhanTypeSection(context, provider),
             const SizedBox(height: 24),
             _buildPrayerNotificationsSection(context, provider),
+            const SizedBox(height: 24),
+            _buildRemindersSection(context, reminderProvider),
             const SizedBox(height: 24),
             _buildTestSection(context),
           ],
@@ -257,6 +261,182 @@ class AdhanSettingsScreen extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRemindersSection(BuildContext context, ReminderSettingsProvider provider) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final s = provider.settings;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.access_alarm, color: onSurface, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Prayer Reminders',
+                style: TextStyle(
+                  color: onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Makruh time windows and a nightly Surah Al-Mulk nudge',
+            style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          _buildReminderToggleRow(
+            context,
+            title: 'Fajr ending soon',
+            description: (m) => 'Warns $m min before sunrise so you don\'t miss Fajr',
+            enabled: s.fajrEndingEnabled,
+            minutes: s.fajrEndingMinutesBefore,
+            min: 5,
+            max: 30,
+            onToggle: (v) => provider.setFajrEnding(enabled: v),
+            onMinutes: (v) => provider.setFajrEnding(minutesBefore: v),
+          ),
+          _buildReminderToggleRow(
+            context,
+            title: 'Sunrise makruh window',
+            description: (m) => 'At sunrise, tells you to wait $m min before praying',
+            enabled: s.sunriseMakruhEnabled,
+            minutes: s.sunriseMakruhDurationMinutes,
+            min: 10,
+            max: 30,
+            onToggle: (v) => provider.setSunriseMakruh(enabled: v),
+            onMinutes: (v) => provider.setSunriseMakruh(durationMinutes: v),
+          ),
+          _buildReminderToggleRow(
+            context,
+            title: 'Dhuhr makruh window',
+            description: (m) => 'Warns $m min before Dhuhr to avoid nafl at zawal',
+            enabled: s.dhuhrMakruhEnabled,
+            minutes: s.dhuhrMakruhMinutesBefore,
+            min: 10,
+            max: 60,
+            onToggle: (v) => provider.setDhuhrMakruh(enabled: v),
+            onMinutes: (v) => provider.setDhuhrMakruh(minutesBefore: v),
+          ),
+          _buildReminderToggleRow(
+            context,
+            title: 'Sunset makruh window',
+            description: (m) => 'Warns $m min before Maghrib to avoid prayer',
+            enabled: s.sunsetMakruhEnabled,
+            minutes: s.sunsetMakruhMinutesBefore,
+            min: 10,
+            max: 30,
+            onToggle: (v) => provider.setSunsetMakruh(enabled: v),
+            onMinutes: (v) => provider.setSunsetMakruh(minutesBefore: v),
+          ),
+          _buildReminderToggleRow(
+            context,
+            title: 'Surah Al-Mulk reminder',
+            description: (m) => 'Nudges you $m min after Isha to recite before sleeping',
+            enabled: s.surahMulkEnabled,
+            minutes: s.surahMulkDelayAfterIshaMinutes,
+            min: 0,
+            max: 90,
+            isLast: true,
+            onToggle: (v) => provider.setSurahMulk(enabled: v),
+            onMinutes: (v) => provider.setSurahMulk(delayMinutes: v),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReminderToggleRow(
+    BuildContext context, {
+    required String title,
+    required String Function(int minutes) description,
+    required bool enabled,
+    required int minutes,
+    required int min,
+    required int max,
+    required ValueChanged<bool> onToggle,
+    required ValueChanged<int> onMinutes,
+    bool isLast = false,
+  }) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return Container(
+      margin: EdgeInsets.only(bottom: isLast ? 0 : 4),
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: onSurface.withValues(alpha: 0.08))),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            title: Text(title, style: TextStyle(color: onSurface)),
+            subtitle: Text(
+              description(minutes),
+              style: TextStyle(
+                color: enabled ? Colors.teal : onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
+            value: enabled,
+            onChanged: onToggle,
+            contentPadding: EdgeInsets.zero,
+          ),
+          if (enabled)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      '$min',
+                      style: TextStyle(fontSize: 11, color: onSurface.withValues(alpha: 0.5)),
+                    ),
+                  ),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: Colors.teal,
+                        inactiveTrackColor: onSurface.withValues(alpha: 0.15),
+                        thumbColor: Colors.teal,
+                        overlayColor: Colors.teal.withValues(alpha: 0.2),
+                      ),
+                      child: Slider(
+                        value: minutes.toDouble(),
+                        min: min.toDouble(),
+                        max: max.toDouble(),
+                        divisions: max - min,
+                        label: '$minutes min',
+                        onChanged: (v) => onMinutes(v.round()),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      '$max',
+                      style: TextStyle(fontSize: 11, color: onSurface.withValues(alpha: 0.5)),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

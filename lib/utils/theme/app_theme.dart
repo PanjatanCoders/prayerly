@@ -441,4 +441,22 @@ class AppTheme {
       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
     );
   }
+
+  /// Adapts a brand/category color (e.g. [islamicColors]) for use as
+  /// text/icon/ring foreground directly on the current surface.
+  ///
+  /// These colors are deep shades tuned for contrast against a light
+  /// background. Used as-is in dark mode they sit close in luminance to
+  /// the dark surface (~2:1 contrast for the purple dhikr accent, well
+  /// under the 3:1 WCAG minimum for large text), which is why things like
+  /// the tasbih counter digits nearly disappear at night. Lightening the
+  /// hue in dark mode keeps the same brand color legible without touching
+  /// its use as a solid fill (badges, FABs) where a white foreground
+  /// already has plenty of contrast regardless of theme.
+  static Color legibleAccent(BuildContext context, Color color) {
+    if (Theme.of(context).brightness != Brightness.dark) return color;
+    final hsl = HSLColor.fromColor(color);
+    if (hsl.lightness >= 0.6) return color;
+    return hsl.withLightness((hsl.lightness + 0.28).clamp(0.0, 0.85)).toColor();
+  }
 }

@@ -14,8 +14,6 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: AppTheme.primaryGreen,
-        foregroundColor: Colors.white,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -74,9 +72,10 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
-      style: AppTheme.subheadingStyle(
-        context,
-      ).copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.bold),
+      style: AppTheme.subheadingStyle(context).copyWith(
+        color: AppTheme.legibleAccent(context, AppTheme.primaryGreen),
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 
@@ -91,7 +90,11 @@ class SettingsScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.language, color: AppTheme.primaryGreen, size: 24),
+                  Icon(
+                    Icons.language,
+                    color: AppTheme.legibleAccent(context, AppTheme.primaryGreen),
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     'Select Language',
@@ -131,7 +134,7 @@ class SettingsScreen extends StatelessWidget {
       child: Container(
         decoration: AppTheme.cardDecoration(context),
         child: ListTile(
-          leading: Icon(icon, color: AppTheme.primaryGreen),
+          leading: Icon(icon, color: AppTheme.legibleAccent(context, AppTheme.primaryGreen)),
           title: Text(
             title,
             style: AppTheme.bodyStyle(

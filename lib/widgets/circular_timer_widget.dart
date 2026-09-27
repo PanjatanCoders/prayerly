@@ -3,8 +3,9 @@
 import 'package:flutter/material.dart';
 import '../utils/circular_progress_painter.dart';
 import '../services/prayer_service.dart';
+import '../utils/theme/app_theme.dart';
 
-class CircularTimerWidget extends StatelessWidget {
+class CircularTimerWidget extends StatefulWidget {
   final String nextPrayer;
   final Duration timeRemaining;
   final DateTime currentTime;
@@ -21,68 +22,143 @@ class CircularTimerWidget extends StatelessWidget {
   });
 
   @override
+  State<CircularTimerWidget> createState() => _CircularTimerWidgetState();
+}
+
+class _CircularTimerWidgetState extends State<CircularTimerWidget>
+    with SingleTickerProviderStateMixin {
+  // Below this, the ring gets a gentle "hurry up" pulse; below this, adhan is
+  // imminent and the pulse quickens and warms towards amber.
+  static const _pulseThreshold = Duration(minutes: 10);
+  static const _urgentThreshold = Duration(minutes: 1);
+
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+    _syncPulse();
+  }
+
+  @override
+  void didUpdateWidget(CircularTimerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncPulse();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  bool get _isPulsing => widget.timeRemaining <= _pulseThreshold;
+  bool get _isUrgent => widget.timeRemaining <= _urgentThreshold;
+
+  void _syncPulse() {
+    final targetDuration = _isUrgent
+        ? const Duration(milliseconds: 550)
+        : const Duration(milliseconds: 1100);
+    if (_pulseController.duration != targetDuration) {
+      _pulseController.duration = targetDuration;
+    }
+    if (_isPulsing) {
+      if (!_pulseController.isAnimating) {
+        _pulseController.repeat(reverse: true);
+      }
+    } else if (_pulseController.isAnimating) {
+      _pulseController.stop();
+      _pulseController.value = 0;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
-    return Container(
-      key: ValueKey('timer_${currentTime.millisecondsSinceEpoch}'),
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Progress circle (this is your only circle now)
-          CustomPaint(
-            key: ValueKey('progress_${progress}_$nextPrayer'),
-            size: Size(size, size),
-            painter: CircularProgressPainter(
-              progress: progress,
-              color: _getPrayerColor(nextPrayer),
+    final baseColor = _getPrayerColor(widget.nextPrayer);
+    final urgentColor = AppTheme.legibleAccent(context, AppTheme.primaryAmber);
+
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final t = _isPulsing ? _pulseController.value : 0.0;
+        final prayerColor = AppTheme.legibleAccent(
+          context,
+          _isUrgent ? Color.lerp(baseColor, urgentColor, t)! : baseColor,
+        );
+        final scale = _isPulsing ? 1.0 + (t * 0.035) : 1.0;
+
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: _isPulsing
+                ? BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: prayerColor.withValues(alpha: 0.25 * t),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  )
+                : null,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  size: Size(widget.size, widget.size),
+                  painter: CircularProgressPainter(
+                    progress: widget.progress,
+                    color: prayerColor,
+                  ),
+                ),
+
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.nextPrayer,
+                      style: TextStyle(
+                        color: prayerColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      _formatTimeRemaining(widget.timeRemaining),
+                      style: TextStyle(
+                        color: onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      PrayerService.formatCurrentTime(widget.currentTime),
+                      style: TextStyle(
+                        color: onSurface.withValues(alpha: 0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-
-          // Timer content
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Next prayer name
-              Text(
-                nextPrayer,
-                key: ValueKey('prayer_$nextPrayer'),
-                style: TextStyle(
-                  color: _getPrayerColor(nextPrayer),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              // Time remaining
-              Text(
-                _formatTimeRemaining(timeRemaining),
-                key: ValueKey('remaining_${timeRemaining.inSeconds}'),
-                style: TextStyle(
-                  color: onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              // Current time
-              Text(
-                PrayerService.formatCurrentTime(currentTime),
-                key: ValueKey('current_${currentTime.millisecondsSinceEpoch}'),
-                style: TextStyle(
-                  color: onSurface.withValues(alpha: 0.6),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

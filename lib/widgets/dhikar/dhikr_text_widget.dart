@@ -1,6 +1,7 @@
 // widgets/dhikr_text_widget.dart
 import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 
 /// Widget for displaying Dhikr text in multiple formats
 class DhikrTextWidget extends StatelessWidget {
@@ -81,7 +82,7 @@ class DhikrTextWidget extends StatelessWidget {
 
           // Transliteration
           if (settings.showTransliteration)
-            _buildTransliterationText(),
+            _buildTransliterationText(context),
 
           // Translation
           if (settings.showTranslation)
@@ -89,7 +90,7 @@ class DhikrTextWidget extends StatelessWidget {
 
           // Meaning (only in full mode)
           if (!isCompact && dhikr.meaning.isNotEmpty)
-            _buildMeaningText(onSurface),
+            _buildMeaningText(context, onSurface),
         ],
       ),
     );
@@ -112,7 +113,7 @@ class DhikrTextWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTransliterationText() {
+  Widget _buildTransliterationText(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
@@ -120,7 +121,7 @@ class DhikrTextWidget extends StatelessWidget {
         style: TextStyle(
           fontSize: isCompact ? 14 : 16,
           fontWeight: FontWeight.w500,
-          color: dhikr.category.color,
+          color: AppTheme.legibleAccent(context, dhikr.category.color),
           fontStyle: FontStyle.italic,
         ),
         textAlign: TextAlign.center,
@@ -143,7 +144,8 @@ class DhikrTextWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMeaningText(Color onSurface) {
+  Widget _buildMeaningText(BuildContext context, Color onSurface) {
+    final accent = AppTheme.legibleAccent(context, dhikr.category.color);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -158,7 +160,7 @@ class DhikrTextWidget extends StatelessWidget {
               Icon(
                 Icons.lightbulb_outline,
                 size: 16,
-                color: dhikr.category.color,
+                color: accent,
               ),
               const SizedBox(width: 6),
               Text(
@@ -166,7 +168,7 @@ class DhikrTextWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: dhikr.category.color,
+                  color: accent,
                 ),
               ),
             ],
@@ -275,7 +277,7 @@ class DhikrCardWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: dhikr.category.color,
+                  color: AppTheme.legibleAccent(context, dhikr.category.color),
                   fontStyle: FontStyle.italic,
                 ),
               ),

@@ -5,8 +5,10 @@ import 'package:prayerly/screens/qaza/qaza_calculator_screen.dart';
 import 'package:prayerly/screens/qaza/qaza_settings_screen.dart';
 import 'package:prayerly/screens/qaza/qaza_statistics_screen.dart';
 import 'package:prayerly/widgets/add_qaza_dialog.dart';
+import 'package:prayerly/widgets/celebration_burst_widget.dart';
 import 'package:prayerly/widgets/complete_qaza_dialog.dart';
 import 'package:prayerly/utils/theme/app_transitions.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 // ignore: unused_import
 import 'dart:math' as math;
 import '../../services/qaza_service.dart';
@@ -117,15 +119,21 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   }
 
   void _showCompleteQazaDialog() {
+    // Captured before the builder below shadows `context` with the dialog's
+    // own (soon to pop, and so briefly invalid) BuildContext.
+    final screenContext = context;
     showDialog(
       context: context,
-      builder: (context) => CompleteQazaDialog(
+      builder: (dialogContext) => CompleteQazaDialog(
         currentCounts: _qazaCounts,
         onComplete: (counts) async {
           await QazaService.completeQazaPrayers(counts);
           _loadData();
           _showSnackBar('Alhamdulillah! Qaza prayers completed', Colors.green);
           HapticFeedback.lightImpact();
+          if (mounted) {
+            CelebrationBurst.show(screenContext, icon: Icons.check_circle, color: Colors.green);
+          }
         },
       ),
     );
@@ -533,7 +541,7 @@ class _QazaTrackerScreenState extends State<QazaTrackerScreen>
   }
 
   Widget _buildPrayerCard(String prayer, int count) {
-    final color = _getPrayerColor(prayer);
+    final color = AppTheme.legibleAccent(context, _getPrayerColor(prayer));
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(

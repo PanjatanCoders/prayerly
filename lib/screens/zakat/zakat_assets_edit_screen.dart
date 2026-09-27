@@ -151,26 +151,27 @@ class _ZakatAssetsEditScreenState extends State<ZakatAssetsEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Assets'),
-        backgroundColor: AppTheme.primaryGreen,
-        foregroundColor: Colors.white,
         actions: [
           _isSaving
-              ? const Padding(
-                  padding: EdgeInsets.all(16),
+              ? Padding(
+                  padding: const EdgeInsets.all(16),
                   child: SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppTheme.legibleAccent(context, AppTheme.primaryGreen),
                     ),
                   ),
                 )
               : TextButton(
                   onPressed: _save,
-                  child: const Text(
+                  child: Text(
                     'Save',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: AppTheme.legibleAccent(context, AppTheme.primaryGreen),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
         ],
@@ -333,18 +334,19 @@ class _ZakatAssetsEditScreenState extends State<ZakatAssetsEditScreen> {
   }
 
   Widget _buildSectionHeader(String title, IconData icon, {Color? color}) {
+    final resolved = AppTheme.legibleAccent(context, color ?? AppTheme.primaryGreen);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: color ?? AppTheme.primaryGreen),
+          Icon(icon, size: 20, color: resolved),
           const SizedBox(width: 8),
           Text(
             title,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: color ?? AppTheme.primaryGreen,
+              color: resolved,
             ),
           ),
         ],
@@ -429,7 +431,9 @@ class _ZakatAssetsEditScreenState extends State<ZakatAssetsEditScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text('Add Entry'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: isDebt ? Colors.red : AppTheme.primaryGreen,
+                  foregroundColor: isDebt
+                      ? Colors.red
+                      : AppTheme.legibleAccent(context, AppTheme.primaryGreen),
                 ),
               ),
             ),

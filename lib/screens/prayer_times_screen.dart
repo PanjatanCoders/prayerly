@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:prayerly/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/reminder_settings_provider.dart';
 import '../widgets/prayer_times/index.dart';
 
 /// Prayer times screen.
@@ -72,6 +74,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   Future<void> _initializeServices() async {
     try {
       await AdhanService.initialize();
+      await ReminderService.initialize();
       await NotificationService.initialize();
 
       AwesomeNotifications().setListeners(
@@ -215,6 +218,10 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         _lastCalculatedFor = DateTime.now();
       });
 
+      if (mounted) {
+        context.read<ReminderSettingsProvider>().updatePrayerTimes(data.prayerTimes);
+      }
+
       _updatePrayerStatus();
 
       if (_notificationsEnabled) {
@@ -235,7 +242,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         _prayerTimesData!.prayerTimes,
         notificationSettings,
       );
-      debugPrint('Adhan notifications scheduled successfully');
+      await ReminderService.scheduleReminders(_prayerTimesData!.prayerTimes);
+      debugPrint('Adhan notifications and reminders scheduled successfully');
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
     }
@@ -275,6 +283,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     final l10n = AppLocalizations.of(context)!;
     if (_notificationsEnabled) {
       await AdhanService.cancelAllNotifications();
+      await ReminderService.cancelAll();
       if (mounted) {
         setState(() => _notificationsEnabled = false);
         _showSnackBar(l10n.notificationsDisabled);

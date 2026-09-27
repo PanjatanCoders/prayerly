@@ -178,13 +178,9 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
         title: Text(
           l10n.qiblaCompass,
           style: AppTheme.subheadingStyle(context).copyWith(
-            color: Theme.of(context).colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: AppTheme.islamicColors['qibla'],
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        elevation: 0,
         centerTitle: true,
         actions: [
           IconButton(

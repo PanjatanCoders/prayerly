@@ -103,7 +103,7 @@ extension DhikrCategoryExtension on DhikrCategory {
       case DhikrCategory.asmaUlHusna:
         return const Color(0xFF0288D1); // Light Blue
       case DhikrCategory.custom:
-        return const Color(0xFF424242); // Grey
+        return const Color(0xFF00838F); // Teal
     }
   }
 }

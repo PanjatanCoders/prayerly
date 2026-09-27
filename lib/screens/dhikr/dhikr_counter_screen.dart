@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
 import 'package:prayerly/services/dhikr_service.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
+import 'package:prayerly/widgets/celebration_burst_widget.dart';
 import 'package:prayerly/widgets/dhikar/dhikr_counter_widget.dart';
 import 'package:prayerly/widgets/dhikar/dhikr_text_widget.dart';
 
@@ -67,6 +68,11 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
     );
 
     if (mounted) {
+      CelebrationBurst.show(
+        context,
+        icon: Icons.celebration,
+        color: AppTheme.legibleAccent(context, AppTheme.islamicColors['dhikr']!),
+      );
       _showCompletionDialog();
     }
   }
@@ -125,7 +131,10 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
           children: [
             Icon(
               Icons.celebration,
-              color: AppTheme.islamicColors['dhikr'],
+              color: AppTheme.legibleAccent(
+                context,
+                AppTheme.islamicColors['dhikr']!,
+              ),
               size: 28,
             ),
             const SizedBox(width: 8),
@@ -216,18 +225,33 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(
-          widget.dhikr.transliteration,
-          style: AppTheme.subheadingStyle(context).copyWith(
-            color: AppTheme.white,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.legibleAccent(
+                  context,
+                  AppTheme.islamicColors['dhikr']!,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                widget.dhikr.transliteration,
+                style: AppTheme.subheadingStyle(context),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
-        backgroundColor: AppTheme.islamicColors['dhikr'],
-        foregroundColor: AppTheme.white,
-        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: AppTheme.white),
+            icon: const Icon(Icons.settings),
             onPressed: _showSettings,
           ),
         ],
@@ -285,19 +309,22 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
                 label: 'Remaining',
                 value: '$remaining',
                 icon: Icons.trending_up,
-                color: AppTheme.primaryOrange,
+                color: AppTheme.legibleAccent(context, AppTheme.primaryOrange),
               ),
               _buildInfoItem(
                 label: 'Progress',
                 value: '${(progress * 100).toStringAsFixed(0)}%',
                 icon: Icons.percent,
-                color: AppTheme.islamicColors['quran']!,
+                color: AppTheme.legibleAccent(
+                  context,
+                  AppTheme.islamicColors['quran']!,
+                ),
               ),
               _buildInfoItem(
                 label: 'Duration',
                 value: DhikrService.formatDuration(sessionDuration),
                 icon: Icons.timer,
-                color: AppTheme.primaryGreen,
+                color: AppTheme.legibleAccent(context, AppTheme.primaryGreen),
               ),
             ],
           ),
@@ -315,7 +342,10 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
               children: [
                 Icon(
                   Icons.favorite,
-                  color: AppTheme.islamicColors['dhikr'],
+                  color: AppTheme.legibleAccent(
+                    context,
+                    AppTheme.islamicColors['dhikr']!,
+                  ),
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -323,7 +353,10 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
                   child: Text(
                     DhikrService.getEncouragementMessage(progress),
                     style: AppTheme.bodyStyle(context).copyWith(
-                      color: AppTheme.islamicColors['dhikr'],
+                      color: AppTheme.legibleAccent(
+                        context,
+                        AppTheme.islamicColors['dhikr']!,
+                      ),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

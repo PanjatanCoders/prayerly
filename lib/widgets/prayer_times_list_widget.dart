@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/prayer_service.dart';
 import '../providers/adhan_settings_provider.dart';
+import '../utils/theme/app_theme.dart';
 
 class PrayerTimesListWidget extends StatelessWidget {
   final Map<String, DateTime> prayerTimes;
@@ -34,7 +35,7 @@ class PrayerTimesListWidget extends StatelessWidget {
           const SizedBox(height: 16),
           ...prayerTimes.entries.map((entry) {
             final hasNotification = provider.notificationSettings[entry.key] ?? false;
-            return _buildPrayerTimeItem(entry.key, entry.value, hasNotification, onSurface);
+            return _buildPrayerTimeItem(context, entry.key, entry.value, hasNotification, onSurface);
           }).toList(),
         ],
       ),
@@ -60,7 +61,7 @@ class PrayerTimesListWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildPrayerTimeItem(String prayer, DateTime time, bool hasNotification, Color onSurface) {
+  Widget _buildPrayerTimeItem(BuildContext context, String prayer, DateTime time, bool hasNotification, Color onSurface) {
     bool isCurrentPrayer = prayer == currentPrayer;
     bool isNextPrayer = prayer == nextPrayer;
 
@@ -86,7 +87,7 @@ class PrayerTimesListWidget extends StatelessWidget {
             width: 4,
             height: 40,
             decoration: BoxDecoration(
-              color: _getPrayerColor(prayer),
+              color: AppTheme.legibleAccent(context, _getPrayerColor(prayer)),
               borderRadius: BorderRadius.circular(2),
             ),
           ),

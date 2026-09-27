@@ -7,9 +7,11 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 
 import 'services/notification_service.dart';
 import 'services/adhan_service.dart';
+import 'services/reminder_service.dart';
 import 'services/language_service.dart';
 import 'screens/splash_screen.dart';
 import 'providers/adhan_settings_provider.dart';
+import 'providers/reminder_settings_provider.dart';
 import 'providers/theme_provider.dart';
 
 // import 'l10n/app_localizations.dart';
@@ -20,6 +22,7 @@ void main() async {
   // Initialize services
   await NotificationService.initialize();
   await AdhanService.initialize();
+  await ReminderService.initialize();
   await LanguageService.initialize();
 
   final themeProvider = ThemeProvider();
@@ -29,6 +32,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AdhanSettingsProvider()),
+        ChangeNotifierProvider(create: (_) => ReminderSettingsProvider()),
         ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: const MyApp(),

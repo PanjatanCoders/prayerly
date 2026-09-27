@@ -10,3 +10,4 @@ export '../../services/prayer_service.dart';
 export '../../services/elevation_service.dart';
 export '../../services/adhan_service.dart';
 export '../../services/notification_service.dart';
+export '../../services/reminder_service.dart';

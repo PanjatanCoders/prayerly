@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/qaza_service.dart';
+import '../../utils/theme/app_theme.dart';
 
 class QazaCalculatorScreen extends StatefulWidget {
   const QazaCalculatorScreen({super.key});
@@ -566,7 +567,7 @@ class _QazaCalculatorScreenState extends State<QazaCalculatorScreen> {
   }
 
   Widget _buildResultCard(String prayer, int count) {
-    final color = _getPrayerColor(prayer);
+    final color = AppTheme.legibleAccent(context, _getPrayerColor(prayer));
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
