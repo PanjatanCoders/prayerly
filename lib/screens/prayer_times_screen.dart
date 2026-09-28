@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:prayerly/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +26,8 @@ class PrayerTimesScreen extends StatefulWidget {
 
 class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     with WidgetsBindingObserver {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // Timers
   Timer? _timeUpdateTimer;
   Timer? _dailyUpdateTimer;
@@ -77,9 +78,12 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       await ReminderService.initialize();
       await NotificationService.initialize();
 
-      AwesomeNotifications().setListeners(
-        onActionReceivedMethod: AdhanService.onNotificationTap,
-      );
+      // Listeners are registered once, in main.dart's MyApp.initState.
+      // Calling AwesomeNotifications().setListeners() again here would
+      // unconditionally overwrite onNotificationDisplayedMethod with null
+      // (awesome_notifications replaces every handler on each call, even
+      // ones omitted from the argument list), silently breaking adhan
+      // auto-play for the lifetime of the app.
 
       final enabled = await NotificationService.areNotificationsEnabled();
       if (mounted) {
@@ -314,13 +318,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     );
   }
 
-  /// Show custom menu
+  /// Opens the glassmorphism navigation sidebar
   void _showCustomMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => MenuBottomSheet(),
-    );
+    _scaffoldKey.currentState?.openDrawer();
   }
 
   /// Show info dialog
@@ -345,6 +345,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: PrayerTimesAppBar(
         notificationsEnabled: _notificationsEnabled,
@@ -353,6 +354,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         onShowInfo: _showInfoDialog,
         onShowMenu: _showCustomMenu,
       ),
+      drawer: const GlassSidebar(),
       body: _buildBody(),
     );
   }

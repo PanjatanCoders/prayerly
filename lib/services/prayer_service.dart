@@ -384,7 +384,7 @@ class PrayerService {
     Map<String, DateTime> prayerTimes,
     DateTime currentTime,
   ) {
-    const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    const prayers = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
     for (int i = 0; i < prayers.length; i++) {
       final prayerTime = prayerTimes[prayers[i]];

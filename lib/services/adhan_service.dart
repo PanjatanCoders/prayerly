@@ -371,7 +371,11 @@ class AdhanService {
             actionType: ActionType.DismissAction,
           ),
         ],
-        schedule: NotificationCalendar.fromDate(date: time),
+        schedule: NotificationCalendar.fromDate(
+          date: time,
+          allowWhileIdle: true,
+          preciseAlarm: true,
+        ),
       );
     } catch (e) {
       debugPrint('Error scheduling $prayer notification: $e');

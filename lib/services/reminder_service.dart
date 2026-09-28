@@ -247,7 +247,11 @@ class ReminderService {
         category: NotificationCategory.Reminder,
         notificationLayout: NotificationLayout.BigText,
       ),
-      schedule: NotificationCalendar.fromDate(date: time),
+      schedule: NotificationCalendar.fromDate(
+        date: time,
+        allowWhileIdle: true,
+        preciseAlarm: true,
+      ),
     );
   }
 

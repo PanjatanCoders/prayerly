@@ -17,17 +17,39 @@ void main() {
   final times = _times(day);
 
   group('current prayer status', () {
-    test('mid-morning sits between Fajr and Dhuhr', () {
+    test('mid-morning sits between Sunrise and Dhuhr', () {
       final status = PrayerService.getCurrentPrayerStatus(
         times,
         DateTime(2026, 3, 15, 9, 0),
       );
 
-      expect(status.currentPrayer, 'Fajr');
+      expect(status.currentPrayer, 'Sunrise');
       expect(status.nextPrayer, 'Dhuhr');
       expect(status.timeRemaining, const Duration(hours: 3, minutes: 10));
       expect(status.progress, greaterThan(0));
       expect(status.progress, lessThan(1));
+    });
+
+    test('just after Fajr sits between Fajr and Sunrise', () {
+      final status = PrayerService.getCurrentPrayerStatus(
+        times,
+        DateTime(2026, 3, 15, 5, 30),
+      );
+
+      expect(status.currentPrayer, 'Fajr');
+      expect(status.nextPrayer, 'Sunrise');
+    });
+
+    test('just after sunrise switches away from Fajr', () {
+      // Regression: the status used to skip Sunrise entirely, so the app
+      // kept showing "Fajr" as the active prayer well past sunrise.
+      final status = PrayerService.getCurrentPrayerStatus(
+        times,
+        DateTime(2026, 3, 15, 6, 30),
+      );
+
+      expect(status.currentPrayer, 'Sunrise');
+      expect(status.nextPrayer, 'Dhuhr');
     });
 
     test('after Isha the next prayer is tomorrow Fajr', () {

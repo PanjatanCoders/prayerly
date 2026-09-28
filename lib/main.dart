@@ -54,8 +54,14 @@ class _MyAppState extends State<MyApp> {
 
     AwesomeNotifications().setListeners(
       onActionReceivedMethod: AdhanService.onNotificationTap,
-      onNotificationCreatedMethod: (notification) async {
-        // Notification logic...
+      // onNotificationCreatedMethod fires the instant a notification is
+      // scheduled (i.e. right when the app calls createNotification, which
+      // can be hours before the prayer time) - it must never trigger
+      // playback. onNotificationDisplayedMethod fires when the notification
+      // actually appears on screen at its scheduled time, which is the
+      // correct moment to auto-play the adhan without the user tapping
+      // anything.
+      onNotificationDisplayedMethod: (notification) async {
         final payload = notification.payload;
         if (payload != null && payload['action'] == 'play_adhan') {
           final prayer = payload['prayer'];
@@ -65,7 +71,6 @@ class _MyAppState extends State<MyApp> {
           }
         }
       },
-      onNotificationDisplayedMethod: (notification) async {},
     );
   }
 

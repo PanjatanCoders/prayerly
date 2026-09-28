@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/prayer_service.dart';
 import '../providers/adhan_settings_provider.dart';
+import '../providers/reminder_settings_provider.dart';
 import '../utils/theme/app_theme.dart';
 
 class PrayerTimesListWidget extends StatelessWidget {
@@ -21,6 +22,7 @@ class PrayerTimesListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AdhanSettingsProvider>(context);
+    final reminderProvider = Provider.of<ReminderSettingsProvider>(context);
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
@@ -34,7 +36,9 @@ class PrayerTimesListWidget extends StatelessWidget {
           _buildHeader(onSurface),
           const SizedBox(height: 16),
           ...prayerTimes.entries.map((entry) {
-            final hasNotification = provider.notificationSettings[entry.key] ?? false;
+            final hasNotification = entry.key == 'Sunrise'
+                ? reminderProvider.settings.sunriseMakruhEnabled
+                : provider.notificationSettings[entry.key] ?? false;
             return _buildPrayerTimeItem(context, entry.key, entry.value, hasNotification, onSurface);
           }).toList(),
         ],

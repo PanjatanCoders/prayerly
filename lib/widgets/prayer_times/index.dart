@@ -2,7 +2,7 @@ export 'app_bar_widget.dart';
 export 'loading_widget.dart';
 export 'error_widget.dart';
 export 'main_content_widget.dart';
-export 'menu_bottom_sheet.dart';
+export 'glass_sidebar.dart';
 export 'info_dialog_widget.dart';
 export 'timer_section_widget.dart';
 export '../../services/location_service.dart';

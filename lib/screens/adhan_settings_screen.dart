@@ -36,7 +36,7 @@ class AdhanSettingsScreen extends StatelessWidget {
             const SizedBox(height: 24),
             _buildAdhanTypeSection(context, provider),
             const SizedBox(height: 24),
-            _buildPrayerNotificationsSection(context, provider),
+            _buildPrayerNotificationsSection(context, provider, reminderProvider),
             const SizedBox(height: 24),
             _buildRemindersSection(context, reminderProvider),
             const SizedBox(height: 24),
@@ -204,8 +204,13 @@ class AdhanSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPrayerNotificationsSection(BuildContext context, AdhanSettingsProvider provider) {
+  Widget _buildPrayerNotificationsSection(
+    BuildContext context,
+    AdhanSettingsProvider provider,
+    ReminderSettingsProvider reminderProvider,
+  ) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
+    final sunriseEnabled = reminderProvider.settings.sunriseMakruhEnabled;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -237,8 +242,8 @@ class AdhanSettingsScreen extends StatelessWidget {
             style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12),
           ),
           const SizedBox(height: 16),
-          ...provider.notificationSettings.entries.map((entry) {
-            return SwitchListTile(
+          ...provider.notificationSettings.entries.expand((entry) {
+            final tile = SwitchListTile(
               title: Text(
                 entry.key,
                 style: TextStyle(color: onSurface),
@@ -260,6 +265,30 @@ class AdhanSettingsScreen extends StatelessWidget {
               },
               contentPadding: EdgeInsets.zero,
             );
+
+            // Sunrise has no adhan, so it isn't part of AdhanSettingsProvider's
+            // per-prayer map - but it's the notification users look for right
+            // here, next to Fajr. Surface it backed by the reminder settings
+            // (the makruh-window notification) instead of a no-op toggle.
+            if (entry.key != 'Fajr') return [tile];
+            return [
+              tile,
+              SwitchListTile(
+                title: Text('Sunrise', style: TextStyle(color: onSurface)),
+                subtitle: Text(
+                  sunriseEnabled
+                      ? 'Reminder will be sent (no adhan for sunrise)'
+                      : 'No notification',
+                  style: TextStyle(
+                    color: sunriseEnabled ? Colors.green : onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
+                ),
+                value: sunriseEnabled,
+                onChanged: (value) => reminderProvider.setSunriseMakruh(enabled: value),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ];
           }),
         ],
       ),

@@ -31,10 +31,31 @@ class NotificationService {
   }
 
   /// Request notification permissions
+  ///
+  /// Includes [NotificationPermission.PreciseAlarms] - without it, every
+  /// scheduled notification (adhan and makruh/reminder alike) falls back to
+  /// an inexact alarm that Android can batch or drop under Doze, which is
+  /// most noticeable for the pre-dawn/early-morning ones (Fajr-ending,
+  /// sunrise) since the phone has usually been idle the longest by then.
+  /// Also includes [NotificationPermission.FullScreenIntent] and
+  /// [NotificationPermission.CriticalAlert], which the adhan channel's
+  /// notifications request but which need explicit user consent on modern
+  /// Android to actually take effect.
   static Future<bool> requestPermissions() async {
     bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
     if (!isAllowed) {
-      isAllowed = await AwesomeNotifications().requestPermissionToSendNotifications();
+      isAllowed = await AwesomeNotifications().requestPermissionToSendNotifications(
+        permissions: const [
+          NotificationPermission.Alert,
+          NotificationPermission.Sound,
+          NotificationPermission.Badge,
+          NotificationPermission.Vibration,
+          NotificationPermission.Light,
+          NotificationPermission.PreciseAlarms,
+          NotificationPermission.FullScreenIntent,
+          NotificationPermission.CriticalAlert,
+        ],
+      );
     }
     return isAllowed;
   }
