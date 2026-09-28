@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/location_service.dart';
 import '../../services/prayer_service.dart';
-import '../circular_timer_widget.dart';
-import '../info_card_widget.dart';
 import '../prayer_times_list_widget.dart';
-import 'greeting_header_widget.dart';
+import 'hero_status_card.dart';
 import 'occasion_banner_widget.dart';
 
 class MainContentWidget extends StatelessWidget {
@@ -37,7 +35,15 @@ class MainContentWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          GreetingHeaderWidget(hijriDate: prayerTimesData.islamicDate),
+          HeroStatusCard(
+            locationData: locationData,
+            prayerTimesData: prayerTimesData,
+            prayerStatus: prayerStatus,
+            currentTime: currentTime,
+            formattedCurrentDate: formattedCurrentDate,
+            elevation: elevation,
+            isLoadingElevation: isLoadingElevation,
+          ),
           const SizedBox(height: 12),
 
           const OccasionBannerWidget(),
@@ -47,30 +53,6 @@ class MainContentWidget extends StatelessWidget {
             _LocationNotice(locationData: locationData),
           ],
 
-          const SizedBox(height: 16),
-
-          // Top section with circular timer and info
-          Row(
-            children: [
-              CircularTimerWidget(
-                nextPrayer: prayerStatus.nextPrayer,
-                timeRemaining: prayerStatus.timeRemaining,
-                currentTime: currentTime,
-                progress: prayerStatus.progress,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: InfoCardWidget(
-                  location: locationData.address,
-                  islamicDate: prayerTimesData.islamicDate,
-                  currentDate: formattedCurrentDate,
-                  elevation: elevation,
-                  isLoadingElevation: isLoadingElevation,
-                ),
-              ),
-            ],
-          ),
-          
           const SizedBox(height: 16),
 
           // Prayer Times List
