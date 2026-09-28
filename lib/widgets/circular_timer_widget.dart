@@ -7,10 +7,10 @@ import '../utils/circular_progress_painter.dart';
 import '../utils/sun_position.dart';
 import '../utils/theme/app_theme.dart';
 
-/// The countdown ring, now doubling as a live sun/moon gauge: the disc
-/// behind the ring, the glyph in the center and its glow all track today's
-/// actual sunrise/Dhuhr/Maghrib times rather than a fixed clock, so "very
-/// bright" always lands around solar noon regardless of season or location.
+/// The countdown ring, doubling as a live sun/moon sky-arc gauge: a marker
+/// travels along a horizon-to-zenith-to-horizon path based on today's actual
+/// Fajr/Sunrise/Dhuhr/Maghrib/Isha times, so its angle always means "how far
+/// from sunrise to overhead" rather than a fixed clock reading.
 class CircularTimerWidget extends StatefulWidget {
   final String nextPrayer;
   final Duration timeRemaining;
@@ -26,7 +26,7 @@ class CircularTimerWidget extends StatefulWidget {
     required this.currentTime,
     required this.progress,
     required this.prayerTimes,
-    this.size = 180,
+    this.size = 190,
   });
 
   @override
@@ -41,8 +41,8 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
   static const _urgentThreshold = Duration(minutes: 1);
 
   late final AnimationController _pulseController;
-  // Slow continuous spin for the sunbeam sweep behind a very bright sun.
-  late final AnimationController _rayController;
+  // Slow breathing glow behind the sun/moon marker itself.
+  late final AnimationController _glowController;
   // Twinkle cycle for the night sky's stars.
   late final AnimationController _twinkleController;
 
@@ -55,10 +55,10 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
     );
     _syncPulse();
 
-    _rayController = AnimationController(
+    _glowController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 26),
-    )..repeat();
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
 
     _twinkleController = AnimationController(
       vsync: this,
@@ -75,7 +75,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
   @override
   void dispose() {
     _pulseController.dispose();
-    _rayController.dispose();
+    _glowController.dispose();
     _twinkleController.dispose();
     super.dispose();
   }
@@ -106,10 +106,11 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
     final sun = SunPosition.calculate(widget.prayerTimes, widget.currentTime);
     final sky = _SkyTheme.forBrightness(sun.brightness);
     final urgentColor = AppTheme.legibleAccent(context, AppTheme.primaryAmber);
+    final discSize = widget.size - 30;
+    final arcRadius = discSize / 2 * 0.62;
 
     return AnimatedBuilder(
-      animation: Listenable.merge(
-          [_pulseController, _rayController, _twinkleController]),
+      animation: Listenable.merge([_pulseController, _twinkleController]),
       builder: (context, child) {
         final t = _isPulsing ? _pulseController.value : 0.0;
         final ringColor = AppTheme.legibleAccent(
@@ -141,30 +142,63 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                 // Sky disc: the backdrop that actually carries the
                 // day/night read at a glance, independent of the ring.
                 Container(
-                  width: widget.size - 30,
-                  height: widget.size - 30,
+                  width: discSize,
+                  height: discSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: sky.discGradient,
-                    ),
+                    gradient: RadialGradient(colors: sky.discGradient),
                   ),
                 ),
 
                 if (sun.brightness == SkyBrightness.night)
                   CustomPaint(
-                    size: Size(widget.size - 30, widget.size - 30),
+                    size: Size(discSize, discSize),
                     painter: _StarfieldPainter(twinkle: _twinkleController.value),
                   ),
 
-                if (sun.brightness == SkyBrightness.bright)
-                  Transform.rotate(
-                    angle: _rayController.value * 2 * math.pi,
-                    child: CustomPaint(
-                      size: Size(widget.size - 30, widget.size - 30),
-                      painter: _SunburstPainter(color: sky.glowColor),
-                    ),
+                CustomPaint(
+                  size: Size(discSize, discSize),
+                  painter: _SkyArcPainter(
+                    radius: arcRadius,
+                    color: onSurface.withValues(alpha: 0.35),
                   ),
+                ),
+
+                // The marker travels smoothly between its last angle and
+                // its newly computed one each time the parent ticks, rather
+                // than snapping - this is the "rotation" across the sky.
+                TweenAnimationBuilder<double>(
+                  key: ValueKey(sun.isSun),
+                  tween: Tween<double>(begin: sun.angleDegrees, end: sun.angleDegrees),
+                  duration: const Duration(milliseconds: 900),
+                  curve: Curves.easeInOut,
+                  builder: (context, animatedAngle, _) {
+                    final phi = animatedAngle * math.pi / 180;
+                    final dx = -math.cos(phi) * arcRadius;
+                    final dy = -math.sin(phi) * arcRadius;
+                    final glow = 0.55 + 0.45 * _glowController.value;
+
+                    return Transform.translate(
+                      offset: Offset(dx, dy),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: sky.glowColor.withValues(
+                                alpha: (sun.isSun ? 0.55 : 0.35) * glow,
+                              ),
+                              blurRadius: 16,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(sky.icon, color: sky.glyphColor, size: 20),
+                      ),
+                    );
+                  },
+                ),
 
                 CustomPaint(
                   size: Size(widget.size, widget.size),
@@ -174,39 +208,37 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                   ),
                 ),
 
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(sky.icon, color: sky.glyphColor, size: 26, shadows: [
-                      Shadow(color: sky.glowColor.withValues(alpha: 0.8), blurRadius: 14),
-                    ]),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.nextPrayer,
-                      style: TextStyle(
-                        color: ringColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                Positioned(
+                  bottom: discSize * 0.12,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.nextPrayer,
+                        style: TextStyle(
+                          color: ringColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatTimeRemaining(widget.timeRemaining),
-                      style: TextStyle(
-                        color: onSurface,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                      Text(
+                        _formatTimeRemaining(widget.timeRemaining),
+                        style: TextStyle(
+                          color: onSurface,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      sky.label,
-                      style: TextStyle(
-                        color: onSurface.withValues(alpha: 0.55),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
+                      Text(
+                        '${sun.angleDegrees.round()}° • ${sky.label}',
+                        style: TextStyle(
+                          color: onSurface.withValues(alpha: 0.55),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -284,20 +316,58 @@ class _SkyTheme {
   }
 }
 
-/// A sparse field of fixed-position stars that twinkle out of phase with
-/// each other, driven by a single 0..1 [twinkle] value.
+/// The horizon line and the guide arc the sun/moon marker travels along.
+class _SkyArcPainter extends CustomPainter {
+  final double radius;
+  final Color color;
+
+  _SkyArcPainter({required this.radius, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    final horizonPaint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    canvas.drawLine(
+      Offset(center.dx - radius, center.dy),
+      Offset(center.dx + radius, center.dy),
+      horizonPaint,
+    );
+
+    final arcPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    // West -> north (top) -> east: the sun/moon's actual path overhead.
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      math.pi,
+      math.pi,
+      false,
+      arcPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SkyArcPainter oldDelegate) =>
+      oldDelegate.radius != radius || oldDelegate.color != color;
+}
+
+/// A sparse field of fixed-position stars, above the horizon line only, that
+/// twinkle out of phase with each other, driven by a single 0..1 [twinkle].
 class _StarfieldPainter extends CustomPainter {
   final double twinkle;
 
   _StarfieldPainter({required this.twinkle});
 
   static const _stars = [
-    Offset(0.28, 0.26),
-    Offset(0.68, 0.20),
-    Offset(0.78, 0.55),
-    Offset(0.22, 0.62),
-    Offset(0.50, 0.72),
-    Offset(0.62, 0.38),
+    Offset(0.22, 0.16),
+    Offset(0.50, 0.08),
+    Offset(0.78, 0.18),
+    Offset(0.34, 0.32),
+    Offset(0.66, 0.30),
   ];
 
   @override
@@ -314,36 +384,4 @@ class _StarfieldPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _StarfieldPainter oldDelegate) =>
       oldDelegate.twinkle != twinkle;
-}
-
-/// Faint radiating sunbeams behind a "very bright" sun, slowly rotating.
-class _SunburstPainter extends CustomPainter {
-  final Color color;
-
-  _SunburstPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final outerRadius = size.width / 2;
-    final innerRadius = outerRadius * 0.55;
-    const beamCount = 12;
-
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    for (var i = 0; i < beamCount; i++) {
-      final angle = (2 * math.pi / beamCount) * i;
-      final start = center + Offset(math.cos(angle), math.sin(angle)) * innerRadius;
-      final end = center + Offset(math.cos(angle), math.sin(angle)) * outerRadius;
-      canvas.drawLine(start, end, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SunburstPainter oldDelegate) =>
-      oldDelegate.color != color;
 }

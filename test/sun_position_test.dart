@@ -63,4 +63,49 @@ void main() {
       expect(sun.isDaytime, isTrue);
     });
   });
+
+  group('sky arc (angle + sun/moon)', () {
+    test('sun rises from just below the horizon during dawn twilight', () {
+      final atFajr = SunPosition.calculate(times, times['Fajr']!);
+      final atSunrise = SunPosition.calculate(times, times['Sunrise']!);
+      expect(atFajr.isSun, isTrue);
+      expect(atFajr.angleDegrees, lessThan(0));
+      expect(atSunrise.angleDegrees, closeTo(0, 0.5));
+    });
+
+    test('sun reaches zenith (90 deg) exactly at Dhuhr', () {
+      final sun = SunPosition.calculate(times, times['Dhuhr']!);
+      expect(sun.isSun, isTrue);
+      expect(sun.angleDegrees, closeTo(90, 0.5));
+    });
+
+    test('sun approaches 180 deg just before Maghrib', () {
+      final sun = SunPosition.calculate(
+        times,
+        times['Maghrib']!.subtract(const Duration(seconds: 1)),
+      );
+      expect(sun.isSun, isTrue);
+      expect(sun.angleDegrees, closeTo(180, 0.5));
+    });
+
+    test('moon takes over the instant Maghrib passes', () {
+      final justAfterMaghrib =
+          SunPosition.calculate(times, times['Maghrib']!.add(const Duration(minutes: 1)));
+      expect(justAfterMaghrib.isSun, isFalse);
+      expect(justAfterMaghrib.angleDegrees, greaterThan(0));
+      expect(justAfterMaghrib.angleDegrees, lessThan(90));
+    });
+
+    test('moon angle increases monotonically overnight', () {
+      double angleAt(int hour) => SunPosition.calculate(
+            times,
+            DateTime(2026, 3, 16, hour),
+          ).angleDegrees;
+
+      expect(angleAt(1), lessThan(angleAt(3)));
+      final beforeFajr = SunPosition.calculate(times, DateTime(2026, 3, 16, 4, 30));
+      expect(beforeFajr.isSun, isFalse);
+      expect(beforeFajr.angleDegrees, greaterThan(90));
+    });
+  });
 }

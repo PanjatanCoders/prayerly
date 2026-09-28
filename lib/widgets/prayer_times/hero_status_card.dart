@@ -5,12 +5,11 @@ import '../../services/location_service.dart';
 import '../../services/prayer_service.dart';
 import '../circular_timer_widget.dart';
 import '../info_card_widget.dart';
-import 'greeting_header_widget.dart';
 
-/// The single "hero" card at the top of the prayer times screen: greeting +
-/// Hijri date, the sun/moon countdown ring, and location/date/elevation, all
-/// sharing one card and one entrance animation instead of three separate
-/// floating pieces.
+/// The single "hero" card at the top of the prayer times screen: the
+/// sun/moon countdown ring and location/date/elevation, sharing one card and
+/// entrance animation. The Hijri date already appears in [InfoCardWidget],
+/// so it isn't duplicated anywhere else here.
 class HeroStatusCard extends StatefulWidget {
   final LocationData locationData;
   final PrayerTimesData prayerTimesData;
@@ -61,8 +60,6 @@ class _HeroStatusCardState extends State<HeroStatusCard>
 
   @override
   Widget build(BuildContext context) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-
     return AnimatedBuilder(
       animation: _entrance,
       builder: (context, child) {
@@ -81,34 +78,25 @@ class _HeroStatusCardState extends State<HeroStatusCard>
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GreetingHeaderWidget(hijriDate: widget.prayerTimesData.islamicDate),
-            const SizedBox(height: 16),
-            Divider(height: 1, color: onSurface.withValues(alpha: 0.08)),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircularTimerWidget(
-                  nextPrayer: widget.prayerStatus.nextPrayer,
-                  timeRemaining: widget.prayerStatus.timeRemaining,
-                  currentTime: widget.currentTime,
-                  progress: widget.prayerStatus.progress,
-                  prayerTimes: widget.prayerTimesData.prayerTimes,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: InfoCardWidget(
-                    location: widget.locationData.address,
-                    islamicDate: widget.prayerTimesData.islamicDate,
-                    currentDate: widget.formattedCurrentDate,
-                    elevation: widget.elevation,
-                    isLoadingElevation: widget.isLoadingElevation,
-                  ),
-                ),
-              ],
+            CircularTimerWidget(
+              nextPrayer: widget.prayerStatus.nextPrayer,
+              timeRemaining: widget.prayerStatus.timeRemaining,
+              currentTime: widget.currentTime,
+              progress: widget.prayerStatus.progress,
+              prayerTimes: widget.prayerTimesData.prayerTimes,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: InfoCardWidget(
+                location: widget.locationData.address,
+                islamicDate: widget.prayerTimesData.islamicDate,
+                currentDate: widget.formattedCurrentDate,
+                elevation: widget.elevation,
+                isLoadingElevation: widget.isLoadingElevation,
+              ),
             ),
           ],
         ),
