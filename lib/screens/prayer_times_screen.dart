@@ -236,17 +236,42 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     }
   }
 
+  /// How many days ahead to schedule notifications for. Nothing in this app
+  /// reschedules in the background, so a single day's schedule silently
+  /// stops existing the day after unless the user reopens the app - a
+  /// week's buffer means notifications keep firing through roughly a week of
+  /// the app being left closed.
+  static const int _notificationScheduleDays = 7;
+
   /// Schedule notifications for prayer times using AdhanService
   Future<void> _scheduleNotifications() async {
-    if (_prayerTimesData?.prayerTimes.isEmpty ?? true) return;
+    final location = _locationData;
+    if (location == null || (_prayerTimesData?.prayerTimes.isEmpty ?? true)) {
+      return;
+    }
 
     try {
       final notificationSettings = await AdhanService.getNotificationSettings();
-      await AdhanService.scheduleAdhanNotifications(
+
+      final prayerTimesByDay = <Map<String, DateTime>>[
         _prayerTimesData!.prayerTimes,
+      ];
+      final today = DateTime.now();
+      for (var i = 1; i < _notificationScheduleDays; i++) {
+        final date = DateTime(today.year, today.month, today.day).add(Duration(days: i));
+        final data = await PrayerService.getPrayerTimes(
+          latitude: location.latitude,
+          longitude: location.longitude,
+          date: date,
+        );
+        prayerTimesByDay.add(data.prayerTimes);
+      }
+
+      await AdhanService.scheduleAdhanNotifications(
+        prayerTimesByDay,
         notificationSettings,
       );
-      await ReminderService.scheduleReminders(_prayerTimesData!.prayerTimes);
+      await ReminderService.scheduleReminders(prayerTimesByDay);
       debugPrint('Adhan notifications and reminders scheduled successfully');
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');

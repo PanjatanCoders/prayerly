@@ -124,7 +124,12 @@ class ReminderService {
         channelName: 'Prayer Reminders',
         channelDescription: 'Makruh time windows and recitation reminders',
         defaultColor: Colors.teal,
-        importance: NotificationImportance.High,
+        // Max (not High): these are precise-alarm scheduled minutes ahead of
+        // a makruh window, so they need the same protection from OEM
+        // battery-optimization throttling that the adhan channel gets, or
+        // they're liable to be delayed/dropped exactly like Bug 1's original
+        // "reminders just don't show up" symptom.
+        importance: NotificationImportance.Max,
         channelShowBadge: true,
         playSound: true,
         enableVibration: true,
@@ -153,82 +158,96 @@ class ReminderService {
     }
   }
 
-  /// (Re)schedules every enabled reminder from today's [prayerTimes]. Cancels
-  /// this channel's existing notifications first so a settings change or a
-  /// new day's times never leaves a stale reminder behind.
-  static Future<void> scheduleReminders(Map<String, DateTime> prayerTimes) async {
+  /// (Re)schedules every enabled reminder from [prayerTimesByDay] (today
+  /// first, then each following day). Cancels this channel's existing
+  /// notifications first so a settings change or a new schedule never leaves
+  /// a stale reminder behind.
+  ///
+  /// Scheduling more than just today matters for the same reason
+  /// [AdhanService.scheduleAdhanNotifications] does: there's no background
+  /// task in this app to recompute and reschedule daily, so a single day's
+  /// worth of reminders would otherwise silently stop firing after that day.
+  static Future<void> scheduleReminders(
+    List<Map<String, DateTime>> prayerTimesByDay,
+  ) async {
     try {
       await AwesomeNotifications().cancelNotificationsByChannelKey(_channelKey);
       final settings = await getSettings();
       final now = DateTime.now();
 
-      final sunrise = prayerTimes['Sunrise'];
-      final dhuhr = prayerTimes['Dhuhr'];
-      final maghrib = prayerTimes['Maghrib'];
-      final isha = prayerTimes['Isha'];
+      for (var dayOffset = 0; dayOffset < prayerTimesByDay.length; dayOffset++) {
+        final prayerTimes = prayerTimesByDay[dayOffset];
+        final sunrise = prayerTimes['Sunrise'];
+        final dhuhr = prayerTimes['Dhuhr'];
+        final maghrib = prayerTimes['Maghrib'];
+        final isha = prayerTimes['Isha'];
+        // Offset by day so a week of the same reminder gets distinct ids
+        // instead of each day's schedule call overwriting the previous one.
+        final idOffset = dayOffset * 10;
 
-      if (settings.fajrEndingEnabled && sunrise != null) {
-        final fireAt = sunrise.subtract(Duration(minutes: settings.fajrEndingMinutesBefore));
-        await _schedule(
-          id: _idFajrEnding,
-          time: _pushToFuture(fireAt, now),
-          title: '🌄 Fajr time is ending soon',
-          body: 'Pray Fajr before sunrise at ${PrayerService.formatTime(sunrise)}.',
-        );
-      }
+        if (settings.fajrEndingEnabled && sunrise != null) {
+          final fireAt = sunrise.subtract(Duration(minutes: settings.fajrEndingMinutesBefore));
+          if (!fireAt.isBefore(now)) {
+            await _schedule(
+              id: _idFajrEnding + idOffset,
+              time: fireAt,
+              title: '🌄 Fajr time is ending soon',
+              body: 'Pray Fajr before sunrise at ${PrayerService.formatTime(sunrise)}.',
+            );
+          }
+        }
 
-      if (settings.sunriseMakruhEnabled && sunrise != null) {
-        final prayAfter = sunrise.add(Duration(minutes: settings.sunriseMakruhDurationMinutes));
-        await _schedule(
-          id: _idSunriseMakruh,
-          time: _pushToFuture(sunrise, now),
-          title: '☀️ Sunrise — avoid prayer',
-          body: 'Sunrise starts at ${PrayerService.formatTime(sunrise)}. '
-              'Pray any namaz after ${PrayerService.formatTime(prayAfter)}.',
-        );
-      }
+        if (settings.sunriseMakruhEnabled && sunrise != null && !sunrise.isBefore(now)) {
+          final prayAfter = sunrise.add(Duration(minutes: settings.sunriseMakruhDurationMinutes));
+          await _schedule(
+            id: _idSunriseMakruh + idOffset,
+            time: sunrise,
+            title: '☀️ Sunrise — avoid prayer',
+            body: 'Sunrise starts at ${PrayerService.formatTime(sunrise)}. '
+                'Pray any namaz after ${PrayerService.formatTime(prayAfter)}.',
+          );
+        }
 
-      if (settings.dhuhrMakruhEnabled && dhuhr != null) {
-        final fireAt = dhuhr.subtract(Duration(minutes: settings.dhuhrMakruhMinutesBefore));
-        await _schedule(
-          id: _idDhuhrMakruh,
-          time: _pushToFuture(fireAt, now),
-          title: '☀️ Avoid prayer — zawal approaching',
-          body: 'Avoid nafl prayer until Dhuhr begins at ${PrayerService.formatTime(dhuhr)}.',
-        );
-      }
+        if (settings.dhuhrMakruhEnabled && dhuhr != null) {
+          final fireAt = dhuhr.subtract(Duration(minutes: settings.dhuhrMakruhMinutesBefore));
+          if (!fireAt.isBefore(now)) {
+            await _schedule(
+              id: _idDhuhrMakruh + idOffset,
+              time: fireAt,
+              title: '☀️ Avoid prayer — zawal approaching',
+              body: 'Avoid nafl prayer until Dhuhr begins at ${PrayerService.formatTime(dhuhr)}.',
+            );
+          }
+        }
 
-      if (settings.sunsetMakruhEnabled && maghrib != null) {
-        final fireAt = maghrib.subtract(Duration(minutes: settings.sunsetMakruhMinutesBefore));
-        await _schedule(
-          id: _idSunsetMakruh,
-          time: _pushToFuture(fireAt, now),
-          title: '🌇 Avoid prayer — sunset approaching',
-          body: 'Avoid prayer for the next ${settings.sunsetMakruhMinutesBefore} minutes, '
-              'until Maghrib at ${PrayerService.formatTime(maghrib)}.',
-        );
-      }
+        if (settings.sunsetMakruhEnabled && maghrib != null) {
+          final fireAt = maghrib.subtract(Duration(minutes: settings.sunsetMakruhMinutesBefore));
+          if (!fireAt.isBefore(now)) {
+            await _schedule(
+              id: _idSunsetMakruh + idOffset,
+              time: fireAt,
+              title: '🌇 Avoid prayer — sunset approaching',
+              body: 'Avoid prayer for the next ${settings.sunsetMakruhMinutesBefore} minutes, '
+                  'until Maghrib at ${PrayerService.formatTime(maghrib)}.',
+            );
+          }
+        }
 
-      if (settings.surahMulkEnabled && isha != null) {
-        final fireAt = isha.add(Duration(minutes: settings.surahMulkDelayAfterIshaMinutes));
-        await _schedule(
-          id: _idSurahMulk,
-          time: _pushToFuture(fireAt, now),
-          title: '📖 Recite Surah Al-Mulk',
-          body: 'A beautiful sunnah before sleeping — recite Surah Al-Mulk tonight.',
-        );
+        if (settings.surahMulkEnabled && isha != null) {
+          final fireAt = isha.add(Duration(minutes: settings.surahMulkDelayAfterIshaMinutes));
+          if (!fireAt.isBefore(now)) {
+            await _schedule(
+              id: _idSurahMulk + idOffset,
+              time: fireAt,
+              title: '📖 Recite Surah Al-Mulk',
+              body: 'A beautiful sunnah before sleeping — recite Surah Al-Mulk tonight.',
+            );
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error scheduling reminders: $e');
     }
-  }
-
-  /// If [time] has already passed today, push it a day forward - same
-  /// per-notification handling [AdhanService.scheduleAdhanNotifications]
-  /// uses, so a reminder whose prayer already happened today still lands
-  /// tomorrow instead of silently never firing.
-  static DateTime _pushToFuture(DateTime time, DateTime now) {
-    return time.isBefore(now) ? time.add(const Duration(days: 1)) : time;
   }
 
   static Future<void> _schedule({

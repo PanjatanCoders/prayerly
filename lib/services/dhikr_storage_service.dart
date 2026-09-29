@@ -9,6 +9,50 @@ class DhikrStorageService {
   static const String _sessionsKey = 'dhikr_sessions';
   static const String _userStatsKey = 'dhikr_user_stats';
   static const String _settingsKey = 'dhikr_settings';
+  static const String _inProgressCountsKey = 'dhikr_in_progress_counts';
+
+  // In-progress counter state, keyed by dhikr id. Lets the counter screen
+  // resume an unfinished session instead of silently losing the count when
+  // the user navigates away before hitting the target.
+  static Future<int?> getInProgressCount(String dhikrId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_inProgressCountsKey);
+      if (raw == null) return null;
+      final counts = json.decode(raw) as Map<String, dynamic>;
+      return counts[dhikrId] as int?;
+    } catch (e) {
+      debugPrint('Error loading in-progress dhikr count: $e');
+      return null;
+    }
+  }
+
+  static Future<void> saveInProgressCount(String dhikrId, int count) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_inProgressCountsKey);
+      final counts = raw != null
+          ? Map<String, dynamic>.from(json.decode(raw))
+          : <String, dynamic>{};
+      counts[dhikrId] = count;
+      await prefs.setString(_inProgressCountsKey, json.encode(counts));
+    } catch (e) {
+      debugPrint('Error saving in-progress dhikr count: $e');
+    }
+  }
+
+  static Future<void> clearInProgressCount(String dhikrId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_inProgressCountsKey);
+      if (raw == null) return;
+      final counts = Map<String, dynamic>.from(json.decode(raw));
+      counts.remove(dhikrId);
+      await prefs.setString(_inProgressCountsKey, json.encode(counts));
+    } catch (e) {
+      debugPrint('Error clearing in-progress dhikr count: $e');
+    }
+  }
 
   // Custom Dhikr Management
   static Future<List<CustomDhikr>> getCustomDhikrList() async {
@@ -271,6 +315,7 @@ class DhikrStorageService {
       await prefs.remove(_sessionsKey);
       await prefs.remove(_userStatsKey);
       await prefs.remove(_settingsKey);
+      await prefs.remove(_inProgressCountsKey);
     } catch (e) {
       debugPrint('Error clearing all data: $e');
     }

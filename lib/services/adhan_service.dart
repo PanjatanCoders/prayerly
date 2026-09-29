@@ -261,7 +261,32 @@ class AdhanService {
     }
   }
 
+  /// Auto-plays the adhan when its notification actually appears on screen.
+  ///
+  /// Must be a bare static tear-off passed to `setListeners`, not a closure:
+  /// `PluginUtilities.getCallbackHandle` (which awesome_notifications uses to
+  /// resurrect this callback in a background isolate when Android has killed
+  /// the app - the normal case by prayer time) can only resolve a handle for
+  /// a static/top-level function. A closure silently resolves to a null
+  /// handle, so the callback only ever fires if the app process happens to
+  /// still be alive - which looked like "auto-play works sometimes" before
+  /// this was pulled out of the inline closure in main.dart.
+  @pragma('vm:entry-point')
+  static Future<void> onNotificationDisplayed(
+    ReceivedNotification notification,
+  ) async {
+    final payload = notification.payload;
+    if (payload != null && payload['action'] == 'play_adhan') {
+      final prayer = payload['prayer'];
+      final autoPlay = await getAutoPlayEnabled();
+      if (autoPlay && prayer != null) {
+        await playAdhan(prayer);
+      }
+    }
+  }
+
   // This method is called when notifications are created OR when user interacts with them
+  @pragma('vm:entry-point')
   static Future<void> onNotificationTap(ReceivedAction receivedAction) async {
     try {
       final payload = receivedAction.payload;
@@ -303,8 +328,16 @@ class AdhanService {
     }
   }
 
+  /// Schedules adhan notifications from [prayerTimesByDay] (today first, then
+  /// each following day).
+  ///
+  /// There's no background task (workmanager/alarm-manager) in this app to
+  /// recompute and reschedule daily, so scheduling only "today" meant every
+  /// notification silently stopped existing the day after, until the user
+  /// happened to reopen the app. Scheduling about a week ahead means the
+  /// adhan keeps firing for roughly that long even if the app stays closed.
   static Future<void> scheduleAdhanNotifications(
-    Map<String, DateTime> prayerTimes,
+    List<Map<String, DateTime>> prayerTimesByDay,
     Map<String, bool> notificationSettings,
   ) async {
     try {
@@ -313,18 +346,22 @@ class AdhanService {
       );
       final now = DateTime.now();
 
-      for (final entry in prayerTimes.entries) {
-        final name = entry.key;
-        final time = entry.value;
-        if (name == 'Sunrise' || !(notificationSettings[name] ?? false)) {
-          continue;
+      for (var dayOffset = 0; dayOffset < prayerTimesByDay.length; dayOffset++) {
+        for (final entry in prayerTimesByDay[dayOffset].entries) {
+          final name = entry.key;
+          final time = entry.value;
+          if (name == 'Sunrise' || !(notificationSettings[name] ?? false)) {
+            continue;
+          }
+          // Only relevant for dayOffset 0: every later day is entirely in
+          // the future already.
+          if (time.isBefore(now)) continue;
+          await _scheduleAdhanNotification(name, time, dayOffset);
         }
-        DateTime scheduleTime = time.isBefore(now)
-            ? time.add(const Duration(days: 1))
-            : time;
-        await _scheduleAdhanNotification(name, scheduleTime);
       }
-      debugPrint('Adhan notifications scheduled successfully');
+      debugPrint(
+        'Adhan notifications scheduled successfully for ${prayerTimesByDay.length} day(s)',
+      );
     } catch (e) {
       debugPrint('Error scheduling adhan notifications: $e');
     }
@@ -333,9 +370,12 @@ class AdhanService {
   static Future<void> _scheduleAdhanNotification(
     String prayer,
     DateTime time,
+    int dayOffset,
   ) async {
     try {
-      final id = _getNotificationId(prayer);
+      // Offset by day so a week of the same prayer gets distinct ids instead
+      // of each day's schedule call overwriting the previous day's.
+      final id = _getNotificationId(prayer) + dayOffset * 10;
       final autoPlay = await getAutoPlayEnabled();
       
       await AwesomeNotifications().createNotification(

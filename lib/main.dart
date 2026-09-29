@@ -61,16 +61,10 @@ class _MyAppState extends State<MyApp> {
       // actually appears on screen at its scheduled time, which is the
       // correct moment to auto-play the adhan without the user tapping
       // anything.
-      onNotificationDisplayedMethod: (notification) async {
-        final payload = notification.payload;
-        if (payload != null && payload['action'] == 'play_adhan') {
-          final prayer = payload['prayer'];
-          final autoPlay = await AdhanService.getAutoPlayEnabled();
-          if (autoPlay && prayer != null) {
-            await AdhanService.playAdhan(prayer);
-          }
-        }
-      },
+      //
+      // This must stay a bare static tear-off (not an inline closure) - see
+      // the doc comment on AdhanService.onNotificationDisplayed.
+      onNotificationDisplayedMethod: AdhanService.onNotificationDisplayed,
     );
   }
 

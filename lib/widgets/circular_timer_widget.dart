@@ -224,7 +224,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                       Text(
                         _formatTimeRemaining(widget.timeRemaining),
                         style: TextStyle(
-                          color: onSurface,
+                          color: sky.glyphColor,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -232,7 +232,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                       Text(
                         '${sun.angleDegrees.round()}° • ${sky.label}',
                         style: TextStyle(
-                          color: onSurface.withValues(alpha: 0.55),
+                          color: sky.glyphColor.withValues(alpha: 0.75),
                           fontSize: 9,
                           fontWeight: FontWeight.w500,
                         ),
