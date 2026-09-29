@@ -376,10 +376,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         notificationsEnabled: _notificationsEnabled,
         onToggleNotifications: _toggleNotifications,
         onRefresh: _refreshData,
-        onShowInfo: _showInfoDialog,
         onShowMenu: _showCustomMenu,
       ),
-      drawer: const GlassSidebar(),
+      drawer: GlassSidebar(onShowInfo: _showInfoDialog),
       body: _buildBody(),
     );
   }
