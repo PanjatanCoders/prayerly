@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
+import 'package:prayerly/models/dhikr_tracking_models.dart';
 import 'package:prayerly/services/dhikr_service.dart';
+import 'package:prayerly/services/dhikr_storage_service.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/widgets/celebration_burst_widget.dart';
 import 'package:prayerly/widgets/dhikar/dhikr_counter_widget.dart';
@@ -37,6 +39,17 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
     _targetCount = widget.dhikr.targetCount;
     _settings = widget.settings ?? const DhikrSettings();
     _sessionStartTime = DateTime.now();
+    _restoreProgress();
+  }
+
+  /// Resumes an unfinished count left over from before the user navigated
+  /// away, so leaving mid-session (back button, app switch) doesn't silently
+  /// reset progress to zero.
+  Future<void> _restoreProgress() async {
+    final saved = await DhikrStorageService.getInProgressCount(widget.dhikr.id);
+    if (saved != null && saved > 0 && saved < _targetCount && mounted) {
+      setState(() => _count = saved);
+    }
   }
 
   void _incrementCount() async {
@@ -48,8 +61,10 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
       // Check if completed
       if (_count >= _targetCount && !_isCompleted) {
         _isCompleted = true;
+        await DhikrStorageService.clearInProgressCount(widget.dhikr.id);
         await _handleCompletion();
       } else {
+        await DhikrStorageService.saveInProgressCount(widget.dhikr.id, _count);
         await DhikrService.provideFeedback(
           enableHaptic: _settings.enableHapticFeedback,
           enableSound: _settings.enableSound,
@@ -61,6 +76,34 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
   }
 
   Future<void> _handleCompletion() async {
+    // Record the finished session so the stats surfaced elsewhere (Today's/
+    // This Week's totals on the Dhikr home screen) reflect real activity
+    // instead of the storage layer sitting unused.
+    final endTime = DateTime.now();
+    final duration = endTime.difference(_sessionStartTime);
+    await DhikrStorageService.addDhikrSession(
+      DhikrSessionTracker(
+        id: '${widget.dhikr.id}_${endTime.millisecondsSinceEpoch}',
+        dhikrId: widget.dhikr.id,
+        count: _count,
+        targetCount: _targetCount,
+        startTime: _sessionStartTime,
+        endTime: endTime,
+        isCompleted: true,
+        dhikrTitle: widget.dhikr.transliteration,
+        wasCompleted: true,
+        totalDuration: duration,
+      ),
+    );
+    await DhikrStorageService.updateUserStats(
+      additionalRecitations: _count,
+      sessionCompleted: true,
+      sessionStarted: true,
+      additionalTime: duration,
+      dhikrId: widget.dhikr.id,
+      category: widget.dhikr.category,
+    );
+
     await DhikrService.provideFeedback(
       enableHaptic: _settings.enableHapticFeedback,
       enableSound: _settings.enableSound,
@@ -78,6 +121,7 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
   }
 
   void _resetCount() {
+    DhikrStorageService.clearInProgressCount(widget.dhikr.id);
     setState(() {
       _count = 0;
       _isCompleted = false;

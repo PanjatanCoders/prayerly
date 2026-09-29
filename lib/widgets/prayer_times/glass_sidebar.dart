@@ -2,7 +2,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:prayerly/screens/calendar/prayer_calendar_screen.dart';
 import 'package:prayerly/screens/dhikr/dhikr_selection_screen.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/utils/theme/app_transitions.dart';
 import '../../screens/qaza/qaza_tracker_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -14,7 +16,12 @@ import '../../screens/zakat/zakat_screen.dart';
 /// (opened via [ScaffoldState.openDrawer]) so it slides in from the left
 /// with the normal scrim and swipe-to-dismiss behavior.
 class GlassSidebar extends StatelessWidget {
-  const GlassSidebar({super.key});
+  /// Opens the app-info dialog that used to live behind a dedicated AppBar
+  /// button; it moved here once that button was removed as redundant with
+  /// the bottom nav bar.
+  final VoidCallback onShowInfo;
+
+  const GlassSidebar({super.key, required this.onShowInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +87,8 @@ class GlassSidebar extends StatelessWidget {
                           onTap: () => _navigate(context, const ZakatScreen()),
                         ),
                         _GlassMenuTile(
-                          icon: Icons.circle_outlined,
-                          iconColor: Colors.purple,
+                          icon: Icons.menu_book,
+                          iconColor: AppTheme.islamicColors['dhikr']!,
                           title: 'Dhikr Counter',
                           subtitle: 'Digital Tasbih counter',
                           onTap: () => _navigate(context, const DhikrSelectionScreen()),
@@ -98,14 +105,16 @@ class GlassSidebar extends StatelessWidget {
                           iconColor: Colors.orange,
                           title: 'Prayer Calendar',
                           subtitle: 'Monthly prayer times',
+                          onTap: () => _navigate(context, const PrayerCalendarScreen()),
+                        ),
+                        _GlassMenuTile(
+                          icon: Icons.info_outline,
+                          iconColor: Colors.grey,
+                          title: 'About Prayerly',
+                          subtitle: 'App info & credits',
                           onTap: () {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Prayer Calendar coming soon!'),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
+                            onShowInfo();
                           },
                         ),
                       ],

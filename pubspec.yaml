@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/icons/icon.png
     - assets/icons/icon_foreground.png
+    - assets/images/hero_prayer_bg.jpg
     - assets/audio/adhan/azan1.mp3
     - assets/audio/adhan/azan2.mp3
     - assets/audio/adhan/azan3.mp3

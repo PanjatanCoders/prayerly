@@ -43,8 +43,8 @@ class _HomeShellState extends State<HomeShell> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.access_time),
-            selectedIcon: Icon(Icons.access_time_filled),
+            icon: Icon(Icons.mosque_outlined),
+            selectedIcon: Icon(Icons.mosque),
             label: 'Prayer',
           ),
           NavigationDestination(
@@ -53,13 +53,13 @@ class _HomeShellState extends State<HomeShell> {
             label: 'Qibla',
           ),
           NavigationDestination(
-            icon: Icon(Icons.circle_outlined),
-            selectedIcon: Icon(Icons.circle),
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book),
             label: 'Dhikr',
           ),
           NavigationDestination(
-            icon: Icon(Icons.format_list_numbered),
-            selectedIcon: Icon(Icons.format_list_numbered_rtl),
+            icon: Icon(Icons.format_list_bulleted),
+            selectedIcon: Icon(Icons.format_list_bulleted),
             label: 'Qaza',
           ),
           NavigationDestination(

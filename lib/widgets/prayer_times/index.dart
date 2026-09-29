@@ -5,6 +5,7 @@ export 'main_content_widget.dart';
 export 'glass_sidebar.dart';
 export 'info_dialog_widget.dart';
 export 'hero_status_card.dart';
+export 'bottom_tiles_row.dart';
 export '../../services/location_service.dart';
 export '../../services/prayer_service.dart';
 export '../../services/elevation_service.dart';

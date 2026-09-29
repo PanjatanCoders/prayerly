@@ -3,6 +3,7 @@ import '../../l10n/app_localizations.dart';
 import '../../services/location_service.dart';
 import '../../services/prayer_service.dart';
 import '../prayer_times_list_widget.dart';
+import 'bottom_tiles_row.dart';
 import 'hero_status_card.dart';
 import 'occasion_banner_widget.dart';
 
@@ -32,9 +33,11 @@ class MainContentWidget extends StatelessWidget {
       // Always scrollable so pull-to-refresh works even when the content
       // happens to fit on screen.
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Full-bleed: the hero photo needs to reach both edges, so it sits
+          // outside the padded section below rather than inside it.
           HeroStatusCard(
             locationData: locationData,
             prayerTimesData: prayerTimesData,
@@ -44,22 +47,39 @@ class MainContentWidget extends StatelessWidget {
             elevation: elevation,
             isLoadingElevation: isLoadingElevation,
           ),
-          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            transform: Matrix4.translationValues(0, -20, 0),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: Column(
+              children: [
+                const OccasionBannerWidget(),
 
-          const OccasionBannerWidget(),
+                if (!locationData.isTrustworthy) ...[
+                  const SizedBox(height: 12),
+                  _LocationNotice(locationData: locationData),
+                ],
 
-          if (!locationData.isTrustworthy) ...[
-            const SizedBox(height: 12),
-            _LocationNotice(locationData: locationData),
-          ],
+                const SizedBox(height: 16),
 
-          const SizedBox(height: 16),
+                // Prayer Times List
+                PrayerTimesListWidget(
+                  prayerTimes: prayerTimesData.prayerTimes,
+                  currentPrayer: prayerStatus.currentPrayer,
+                  nextPrayer: prayerStatus.nextPrayer,
+                ),
 
-          // Prayer Times List
-          PrayerTimesListWidget(
-            prayerTimes: prayerTimesData.prayerTimes,
-            currentPrayer: prayerStatus.currentPrayer,
-            nextPrayer: prayerStatus.nextPrayer,
+                const SizedBox(height: 16),
+
+                BottomTilesRow(
+                  nextPrayer: prayerStatus.nextPrayer,
+                  timeRemaining: prayerStatus.timeRemaining,
+                ),
+              ],
+            ),
           ),
         ],
       ),

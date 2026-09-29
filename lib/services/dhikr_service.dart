@@ -4,6 +4,24 @@ import 'package:flutter/services.dart';
 import '../models/dhikr_models.dart';
 import 'dhikr_data_service.dart';
 
+/// The filter-chip groupings on the Dhikr home screen.
+enum DhikrTimeGroup { daily, morning, evening, afterSalah }
+
+extension DhikrTimeGroupLabel on DhikrTimeGroup {
+  String get label {
+    switch (this) {
+      case DhikrTimeGroup.daily:
+        return 'Daily Dhikr';
+      case DhikrTimeGroup.morning:
+        return 'Morning';
+      case DhikrTimeGroup.evening:
+        return 'Evening';
+      case DhikrTimeGroup.afterSalah:
+        return 'After Salah';
+    }
+  }
+}
+
 /// Service for managing Dhikr counting logic and interactions
 class DhikrService {
   
@@ -161,29 +179,26 @@ class DhikrService {
     return count / (duration.inMinutes > 0 ? duration.inMinutes : 1);
   }
 
-  /// Get time-based recommendations
-  static List<Dhikr> getTimeBasedRecommendations() {
-    final hour = DateTime.now().hour;
-    
-    if (hour >= 5 && hour < 12) {
-      // Morning dhikr
-      return [
-        DhikrDataService.getAllDhikr().firstWhere((d) => d.id == 'subhan_allah'),
-        DhikrDataService.getAllDhikr().firstWhere((d) => d.id == 'alhamdulillah'),
-        DhikrDataService.getAllDhikr().firstWhere((d) => d.id == 'allahu_akbar'),
-      ];
-    } else if (hour >= 12 && hour < 18) {
-      // Afternoon dhikr
-      return [
-        DhikrDataService.getAllDhikr().firstWhere((d) => d.id == 'astaghfirullah'),
-        DhikrDataService.getAllDhikr().firstWhere((d) => d.id == 'la_ilaha_illa_allah'),
-      ];
-    } else {
-      // Evening dhikr
-      return [
-        DhikrDataService.getAllDhikr().firstWhere((d) => d.id == 'subhan_allah_wabihamdihi'),
-        DhikrDataService.getAllDhikr().firstWhere((d) => d.id == 'la_hawla_wala_quwwata'),
-      ];
+  /// Named groupings shown as filter chips on the Dhikr home screen.
+  static List<Dhikr> getDhikrForTimeGroup(DhikrTimeGroup group) {
+    final all = DhikrDataService.getAllDhikr();
+    Dhikr byId(String id) => all.firstWhere((d) => d.id == id);
+
+    switch (group) {
+      case DhikrTimeGroup.daily:
+        return DhikrDataService.getPopularDhikr();
+      case DhikrTimeGroup.morning:
+        return [byId('subhan_allah'), byId('alhamdulillah'), byId('allahu_akbar')];
+      case DhikrTimeGroup.evening:
+        return [
+          byId('subhan_allah_wabihamdihi'),
+          byId('la_hawla_wala_quwwata'),
+          byId('astaghfirullah'),
+        ];
+      case DhikrTimeGroup.afterSalah:
+        // The tasbih taught in Sahih Muslim: SubhanAllah, Alhamdulillah and
+        // Allahu Akbar, recited after every obligatory prayer.
+        return [byId('subhan_allah'), byId('alhamdulillah'), byId('allahu_akbar')];
     }
   }
 

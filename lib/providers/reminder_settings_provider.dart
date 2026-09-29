@@ -34,7 +34,10 @@ class ReminderSettingsProvider extends ChangeNotifier {
     await ReminderService.saveSettings(updated);
     final times = _prayerTimes;
     if (times != null) {
-      await ReminderService.scheduleReminders(times);
+      // Only today's times are known here; the full multi-day schedule gets
+      // restored on the next full recalculation (see
+      // PrayerTimesScreen._scheduleNotifications).
+      await ReminderService.scheduleReminders([times]);
     }
   }
 

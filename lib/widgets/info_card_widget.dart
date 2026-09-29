@@ -2,6 +2,10 @@
 
 import 'package:flutter/material.dart';
 
+/// Location, date and elevation summary shown on the semi-opaque card over
+/// the hero photo. Always renders in dark text on the assumption of a light
+/// (near-white) card background, regardless of app theme - see
+/// [HeroStatusCard]'s `_LocationDateCard`.
 class InfoCardWidget extends StatelessWidget {
   final String location;
   final String islamicDate;
@@ -20,103 +24,103 @@ class InfoCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Location info
-          _buildInfoRow(
-            icon: Icons.location_on,
-            text: location,
-            onSurface: onSurface,
-            maxLines: 2,
-          ),
+    final locationParts = _splitFirst(location);
 
-          const SizedBox(height: 12),
-
-          // Current date
-          _buildInfoRow(
-            icon: Icons.calendar_today,
-            text: currentDate,
-            onSurface: onSurface,
-          ),
-
-          const SizedBox(height: 12),
-
-          // Islamic date
-          _buildInfoRow(
-            icon: Icons.nightlight_round,
-            text: islamicDate,
-            onSurface: onSurface,
-          ),
-
-          const SizedBox(height: 12),
-
-          // Elevation info
-          _buildElevationRow(onSurface),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildIconRow(
+          icon: Icons.location_on,
+          primary: locationParts.$1,
+          secondary: locationParts.$2,
+        ),
+        const SizedBox(height: 12),
+        _buildIconRow(
+          icon: Icons.calendar_today,
+          primary: currentDate,
+          secondary: islamicDate,
+        ),
+        const SizedBox(height: 12),
+        _buildElevationRow(),
+      ],
     );
   }
 
-  /// Builds a generic info row with icon and text
-  Widget _buildInfoRow({
+  /// Splits "Neighborhood, City, Country" into a bold first line and a
+  /// muted remainder line, matching the reference design's two-line address.
+  (String, String?) _splitFirst(String text) {
+    final commaIndex = text.indexOf(',');
+    if (commaIndex == -1) return (text, null);
+    return (
+      '${text.substring(0, commaIndex)},',
+      text.substring(commaIndex + 1).trim(),
+    );
+  }
+
+  Widget _buildIconRow({
     required IconData icon,
-    required String text,
-    required Color onSurface,
-    int maxLines = 1,
+    required String primary,
+    String? secondary,
   }) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: onSurface, size: 16),
-        const SizedBox(width: 4),
+        Icon(icon, color: Colors.black54, size: 16),
+        const SizedBox(width: 6),
         Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: onSurface,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: maxLines,
-            overflow: TextOverflow.ellipsis,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                primary,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (secondary != null && secondary.isNotEmpty)
+                Text(
+                  secondary,
+                  style: TextStyle(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  /// Builds the elevation row with loading state
-  Widget _buildElevationRow(Color onSurface) {
-    final mutedColor = onSurface.withValues(alpha: 0.6);
+  Widget _buildElevationRow() {
     return Row(
       children: [
-        Icon(Icons.filter_hdr, color: onSurface, size: 16),
-        const SizedBox(width: 4),
+        const Icon(Icons.terrain, color: Colors.black54, size: 16),
+        const SizedBox(width: 6),
         Expanded(
           child: isLoadingElevation
               ? Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 12,
                       height: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(mutedColor),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black45),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       "Loading elevation...",
                       style: TextStyle(
-                        color: mutedColor,
-                        fontSize: 10,
+                        color: Colors.black.withValues(alpha: 0.55),
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -124,8 +128,8 @@ class InfoCardWidget extends StatelessWidget {
               : Text(
                   _formatElevationWithFeet(elevation),
                   style: TextStyle(
-                    color: mutedColor,
-                    fontSize: 10,
+                    color: Colors.black.withValues(alpha: 0.55),
+                    fontSize: 12,
                   ),
                 ),
         ),
@@ -140,7 +144,7 @@ class InfoCardWidget extends StatelessWidget {
     final meters = elevation.round();
     final feet = (elevation * 3.28084).round(); // 1 meter = 3.28084 feet
 
-    return '${meters}m (${feet}ft)';
+    return '$meters m ($feet ft)';
   }
 }
 

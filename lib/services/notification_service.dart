@@ -30,34 +30,52 @@ class NotificationService {
     );
   }
 
-  /// Request notification permissions
+  /// Permissions notifications can't work reliably without.
   ///
   /// Includes [NotificationPermission.PreciseAlarms] - without it, every
   /// scheduled notification (adhan and makruh/reminder alike) falls back to
   /// an inexact alarm that Android can batch or drop under Doze, which is
   /// most noticeable for the pre-dawn/early-morning ones (Fajr-ending,
   /// sunrise) since the phone has usually been idle the longest by then.
-  /// Also includes [NotificationPermission.FullScreenIntent] and
-  /// [NotificationPermission.CriticalAlert], which the adhan channel's
-  /// notifications request but which need explicit user consent on modern
-  /// Android to actually take effect.
+  static const _requiredPermissions = [
+    NotificationPermission.Alert,
+    NotificationPermission.Sound,
+    NotificationPermission.Badge,
+    NotificationPermission.Vibration,
+    NotificationPermission.Light,
+    NotificationPermission.PreciseAlarms,
+  ];
+
+  /// Permissions the adhan channel's notifications also request
+  /// ([FullScreenIntent], [CriticalAlert]), but which are requested
+  /// best-effort only. They need explicit, additional user consent on some
+  /// Android builds and aren't always grantable through this flow at all
+  /// ([CriticalAlert] in particular is an iOS-flavored concept bolted onto
+  /// the Android permission enum). Gating [requestPermissions]'s result on
+  /// these too meant a single unsatisfiable permission silently blocked
+  /// every prayer notification, forever - see the fix that added this split.
+  static const _bestEffortPermissions = [
+    NotificationPermission.FullScreenIntent,
+    NotificationPermission.CriticalAlert,
+  ];
+
+  /// Request notification permissions.
   static Future<bool> requestPermissions() async {
     bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
     if (!isAllowed) {
       isAllowed = await AwesomeNotifications().requestPermissionToSendNotifications(
-        permissions: const [
-          NotificationPermission.Alert,
-          NotificationPermission.Sound,
-          NotificationPermission.Badge,
-          NotificationPermission.Vibration,
-          NotificationPermission.Light,
-          NotificationPermission.PreciseAlarms,
-          NotificationPermission.FullScreenIntent,
-          NotificationPermission.CriticalAlert,
-        ],
+        permissions: _requiredPermissions,
       );
     }
-    return isAllowed;
+    if (!isAllowed) return false;
+
+    // Best-effort: request them, but never let a refusal here block
+    // scheduling of everything else.
+    await AwesomeNotifications().requestPermissionToSendNotifications(
+      permissions: _bestEffortPermissions,
+    );
+
+    return true;
   }
 
   /// Schedule notifications for all prayer times
