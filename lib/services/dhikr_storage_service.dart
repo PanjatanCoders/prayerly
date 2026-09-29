@@ -10,6 +10,8 @@ class DhikrStorageService {
   static const String _userStatsKey = 'dhikr_user_stats';
   static const String _settingsKey = 'dhikr_settings';
   static const String _inProgressCountsKey = 'dhikr_in_progress_counts';
+  static const String _weeklyGoalKey = 'dhikr_weekly_goal';
+  static const int _defaultWeeklyGoal = 1000;
 
   // In-progress counter state, keyed by dhikr id. Lets the counter screen
   // resume an unfinished session instead of silently losing the count when
@@ -160,6 +162,49 @@ class DhikrStorageService {
     final sessions = await getDhikrSessions();
     sessions.sort((a, b) => b.startTime.compareTo(a.startTime));
     return sessions.take(limit).toList();
+  }
+
+  /// Today's and this-week's total recitations, summed from completed
+  /// sessions (an in-progress count isn't recorded here until the target is
+  /// reached - see [getInProgressCount] for that), plus the user's weekly
+  /// goal - the numbers behind the "Today" / "This Week" / "My Goal" tiles
+  /// on the Dhikr home screen.
+  static Future<({int today, int thisWeek, int weeklyGoal})> getStatsSummary() async {
+    final sessions = await getDhikrSessions();
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    final startOfWeek = startOfToday.subtract(Duration(days: now.weekday - 1));
+
+    var today = 0;
+    var thisWeek = 0;
+    for (final session in sessions) {
+      if (!session.startTime.isBefore(startOfWeek)) {
+        thisWeek += session.count;
+        if (!session.startTime.isBefore(startOfToday)) {
+          today += session.count;
+        }
+      }
+    }
+
+    return (today: today, thisWeek: thisWeek, weeklyGoal: await getWeeklyGoal());
+  }
+
+  static Future<int> getWeeklyGoal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt(_weeklyGoalKey) ?? _defaultWeeklyGoal;
+    } catch (e) {
+      return _defaultWeeklyGoal;
+    }
+  }
+
+  static Future<void> setWeeklyGoal(int goal) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_weeklyGoalKey, goal);
+    } catch (e) {
+      debugPrint('Error saving weekly dhikr goal: $e');
+    }
   }
 
   // User Statistics
