@@ -4,19 +4,25 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../utils/circular_progress_painter.dart';
+import '../utils/solar_angle.dart';
 import '../utils/sun_position.dart';
 import '../utils/theme/app_theme.dart';
 
 /// The countdown ring, doubling as a live sun/moon sky-arc gauge: a marker
 /// travels along a horizon-to-zenith-to-horizon path based on today's actual
 /// Fajr/Sunrise/Dhuhr/Maghrib/Isha times, so its angle always means "how far
-/// from sunrise to overhead" rather than a fixed clock reading.
+/// from sunrise to overhead" rather than a fixed clock reading. The angle
+/// printed in the caption, however, is the sun's real elevation/azimuth (see
+/// [SolarAngle]) - the marker's position is a stylized gauge, but the number
+/// underneath it is true astronomy.
 class CircularTimerWidget extends StatefulWidget {
   final String nextPrayer;
   final Duration timeRemaining;
   final DateTime currentTime;
   final double progress;
   final Map<String, DateTime> prayerTimes;
+  final double latitude;
+  final double longitude;
   final double size;
 
   const CircularTimerWidget({
@@ -26,6 +32,8 @@ class CircularTimerWidget extends StatefulWidget {
     required this.currentTime,
     required this.progress,
     required this.prayerTimes,
+    required this.latitude,
+    required this.longitude,
     this.size = 190,
   });
 
@@ -105,6 +113,11 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final sun = SunPosition.calculate(widget.prayerTimes, widget.currentTime);
     final sky = _SkyTheme.forBrightness(sun.brightness);
+    final solarAngle = SolarAngle.calculate(
+      latitude: widget.latitude,
+      longitude: widget.longitude,
+      time: widget.currentTime,
+    );
     final urgentColor = AppTheme.legibleAccent(context, AppTheme.primaryAmber);
     final discSize = widget.size - 30;
     final arcRadius = discSize / 2 * 0.62;
@@ -230,7 +243,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                         ),
                       ),
                       Text(
-                        '${sun.angleDegrees.round()}° • ${sky.label}',
+                        '${solarAngle.altitudeDegrees.round()}° • ${solarAngle.compassDirection}',
                         style: TextStyle(
                           color: sky.glyphColor.withValues(alpha: 0.75),
                           fontSize: 9,

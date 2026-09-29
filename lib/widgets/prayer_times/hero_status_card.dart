@@ -87,6 +87,8 @@ class _HeroStatusCardState extends State<HeroStatusCard>
               currentTime: widget.currentTime,
               progress: widget.prayerStatus.progress,
               prayerTimes: widget.prayerTimesData.prayerTimes,
+              latitude: widget.locationData.latitude,
+              longitude: widget.locationData.longitude,
             ),
             const SizedBox(width: 16),
             Expanded(
