@@ -190,9 +190,9 @@ class PrayerTimesListWidget extends StatelessWidget {
 
     if (prayer == 'Asr') {
       children.add(
-        const Text(
-          '(Hanafi)',
-          style: TextStyle(color: Colors.blue, fontSize: 12),
+        Text(
+          'Hanafi',
+          style: TextStyle(color: onSurface.withValues(alpha: 0.5), fontSize: 12),
         ),
       );
     }

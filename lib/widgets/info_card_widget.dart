@@ -144,7 +144,7 @@ class InfoCardWidget extends StatelessWidget {
     final meters = elevation.round();
     final feet = (elevation * 3.28084).round(); // 1 meter = 3.28084 feet
 
-    return '${meters}m (${feet}ft)';
+    return '$meters m ($feet ft)';
   }
 }
 

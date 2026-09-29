@@ -363,8 +363,13 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   }
 
   /// Format current date for display
+  static const _monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
   String get _formattedCurrentDate {
-    return "${_currentTime.day.toString().padLeft(2, '0')}/${_currentTime.month.toString().padLeft(2, '0')}/${_currentTime.year}";
+    return '${_currentTime.day} ${_monthNames[_currentTime.month - 1]} ${_currentTime.year}';
   }
 
   @override
