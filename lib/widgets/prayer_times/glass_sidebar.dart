@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:prayerly/screens/calendar/prayer_calendar_screen.dart';
 import 'package:prayerly/screens/dhikr/dhikr_selection_screen.dart';
+import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/utils/theme/app_transitions.dart';
 import '../../screens/qaza/qaza_tracker_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -86,8 +87,8 @@ class GlassSidebar extends StatelessWidget {
                           onTap: () => _navigate(context, const ZakatScreen()),
                         ),
                         _GlassMenuTile(
-                          icon: Icons.circle_outlined,
-                          iconColor: Colors.purple,
+                          icon: Icons.menu_book,
+                          iconColor: AppTheme.islamicColors['dhikr']!,
                           title: 'Dhikr Counter',
                           subtitle: 'Digital Tasbih counter',
                           onTap: () => _navigate(context, const DhikrSelectionScreen()),

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
+import 'package:prayerly/models/dhikr_tracking_models.dart';
 import 'package:prayerly/services/dhikr_service.dart';
 import 'package:prayerly/services/dhikr_storage_service.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
@@ -75,6 +76,34 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
   }
 
   Future<void> _handleCompletion() async {
+    // Record the finished session so the stats surfaced elsewhere (Today's/
+    // This Week's totals on the Dhikr home screen) reflect real activity
+    // instead of the storage layer sitting unused.
+    final endTime = DateTime.now();
+    final duration = endTime.difference(_sessionStartTime);
+    await DhikrStorageService.addDhikrSession(
+      DhikrSessionTracker(
+        id: '${widget.dhikr.id}_${endTime.millisecondsSinceEpoch}',
+        dhikrId: widget.dhikr.id,
+        count: _count,
+        targetCount: _targetCount,
+        startTime: _sessionStartTime,
+        endTime: endTime,
+        isCompleted: true,
+        dhikrTitle: widget.dhikr.transliteration,
+        wasCompleted: true,
+        totalDuration: duration,
+      ),
+    );
+    await DhikrStorageService.updateUserStats(
+      additionalRecitations: _count,
+      sessionCompleted: true,
+      sessionStarted: true,
+      additionalTime: duration,
+      dhikrId: widget.dhikr.id,
+      category: widget.dhikr.category,
+    );
+
     await DhikrService.provideFeedback(
       enableHaptic: _settings.enableHapticFeedback,
       enableSound: _settings.enableSound,

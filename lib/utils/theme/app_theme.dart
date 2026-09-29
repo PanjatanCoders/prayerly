@@ -368,7 +368,7 @@ class AppTheme {
   // Islamic colors for different categories
   static const Map<String, Color> islamicColors = {
     'prayer': Color(0xFF2E7D32),     // Green
-    'dhikr': Color(0xFF7B1FA2),      // Purple
+    'dhikr': Color(0xFF2E7D32),      // Green (was purple; matched to the target Dhikr design)
     'qibla': Color(0xFF388E3C),      // Dark Green
     'quran': Color(0xFF1976D2),      // Blue
     'dua': Color(0xFFD32F2F),        // Red
