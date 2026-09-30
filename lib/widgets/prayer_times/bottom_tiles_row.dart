@@ -49,44 +49,50 @@ class _VerseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: const Color(0xFF0F3D2E),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Icon(Icons.menu_book, size: 14, color: Colors.white.withValues(alpha: 0.8)),
               const SizedBox(width: 6),
-              Text(
-                "Today's Verse",
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  "Today's Verse",
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 5),
           const Text(
             '"Verily, prayer restrains from immorality and wrongdoing."',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 12,
               fontStyle: FontStyle.italic,
-              height: 1.35,
+              height: 1.25,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 5),
           Text(
             "— Qur'an 29:45",
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ],
@@ -109,7 +115,7 @@ class _NextPrayerTile extends StatelessWidget {
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: _nextPrayerCardBackground(context),
         borderRadius: BorderRadius.circular(16),
@@ -120,17 +126,21 @@ class _NextPrayerTile extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Next Prayer',
-                style: TextStyle(
-                  color: onSurface.withValues(alpha: 0.6),
-                  fontSize: 12,
+              Flexible(
+                child: Text(
+                  'Next Prayer',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
                 ),
               ),
+              const SizedBox(width: 4),
               const Icon(Icons.wb_sunny, size: 16, color: Colors.amber),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             nextPrayer,
             style: TextStyle(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:prayerly/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/reminder_settings_provider.dart';
 import '../widgets/prayer_times/index.dart';
@@ -89,8 +90,56 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
       if (mounted) {
         setState(() => _notificationsEnabled = enabled);
       }
+
+      if (enabled) {
+        unawaited(_maybePromptBatteryOptimization());
+      }
     } catch (e) {
       debugPrint('Error initializing services: $e');
+    }
+  }
+
+  static const _batteryOptPromptedKey = 'battery_opt_exemption_prompted';
+
+  /// Asks, once, for existing users who already had notifications enabled
+  /// before this exemption existed: without it, Android can suspend the app
+  /// between prayer times and silently drop the adhan/reminders regardless
+  /// of how correctly they were scheduled. Only asks once so it doesn't nag
+  /// on every launch if the user declines - the Settings screen offers the
+  /// same request for anyone who changes their mind later.
+  Future<void> _maybePromptBatteryOptimization() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_batteryOptPromptedKey) ?? false) return;
+    if (await NotificationService.isIgnoringBatteryOptimizations()) return;
+
+    await prefs.setBool(_batteryOptPromptedKey, true);
+    if (!mounted) return;
+
+    final shouldRequest = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Allow Prayerly to run in the background'),
+        content: const Text(
+          'Your phone\'s battery optimization can stop the Adhan from '
+          'playing automatically and delay prayer notifications while the '
+          'app is closed. Allow Prayerly to ignore battery optimization so '
+          'they arrive on time.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Allow'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldRequest ?? false) {
+      await NotificationService.requestIgnoreBatteryOptimizations();
     }
   }
 
@@ -325,6 +374,12 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
         setState(() => _notificationsEnabled = true);
         await _scheduleNotifications();
         if (mounted) _showSnackBar(l10n.notificationsEnabled);
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_batteryOptPromptedKey, true);
+        if (!await NotificationService.isIgnoringBatteryOptimizations()) {
+          await NotificationService.requestIgnoreBatteryOptimizations();
+        }
       } else {
         _showSnackBar(l10n.notificationPermissionDenied);
       }

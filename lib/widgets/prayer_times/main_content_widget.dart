@@ -53,17 +53,17 @@ class MainContentWidget extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             transform: Matrix4.translationValues(0, -20, 0),
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
             child: Column(
               children: [
                 const OccasionBannerWidget(),
 
                 if (!locationData.isTrustworthy) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
                   _LocationNotice(locationData: locationData),
                 ],
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 // Prayer Times List
                 PrayerTimesListWidget(
@@ -72,7 +72,7 @@ class MainContentWidget extends StatelessWidget {
                   nextPrayer: prayerStatus.nextPrayer,
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 BottomTilesRow(
                   nextPrayer: prayerStatus.nextPrayer,

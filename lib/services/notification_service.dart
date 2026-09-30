@@ -2,6 +2,7 @@
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart' as permission_handler;
 
 class NotificationService {
   static const String _channelKey = 'prayer_notifications';
@@ -179,6 +180,40 @@ class NotificationService {
   /// Check if notifications are enabled
   static Future<bool> areNotificationsEnabled() async {
     return await AwesomeNotifications().isNotificationAllowed();
+  }
+
+  /// Whether the app is exempt from Android's battery optimization.
+  ///
+  /// This is separate from (and matters as much as) the notification and
+  /// precise-alarm permissions: when it's *not* granted, Doze/App Standby -
+  /// or an OEM battery manager on top of it (MIUI, ColorOS, FuntouchOS, One
+  /// UI...) - can suspend the app's process between prayer times, which
+  /// silently drops the scheduled adhan/reminder notifications or the
+  /// auto-play background isolate they depend on. That's the "adhan only
+  /// plays if I open the app" symptom. Android-only; returns true on other
+  /// platforms so callers don't need to branch on it.
+  static Future<bool> isIgnoringBatteryOptimizations() async {
+    try {
+      return await permission_handler
+          .Permission.ignoreBatteryOptimizations.status
+          .isGranted;
+    } catch (e) {
+      debugPrint('Error checking battery optimization status: $e');
+      return true;
+    }
+  }
+
+  /// Requests exemption from battery optimization. Shows the system's own
+  /// confirmation dialog; returns whether it was granted.
+  static Future<bool> requestIgnoreBatteryOptimizations() async {
+    try {
+      final status =
+          await permission_handler.Permission.ignoreBatteryOptimizations.request();
+      return status.isGranted;
+    } catch (e) {
+      debugPrint('Error requesting battery optimization exemption: $e');
+      return false;
+    }
   }
 
   /// Get prayer icon based on prayer name

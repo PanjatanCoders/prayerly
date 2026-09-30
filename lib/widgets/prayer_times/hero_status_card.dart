@@ -74,14 +74,16 @@ class _HeroStatusCardState extends State<HeroStatusCard>
       },
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 260),
+        // Sized to help the whole prayer times screen fit one viewport
+        // without scrolling - see MainContentWidget.
+        constraints: const BoxConstraints(minHeight: 172),
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/hero_prayer_bg.jpg'),
             fit: BoxFit.cover,
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+        padding: const EdgeInsets.fromLTRB(14, 16, 14, 20),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -94,14 +96,14 @@ class _HeroStatusCardState extends State<HeroStatusCard>
                 isLoadingElevation: widget.isLoadingElevation,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             CircularTimerWidget(
               nextPrayer: widget.prayerStatus.nextPrayer,
               timeRemaining: widget.prayerStatus.timeRemaining,
               currentTime: widget.currentTime,
               progress: widget.prayerStatus.progress,
               prayerTimes: widget.prayerTimesData.prayerTimes,
-              size: 170,
+              size: 128,
             ),
           ],
         ),
@@ -130,7 +132,7 @@ class _LocationDateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(11),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(16),
@@ -145,7 +147,7 @@ class _LocationDateCard extends StatelessWidget {
             elevation: elevation,
             isLoadingElevation: isLoadingElevation,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _AsrMethodPill(
             onTap: () => Navigator.push(
               context,
@@ -172,22 +174,25 @@ class _AsrMethodPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 9, vertical: 6),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.settings, size: 14, color: Colors.black87),
-              SizedBox(width: 6),
-              Text(
-                'Asr: Hanafi',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              Icon(Icons.settings, size: 12, color: Colors.black87),
+              SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  'Asr: Hanafi',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              SizedBox(width: 4),
-              Icon(Icons.chevron_right, size: 16, color: Colors.black54),
+              SizedBox(width: 2),
+              Icon(Icons.chevron_right, size: 14, color: Colors.black54),
             ],
           ),
         ),

@@ -131,21 +131,21 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, color: iconColor, size: 28),
-                    const SizedBox(height: 6),
+                    Icon(icon, color: iconColor, size: widget.size * 0.165),
+                    SizedBox(height: widget.size * 0.035),
                     Text(
                       widget.nextPrayer,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.black87,
-                        fontSize: 18,
+                        fontSize: widget.size * 0.106,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       _formatTimeRemaining(widget.timeRemaining),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.black87,
-                        fontSize: 20,
+                        fontSize: widget.size * 0.118,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -153,7 +153,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                       'until prayer',
                       style: TextStyle(
                         color: Colors.black.withValues(alpha: 0.5),
-                        fontSize: 11,
+                        fontSize: widget.size * 0.065,
                       ),
                     ),
                   ],

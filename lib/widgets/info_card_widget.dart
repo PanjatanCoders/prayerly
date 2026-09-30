@@ -34,13 +34,13 @@ class InfoCardWidget extends StatelessWidget {
           primary: locationParts.$1,
           secondary: locationParts.$2,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         _buildIconRow(
           icon: Icons.calendar_today,
           primary: currentDate,
           secondary: islamicDate,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         _buildElevationRow(),
       ],
     );

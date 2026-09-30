@@ -15,6 +15,11 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Without this, Doze/App Standby (and OEM battery managers on MIUI,
+         ColorOS, FuntouchOS, One UI, etc.) can suspend the process the adhan
+         auto-play and reminder notifications depend on, which is why they
+         were only firing reliably while the app happened to be open. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <application
         android:label="prayerly"

@@ -12,7 +12,10 @@ class CircularProgressPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 30;
+    // Keep the ring close to the edge of the white disc behind it (which is
+    // inset by 12px from this CustomPaint's own size) rather than floating
+    // well inside it.
+    final radius = size.width / 2 - 9;
 
     // Background circle
     final backgroundPaint = Paint()

@@ -28,7 +28,7 @@ class PrayerTimesListWidget extends StatelessWidget {
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
@@ -36,7 +36,7 @@ class PrayerTimesListWidget extends StatelessWidget {
       child: Column(
         children: [
           _buildHeader(context, onSurface),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           ...prayerTimes.entries.map((entry) {
             final hasNotification = entry.key == 'Sunrise'
                 ? reminderProvider.settings.sunriseMakruhEnabled
@@ -51,17 +51,20 @@ class PrayerTimesListWidget extends StatelessWidget {
   Widget _buildHeader(BuildContext context, Color onSurface) {
     return Row(
       children: [
-        Icon(Icons.schedule, color: onSurface, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          'Prayer Times',
-          style: TextStyle(
-            color: onSurface,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+        Icon(Icons.schedule, color: onSurface, size: 18),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            'Prayer Times',
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: onSurface,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: 8),
         Material(
           color: onSurface.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(20),
@@ -72,22 +75,20 @@ class PrayerTimesListWidget extends StatelessWidget {
               AppTransitions.slideIn(const PrayerCalendarScreen()),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.calendar_month, size: 14, color: onSurface.withValues(alpha: 0.8)),
-                  const SizedBox(width: 4),
+                  Icon(Icons.calendar_month, size: 13, color: onSurface.withValues(alpha: 0.8)),
+                  const SizedBox(width: 3),
                   Text(
-                    'View Calendar',
+                    'Calendar',
                     style: TextStyle(
                       color: onSurface.withValues(alpha: 0.8),
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: 2),
-                  Icon(Icons.chevron_right, size: 14, color: onSurface.withValues(alpha: 0.5)),
                 ],
               ),
             ),
@@ -102,8 +103,8 @@ class PrayerTimesListWidget extends StatelessWidget {
     bool isSunrise = prayer == 'Sunrise';
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: isNextPrayer ? Colors.red.withValues(alpha: 0.08) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -112,7 +113,7 @@ class PrayerTimesListWidget extends StatelessWidget {
         children: [
           Container(
             width: 4,
-            height: 40,
+            height: 24,
             decoration: BoxDecoration(
               color: AppTheme.legibleAccent(context, _getPrayerColor(prayer)),
               borderRadius: BorderRadius.circular(2),
@@ -122,7 +123,7 @@ class PrayerTimesListWidget extends StatelessWidget {
           Icon(
             _getPrayerIcon(prayer),
             color: AppTheme.legibleAccent(context, _getPrayerColor(prayer)),
-            size: 20,
+            size: 18,
           ),
           const SizedBox(width: 10),
           Expanded(

@@ -3,11 +3,35 @@ import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/utils/theme/app_transitions.dart';
 import 'package:prayerly/widgets/theme_switch_widget.dart';
 import '../services/language_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/language_selector.dart';
 import 'adhan_settings_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool? _ignoringBatteryOptimizations;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshBatteryOptimizationStatus();
+  }
+
+  Future<void> _refreshBatteryOptimizationStatus() async {
+    final ignoring = await NotificationService.isIgnoringBatteryOptimizations();
+    if (mounted) setState(() => _ignoringBatteryOptimizations = ignoring);
+  }
+
+  Future<void> _requestBatteryOptimizationExemption() async {
+    await NotificationService.requestIgnoreBatteryOptimizations();
+    await _refreshBatteryOptimizationStatus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +87,22 @@ class SettingsScreen extends StatelessWidget {
                 ),
               );
             },
+          ),
+
+          const SizedBox(height: 12),
+          _buildSettingsCard(
+            context,
+            icon: _ignoringBatteryOptimizations == true
+                ? Icons.battery_charging_full
+                : Icons.battery_alert,
+            title: 'Background Reliability',
+            subtitle: _ignoringBatteryOptimizations == true
+                ? 'Battery optimization is off for Prayerly - Adhan and reminders can fire on time.'
+                : 'Allow Prayerly to ignore battery optimization so the Adhan plays and '
+                    'notifications arrive without opening the app. On some phones '
+                    '(Xiaomi, Oppo, Vivo, Samsung...) also enable "Autostart" or "No '
+                    'restrictions" for Prayerly in the phone\'s own battery settings.',
+            onTap: _requestBatteryOptimizationExemption,
           ),
         ],
       ),
