@@ -29,7 +29,7 @@ class BottomTilesRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Expanded(flex: 6, child: _VerseTile()),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             flex: 5,
             child: _NextPrayerTile(

@@ -38,6 +38,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   PrayerTimesData? _prayerTimesData;
   PrayerStatus? _prayerStatus;
   double? _elevation;
+  WeatherSnapshot? _weather;
   DateTime _currentTime = DateTime.now();
   DateTime? _lastCalculatedFor;
 
@@ -207,6 +208,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     // Best-effort enrichment. Failures here never reach the user.
     unawaited(_resolveAddress());
     unawaited(_fetchElevation());
+    unawaited(_fetchWeather());
   }
 
   /// Reverse geocoding runs off the critical path: it needs a network, and a
@@ -251,6 +253,24 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     } catch (e) {
       debugPrint('Error fetching elevation: $e');
       if (mounted) setState(() => _isLoadingElevation = false);
+    }
+  }
+
+  /// Fetches cloud cover for the circular timer's sky ("cloudy" vs. clear
+  /// sun/moon) - purely cosmetic enrichment, same off-critical-path pattern
+  /// as [_fetchElevation]: it never blocks or fails the prayer times screen.
+  Future<void> _fetchWeather() async {
+    final location = _locationData;
+    if (location == null || !mounted) return;
+
+    try {
+      final weather = await WeatherService.getCurrentWeather(
+        location.latitude,
+        location.longitude,
+      );
+      if (mounted) setState(() => _weather = weather);
+    } catch (e) {
+      debugPrint('Error fetching weather: $e');
     }
   }
 
@@ -459,6 +479,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
           formattedCurrentDate: _formattedCurrentDate,
           elevation: _elevation,
           isLoadingElevation: _isLoadingElevation,
+          weather: _weather,
         ),
       );
     }

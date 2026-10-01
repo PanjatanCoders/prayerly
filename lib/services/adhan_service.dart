@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'dart:convert';
 
 class AdhanService {
@@ -285,6 +286,34 @@ class AdhanService {
     }
   }
 
+  /// Fires the adhan from a plain AlarmManager alarm, independent of whether
+  /// the Flutter engine/Dart VM is already running.
+  ///
+  /// [onNotificationDisplayed] above only runs if the app process is still
+  /// alive - awesome_notifications has no background-isolate resurrection
+  /// path for "notification displayed", only for [onNotificationTap]'s
+  /// action-received event. By actual prayer time Android has normally
+  /// killed the process, so that hook was never even attempted and the adhan
+  /// silently didn't play. `android_alarm_manager_plus` exists specifically
+  /// to run Dart code at an exact time with its own background isolate
+  /// (plugins registered), the same mechanism alarm-clock apps use, so this
+  /// alarm - scheduled alongside each notification in
+  /// `_scheduleAdhanNotification` - is what actually triggers playback now.
+  @pragma('vm:entry-point')
+  static Future<void> onAlarmFired(int id, Map<String, dynamic> params) async {
+    final prayer = params['prayer'] as String?;
+    if (prayer == null) return;
+    // This runs in android_alarm_manager_plus's own background isolate,
+    // which never ran this app's main() - _audioPlayer and the notification
+    // channels haven't been set up in *this* isolate yet, even though they
+    // were in the foreground one.
+    await initialize();
+    final autoPlay = await getAutoPlayEnabled();
+    if (autoPlay) {
+      await playAdhan(prayer);
+    }
+  }
+
   // This method is called when notifications are created OR when user interacts with them
   @pragma('vm:entry-point')
   static Future<void> onNotificationTap(ReceivedAction receivedAction) async {
@@ -344,6 +373,7 @@ class AdhanService {
       await AwesomeNotifications().cancelNotificationsByChannelKey(
         'adhan_channel',
       );
+      await _cancelAllAlarms();
       final now = DateTime.now();
 
       for (var dayOffset = 0; dayOffset < prayerTimesByDay.length; dayOffset++) {
@@ -417,8 +447,35 @@ class AdhanService {
           preciseAlarm: true,
         ),
       );
+
+      // The actual auto-play trigger - see the doc comment on [onAlarmFired].
+      await AndroidAlarmManager.oneShotAt(
+        time,
+        id,
+        onAlarmFired,
+        alarmClock: true,
+        exact: true,
+        wakeup: true,
+        rescheduleOnReboot: true,
+        params: {'prayer': prayer},
+      );
     } catch (e) {
       debugPrint('Error scheduling $prayer notification: $e');
+    }
+  }
+
+  /// Every id [_scheduleAdhanNotification] could have handed to
+  /// `AndroidAlarmManager.oneShotAt` across the ~week of days
+  /// `scheduleAdhanNotifications` schedules - cancelled up front on every
+  /// reschedule so a prayer/day that becomes disabled doesn't leave a
+  /// dangling native alarm that fires anyway.
+  static Future<void> _cancelAllAlarms() async {
+    for (final prayer in _defaultSettings.keys) {
+      for (var dayOffset = 0; dayOffset < 8; dayOffset++) {
+        await AndroidAlarmManager.cancel(
+          _getNotificationId(prayer) + dayOffset * 10,
+        );
+      }
     }
   }
 
@@ -447,6 +504,7 @@ class AdhanService {
       await AwesomeNotifications().cancelNotificationsByChannelKey(
         'adhan_playing_channel',
       );
+      await _cancelAllAlarms();
     } catch (e) {
       debugPrint('Error canceling notifications: $e');
     }

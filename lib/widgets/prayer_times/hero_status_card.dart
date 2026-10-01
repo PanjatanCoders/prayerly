@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../screens/adhan_settings_screen.dart';
 import '../../services/location_service.dart';
 import '../../services/prayer_service.dart';
+import '../../services/weather_service.dart';
 import '../../utils/theme/app_transitions.dart';
 import '../circular_timer_widget.dart';
 import '../info_card_widget.dart';
@@ -19,6 +20,8 @@ class HeroStatusCard extends StatefulWidget {
   final String formattedCurrentDate;
   final double? elevation;
   final bool isLoadingElevation;
+  final WeatherSnapshot? weather;
+  final double minHeight;
 
   const HeroStatusCard({
     super.key,
@@ -29,6 +32,8 @@ class HeroStatusCard extends StatefulWidget {
     required this.formattedCurrentDate,
     required this.elevation,
     required this.isLoadingElevation,
+    this.weather,
+    this.minHeight = 172,
   });
 
   @override
@@ -74,9 +79,11 @@ class _HeroStatusCardState extends State<HeroStatusCard>
       },
       child: Container(
         width: double.infinity,
-        // Sized to help the whole prayer times screen fit one viewport
-        // without scrolling - see MainContentWidget.
-        constraints: const BoxConstraints(minHeight: 172),
+        // On a tall screen, MainContentWidget passes a taller minHeight so
+        // the hero photo grows to use some of the extra vertical space - a
+        // bigger photo reads as intentional, unlike stretched gaps lower on
+        // the screen (see MainContentWidget for the full reasoning).
+        constraints: BoxConstraints(minHeight: widget.minHeight),
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/hero_prayer_bg.jpg'),
@@ -85,7 +92,12 @@ class _HeroStatusCardState extends State<HeroStatusCard>
         ),
         padding: const EdgeInsets.fromLTRB(14, 16, 14, 20),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // Centered, not start-aligned, so the countdown ring sits centered
+          // against the location/date card beside it rather than pinned to
+          // its top edge - matters whenever the card's content (a longer
+          // address, or the "location not trustworthy" notice) makes it
+          // taller or shorter than the ring.
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: _LocationDateCard(
@@ -103,6 +115,7 @@ class _HeroStatusCardState extends State<HeroStatusCard>
               currentTime: widget.currentTime,
               progress: widget.prayerStatus.progress,
               prayerTimes: widget.prayerTimesData.prayerTimes,
+              weather: widget.weather,
               size: 128,
             ),
           ],

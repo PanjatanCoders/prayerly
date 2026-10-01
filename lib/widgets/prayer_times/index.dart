@@ -9,6 +9,7 @@ export 'bottom_tiles_row.dart';
 export '../../services/location_service.dart';
 export '../../services/prayer_service.dart';
 export '../../services/elevation_service.dart';
+export '../../services/weather_service.dart';
 export '../../services/adhan_service.dart';
 export '../../services/notification_service.dart';
 export '../../services/reminder_service.dart';

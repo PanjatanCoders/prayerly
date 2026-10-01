@@ -4,6 +4,7 @@ import 'package:prayerly/l10n/app_localizations.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 import 'services/notification_service.dart';
 import 'services/adhan_service.dart';
@@ -18,6 +19,12 @@ import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Required for AdhanService's native-alarm fallback: awesome_notifications
+  // can only resurrect Dart in a background isolate for onActionReceivedMethod,
+  // not for onNotificationDisplayed, so the adhan itself is fired by a plain
+  // AlarmManager alarm (this plugin) scheduled alongside each notification.
+  await AndroidAlarmManager.initialize();
 
   // Initialize services
   await NotificationService.initialize();

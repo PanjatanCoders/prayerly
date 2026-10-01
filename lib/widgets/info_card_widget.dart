@@ -100,6 +100,10 @@ class InfoCardWidget extends StatelessWidget {
 
   Widget _buildElevationRow() {
     return Row(
+      // Matches the start alignment _buildIconRow uses above, so this row's
+      // icon sits at the same relative position against its text as the
+      // location/date rows' icons do against theirs.
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Icon(Icons.terrain, color: Colors.black54, size: 16),
         const SizedBox(width: 6),

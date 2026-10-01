@@ -49,52 +49,59 @@ class PrayerTimesListWidget extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, Color onSurface) {
-    return Row(
-      children: [
-        Icon(Icons.schedule, color: onSurface, size: 18),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            'Prayer Times',
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: onSurface,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Material(
-          color: onSurface.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(20),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () => Navigator.push(
-              context,
-              AppTransitions.slideIn(const PrayerCalendarScreen()),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.calendar_month, size: 13, color: onSurface.withValues(alpha: 0.8)),
-                  const SizedBox(width: 3),
-                  Text(
-                    'Calendar',
-                    style: TextStyle(
-                      color: onSurface.withValues(alpha: 0.8),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+    // Horizontal padding matches _buildPrayerTimeItem's row padding below,
+    // so the clock icon and Calendar button sit on the same left/right
+    // columns as each row's indicator bar and notification icon rather than
+    // floating further in from the card edge than the header above them.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          Icon(Icons.schedule, color: onSurface, size: 18),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              'Prayer Times',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: onSurface,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Material(
+            color: onSurface.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(20),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => Navigator.push(
+                context,
+                AppTransitions.slideIn(const PrayerCalendarScreen()),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.calendar_month, size: 13, color: onSurface.withValues(alpha: 0.8)),
+                    const SizedBox(width: 3),
+                    Text(
+                      'Calendar',
+                      style: TextStyle(
+                        color: onSurface.withValues(alpha: 0.8),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -104,7 +111,7 @@ class PrayerTimesListWidget extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
         color: isNextPrayer ? Colors.red.withValues(alpha: 0.08) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),

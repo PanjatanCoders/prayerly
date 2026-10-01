@@ -15,9 +15,11 @@ dependencies:
   permission_handler: ^12.0.1
   intl: ^0.20.2
   geocoding: ^4.0.0
+  http: ^1.2.2
   flutter_launcher_icons: ^0.14.4
   marquee: ^2.3.0
   awesome_notifications: ^0.10.1
+  android_alarm_manager_plus: ^5.1.1
   audioplayers: ^6.5.0
   shared_preferences: ^2.5.3
   provider: ^6.1.5
