@@ -2,7 +2,7 @@ name: prayerly
 description: "Prayerly app"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.5.2+13
+version: 2.6.0+14
 
 environment:
   sdk: ^3.8.1
@@ -39,39 +39,28 @@ flutter:
   generate: true
   uses-material-design: true
 
-  # fonts:
-  #   # For Hindi (Devanagari script)
-  #   - family: NotoSansDevanagari
-  #     fonts:
-  #       - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
-  #       - asset: assets/fonts/NotoSansDevanagari-Bold.ttf
-  #         weight: 700
-
-  #   # For Urdu (Arabic-Urdu script)
-  #   - family: NotoNastaliqUrdu
-  #     fonts:
-  #       - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf
-  #       - asset: assets/fonts/NotoNastaliqUrdu-Bold.ttf
-  #         weight: 700
-
-  #   # For Bengali script
-  #   - family: NotoSansBengali
-  #     fonts:
-  #       - asset: assets/fonts/NotoSansBengali-Regular.ttf
-  #       - asset: assets/fonts/NotoSansBengali-Bold.ttf
-  #         weight: 700
-
-  #   # For Arabic (for Dhikr text)
-  #   - family: Amiri
-  #     fonts:
-  #       - asset: assets/fonts/Amiri-Regular.ttf
-  #       - asset: assets/fonts/Amiri-Bold.ttf
-  #         weight: 700
+  fonts:
+    # The system/device fallback font for Arabic script does not reliably
+    # render a shadda stacked with a vowel mark on the same letter (e.g.
+    # صَلِّ's shadda+kasra) - confirmed on-device: it shows some other glyph
+    # (reported as a fatha) or drops the vowel mark entirely, regardless of
+    # the marks' order in the string (Arabic combining-mark order itself was
+    # independently verified correct per Unicode's canonical combining
+    # classes - kasra then shadda is already canonical). Amiri is a classical
+    # Naskh typeface built for exactly this (full Qur'anic/classical
+    # diacritic stacking), SIL Open Font License, used wherever this app
+    # renders Dhikr/Durood Arabic text.
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+        - asset: assets/fonts/Amiri-Bold.ttf
+          weight: 700
 
   assets:
     - assets/icons/icon.png
     - assets/icons/icon_foreground.png
     - assets/images/hero_prayer_bg.jpg
+    - assets/images/world_map.jpg
     - assets/audio/adhan/azan1.mp3
     - assets/audio/adhan/azan2.mp3
     - assets/audio/adhan/azan3.mp3

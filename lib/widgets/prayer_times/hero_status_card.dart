@@ -1,11 +1,9 @@
 // widgets/prayer_times/hero_status_card.dart
 import 'package:flutter/material.dart';
 
-import '../../screens/adhan_settings_screen.dart';
 import '../../services/location_service.dart';
 import '../../services/prayer_service.dart';
 import '../../services/weather_service.dart';
-import '../../utils/theme/app_transitions.dart';
 import '../circular_timer_widget.dart';
 import '../info_card_widget.dart';
 
@@ -101,6 +99,7 @@ class _HeroStatusCardState extends State<HeroStatusCard>
               child: _LocationDateCard(
                 locationData: widget.locationData,
                 prayerTimesData: widget.prayerTimesData,
+                prayerStatus: widget.prayerStatus,
                 formattedCurrentDate: widget.formattedCurrentDate,
                 weather: widget.weather,
                 isLoadingWeather: widget.isLoadingWeather,
@@ -108,12 +107,12 @@ class _HeroStatusCardState extends State<HeroStatusCard>
             ),
             const SizedBox(width: 14),
             CircularTimerWidget(
-              nextPrayer: widget.prayerStatus.nextPrayer,
               timeRemaining: widget.prayerStatus.timeRemaining,
               currentTime: widget.currentTime,
               progress: widget.prayerStatus.progress,
               prayerTimes: widget.prayerTimesData.prayerTimes,
               weather: widget.weather,
+              locationData: widget.locationData,
               size: 128,
             ),
           ],
@@ -123,11 +122,15 @@ class _HeroStatusCardState extends State<HeroStatusCard>
   }
 }
 
-/// The semi-opaque card over the hero photo: location, Gregorian/Hijri date,
-/// current weather/temperature, and the current Asr calculation method.
+/// The semi-opaque card over the hero photo: next prayer/countdown,
+/// location, Gregorian/Hijri date, and current weather/temperature. (The
+/// Asr calculation method used to show here too, as a tappable pill, but
+/// it's redundant with the "Asr Hanafi" label already in the Prayer Times
+/// list below.)
 class _LocationDateCard extends StatelessWidget {
   final LocationData locationData;
   final PrayerTimesData prayerTimesData;
+  final PrayerStatus prayerStatus;
   final String formattedCurrentDate;
   final WeatherSnapshot? weather;
   final bool isLoadingWeather;
@@ -135,6 +138,7 @@ class _LocationDateCard extends StatelessWidget {
   const _LocationDateCard({
     required this.locationData,
     required this.prayerTimesData,
+    required this.prayerStatus,
     required this.formattedCurrentDate,
     required this.weather,
     required this.isLoadingWeather,
@@ -152,61 +156,15 @@ class _LocationDateCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InfoCardWidget(
+            nextPrayer: prayerStatus.nextPrayer,
+            timeRemaining: prayerStatus.timeRemaining,
             location: locationData.address,
             islamicDate: prayerTimesData.islamicDate,
             currentDate: formattedCurrentDate,
             weather: weather,
             isLoadingWeather: isLoadingWeather,
           ),
-          const SizedBox(height: 8),
-          _AsrMethodPill(
-            onTap: () => Navigator.push(
-              context,
-              AppTransitions.slideIn(const AdhanSettingsScreen()),
-            ),
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _AsrMethodPill extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _AsrMethodPill({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.settings, size: 12, color: Colors.black87),
-              SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  'Asr: Hanafi',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              SizedBox(width: 2),
-              Icon(Icons.chevron_right, size: 14, color: Colors.black54),
-            ],
-          ),
-        ),
       ),
     );
   }

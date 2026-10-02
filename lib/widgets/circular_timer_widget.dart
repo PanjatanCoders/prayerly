@@ -1,12 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../models/location_data.dart';
 import '../services/weather_service.dart';
 import '../utils/circular_progress_painter.dart';
 import '../utils/moon_phase.dart';
 import '../utils/moon_phase_painter.dart';
 import '../utils/sun_position.dart';
 import '../utils/theme/app_theme.dart';
+import 'world_map_dialog.dart';
 
 /// Where to draw the sun/moon along the sky disc's upper arc for a given
 /// [SunPosition.angleDegrees] (0 = horizon/rising, 90 = zenith, 180 =
@@ -25,8 +27,12 @@ Offset _skyArcOffset(double angleDegrees, double radius) {
   return Offset(dx, dy);
 }
 
-/// The countdown ring: a plain disc with an orange progress ring, a sky icon,
-/// the next prayer's name, and an HH:MM:SS countdown.
+/// The countdown ring: a globe disc (lit on whichever side faces the
+/// orbiting sun/moon icon) inside an orange progress ring. Purely visual -
+/// the next prayer's name and countdown text live on the side card now (see
+/// [InfoCardWidget]), not overlaid on the circle itself. Tapping it opens
+/// [showWorldMapDialog] - the same map, full and unpanned, plus live
+/// numbers.
 ///
 /// The sky icon is not just a flat sun-or-moon swap: by day its color and
 /// glow follow [SunPosition.intensity] (pale and dim at dawn/dusk, hot and
@@ -35,22 +41,22 @@ Offset _skyArcOffset(double angleDegrees, double radius) {
 /// [MoonPhase]/[MoonPhasePainter]) sized and glowing according to how much
 /// of it is lit, also dimmed under cloud cover.
 class CircularTimerWidget extends StatefulWidget {
-  final String nextPrayer;
   final Duration timeRemaining;
   final DateTime currentTime;
   final double progress;
   final Map<String, DateTime> prayerTimes;
   final WeatherSnapshot? weather;
+  final LocationData? locationData;
   final double size;
 
   const CircularTimerWidget({
     super.key,
-    required this.nextPrayer,
     required this.timeRemaining,
     required this.currentTime,
     required this.progress,
     required this.prayerTimes,
     this.weather,
+    this.locationData,
     this.size = 190,
   });
 
@@ -109,119 +115,97 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
     }
   }
 
+  void _openWorldMap() {
+    showWorldMapDialog(
+      context,
+      locationData: widget.locationData,
+      prayerTimes: widget.prayerTimes,
+      currentTime: widget.currentTime,
+      weather: widget.weather,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sun = SunPosition.calculate(widget.prayerTimes, widget.currentTime);
     final ringColor = AppTheme.legibleAccent(context, AppTheme.primaryAmber);
-    // The sky disc behind this text switches to a dark "night mode" gradient
-    // after Maghrib (see _SkyDisc) - black text would be unreadable on it.
-    final textColor = sun.isDaytime ? Colors.black87 : Colors.white;
 
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, child) {
-        final t = _isPulsing ? _pulseController.value : 0.0;
-        final scale = _isPulsing ? 1.0 + (t * 0.035) : 1.0;
+    return GestureDetector(
+      onTap: _openWorldMap,
+      child: AnimatedBuilder(
+        animation: _pulseController,
+        builder: (context, child) {
+          final t = _isPulsing ? _pulseController.value : 0.0;
+          final scale = _isPulsing ? 1.0 + (t * 0.035) : 1.0;
 
-        return Transform.scale(
-          scale: scale,
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: _isPulsing
-                ? BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: ringColor.withValues(alpha: 0.25 * t),
-                        blurRadius: 24,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  )
-                : null,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                _SkyDisc(
-                  size: widget.size - 12,
-                  sun: sun,
-                  currentTime: widget.currentTime,
-                  weather: widget.weather,
-                ),
-                CustomPaint(
-                  size: Size(widget.size, widget.size),
-                  painter: CircularProgressPainter(
-                    progress: widget.progress,
-                    color: ringColor,
-                  ),
-                ),
-                // Positioned along the sky disc's arc per the sun/moon's
-                // actual current angle, rather than sitting fixed in place -
-                // see _skyArcOffset.
-                Transform.translate(
-                  offset: _skyArcOffset(
-                    sun.angleDegrees,
-                    (widget.size - 12) / 2 * 0.72,
-                  ),
-                  child: _SkyIcon(
+          return Transform.scale(
+            scale: scale,
+            child: Container(
+              width: widget.size,
+              height: widget.size,
+              decoration: _isPulsing
+                  ? BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: ringColor.withValues(alpha: 0.25 * t),
+                          blurRadius: 24,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    )
+                  : null,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  _SkyDisc(
+                    size: widget.size - 12,
                     sun: sun,
-                    weather: widget.weather,
                     currentTime: widget.currentTime,
-                    size: widget.size * 0.165,
+                    weather: widget.weather,
                   ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.nextPrayer,
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: widget.size * 0.106,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  CustomPaint(
+                    size: Size(widget.size, widget.size),
+                    painter: CircularProgressPainter(
+                      progress: widget.progress,
+                      color: ringColor,
                     ),
-                    Text(
-                      _formatTimeRemaining(widget.timeRemaining),
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: widget.size * 0.118,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                  // Positioned along the sky disc's arc per the sun/moon's
+                  // actual current angle, rather than sitting fixed in place -
+                  // see _skyArcOffset.
+                  Transform.translate(
+                    offset: _skyArcOffset(
+                      sun.angleDegrees,
+                      (widget.size - 12) / 2 * 0.72,
                     ),
-                    Text(
-                      'until prayer',
-                      style: TextStyle(
-                        color: textColor.withValues(alpha: 0.6),
-                        fontSize: widget.size * 0.065,
-                      ),
+                    child: _SkyIcon(
+                      sun: sun,
+                      weather: widget.weather,
+                      currentTime: widget.currentTime,
+                      size: widget.size * 0.165,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
-  }
-
-  /// Formats time remaining as HH:MM:SS
-  String _formatTimeRemaining(Duration duration) {
-    return "${duration.inHours.toString().padLeft(2, '0')}:"
-        "${(duration.inMinutes % 60).toString().padLeft(2, '0')}:"
-        "${(duration.inSeconds % 60).toString().padLeft(2, '0')}";
   }
 }
 
-/// The countdown ring's sky background - not just a flat white disc, but a
-/// gradient that actually reflects what's going on outside: pale cream
-/// warming toward white as the sun's [SunPosition.intensity] climbs by day,
-/// a dark indigo "night mode" (lighter the fuller the moon) by night, and a
-/// blue-grey wash over either one when [weather] reports real cloud cover -
-/// so an overcast sky reads as overcast at a glance, not just via a small
-/// cloud glyph on the sun/moon icon itself.
+/// The countdown ring's sky background - a real equirectangular world map
+/// (NASA's public-domain "Blue Marble" composite,
+/// assets/images/world_map.jpg) standing in for the whole Earth, scaled to
+/// full disc height (so it fills the entire circle - no empty top/bottom
+/// caps) and panned left/right over the course of the day to follow the
+/// sun/moon icon orbiting it (same arc direction as [_skyArcOffset], reused
+/// here horizontally only), so whichever region is "lit" right now stays in
+/// view as the apparent current patch of the globe. A fixed day/night
+/// gradient (centered on the now-panned, always-centered lit region) and a
+/// blue-grey wash under real cloud cover sit on top.
 class _SkyDisc extends StatelessWidget {
   final double size;
   final SunPosition sun;
@@ -235,21 +219,41 @@ class _SkyDisc extends StatelessWidget {
     required this.weather,
   });
 
+  // Not fully opaque - real day/night Earth maps always leave the night
+  // side's geography faintly visible rather than pure black, and it reads
+  // as a deliberate "night" tint rather than a hole in the map.
+  static const _nightColor = Color(0xCC03060F);
+
   @override
   Widget build(BuildContext context) {
-    final List<Color> colors;
+    // Only the horizontal component of the sun/moon's arc direction is used
+    // - [_skyArcOffset]'s vertical component stays confined near the top of
+    // the disc all day (by design, so the icon never drops to text height),
+    // which isn't meaningful here. -1 (sunrise/dawn) -> 0 (zenith/noon) ->
+    // +1 (sunset/dusk), matching the icon's own left-to-right sweep.
+    final lightDirX = _skyArcOffset(sun.angleDegrees, 1.0).dx.clamp(-1.0, 1.0);
+
+    // A bright wash at the viewport's center - warm by day (scaled by real
+    // sun intensity), cool by night (scaled by real moon illumination) -
+    // fading to the (softened) night color toward both edges. Centered
+    // rather than following lightDirX a second time: the map pan below
+    // already keeps the current light direction centered in view, so the
+    // gradient just needs to brighten whatever's now in the middle.
+    final Color litTint;
     if (sun.isDaytime) {
       final intensity = sun.intensity.clamp(0.0, 1.0);
-      colors = [
-        Color.lerp(const Color(0xFFFFF3D6), Colors.white, intensity)!,
-        Color.lerp(const Color(0xFFFFE9B8), const Color(0xFFEAF2FF), intensity)!,
-      ];
+      litTint = Color.lerp(
+        const Color(0x55FFE9B8),
+        const Color(0xCCFFF3D6),
+        intensity,
+      )!;
     } else {
       final moon = MoonPhase.forDate(currentTime);
-      colors = [
-        Color.lerp(const Color(0xFF171B38), const Color(0xFF39407A), moon.illumination)!,
-        const Color(0xFF0A0B1C),
-      ];
+      litTint = Color.lerp(
+        const Color(0x339FC2EC),
+        const Color(0x809FC2EC),
+        moon.illumination,
+      )!;
     }
 
     final cloudFraction = weather?.cloudFraction ?? 0.0;
@@ -262,9 +266,28 @@ class _SkyDisc extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            // The map's native aspect is 2:1; scaling its height to the
+            // full circle diameter makes it exactly twice as wide as the
+            // circle, so panning it within Align's -1..1 range slides
+            // smoothly between showing its left and right halves with no
+            // gap ever appearing at any pan position.
+            Align(
+              alignment: Alignment(lightDirX, 0),
+              child: SizedBox(
+                width: size * 2,
+                height: size,
+                child: Image.asset(
+                  'assets/images/world_map.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
             DecoratedBox(
               decoration: BoxDecoration(
-                gradient: RadialGradient(colors: colors, radius: 0.95),
+                gradient: RadialGradient(
+                  radius: 0.85,
+                  colors: [litTint, _nightColor],
+                ),
               ),
             ),
             if (cloudAlpha > 0)
@@ -302,7 +325,8 @@ class _SkyIcon extends StatelessWidget {
     final cloudFraction = weather?.cloudFraction ?? 0.0;
     final isPrecipitating = weather?.isPrecipitating ?? false;
     final isOvercast = isPrecipitating || cloudFraction > _overcastThreshold;
-    final isPartlyCloudy = !isOvercast && cloudFraction > _partlyCloudyThreshold;
+    final isPartlyCloudy =
+        !isOvercast && cloudFraction > _partlyCloudyThreshold;
 
     final body = sun.isSun ? _buildSun(isOvercast) : _buildMoon(isOvercast);
 
@@ -328,7 +352,8 @@ class _SkyIcon extends StatelessWidget {
   /// Color and glow follow [SunPosition.intensity] directly, so the same
   /// "sun" icon actually looks pale and dim near Fajr/Maghrib and hot and
   /// bright at Dhuhr, rather than a single flat amber regardless of time of
-  /// day.
+  /// day. This small orb is the actual light source - the globe disc behind
+  /// it (see [_SkyDisc]) is lit on whichever side currently faces it.
   Widget _buildSun(bool isOvercast) {
     final intensity = sun.intensity.clamp(0.0, 1.0);
     final sunColor = Color.lerp(
@@ -359,12 +384,14 @@ class _SkyIcon extends StatelessWidget {
 
   /// Draws the real current moon phase (see [MoonPhase]/[MoonPhasePainter])
   /// rather than one flat crescent icon: a full moon renders visibly larger
-  /// and with a brighter glow than a new or crescent moon, and the night
-  /// itself reads as brighter the fuller the moon is.
+  /// and with a brighter glow than a new or crescent moon. This small orb is
+  /// the actual light source - the globe disc behind it (see [_SkyDisc]) is
+  /// lit on whichever side currently faces it.
   Widget _buildMoon(bool isOvercast) {
     final moon = MoonPhase.forDate(currentTime);
     final diameter = size * (0.82 + moon.illumination * 0.36);
-    final glowAlpha = (0.08 + moon.illumination * 0.3) * (isOvercast ? 0.25 : 1.0);
+    final glowAlpha =
+        (0.08 + moon.illumination * 0.3) * (isOvercast ? 0.25 : 1.0);
 
     return Container(
       width: diameter,
@@ -373,7 +400,9 @@ class _SkyIcon extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFBFC9FF).withValues(alpha: glowAlpha.clamp(0.0, 1.0)),
+            color: const Color(
+              0xFFBFC9FF,
+            ).withValues(alpha: glowAlpha.clamp(0.0, 1.0)),
             blurRadius: diameter * 0.6,
             spreadRadius: diameter * 0.08,
           ),

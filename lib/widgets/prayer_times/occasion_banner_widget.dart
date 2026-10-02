@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/islamic_occasion_service.dart';
 import '../../utils/theme/app_theme.dart';
+import '../jumuah_durood_dialog.dart';
 
 /// Surfaces the current Islamic occasion - Ramadan, the White Days, Jumu'ah,
 /// or an upcoming Ramadan countdown - and collapses to nothing on an
@@ -54,45 +55,55 @@ class _OccasionBannerWidgetState extends State<OccasionBannerWidget>
           ),
         );
       },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [accent.withValues(alpha: 0.16), accent.withValues(alpha: 0.05)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          border: Border.all(color: accent.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Icon(occasion.icon, color: accent, size: 22),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    occasion.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: accent,
-                    ),
-                  ),
-                  Text(
-                    occasion.subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
+          onTap: occasion.isJumuah ? () => showJumuahDuroodDialog(context) : null,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [accent.withValues(alpha: 0.16), accent.withValues(alpha: 0.05)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
+              border: Border.all(color: accent.withValues(alpha: 0.3)),
             ),
-          ],
+            child: Row(
+              children: [
+                Icon(occasion.icon, color: accent, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        occasion.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: accent,
+                        ),
+                      ),
+                      Text(
+                        occasion.subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (occasion.isJumuah)
+                  Icon(Icons.chevron_right, color: accent.withValues(alpha: 0.6), size: 20),
+              ],
+            ),
+          ),
         ),
       ),
     );

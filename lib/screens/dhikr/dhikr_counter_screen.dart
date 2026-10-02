@@ -304,16 +304,14 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            
-            // Dhikr text display
-            DhikrDisplayWidget(
-              dhikr: widget.dhikr,
-              settings: _settings,
-            ),
-            
-            const SizedBox(height: 30),
-            
-            // Counter widget
+
+            // Counter widget - kept first/above the fold regardless of how
+            // long the dhikr text below it is (some entries, e.g. the daily
+            // wazifa set, run several lines of Arabic plus a translation and
+            // virtue box, which used to push this below the initial screen).
+            // The app bar title already names the dhikr, so leading with the
+            // counter - the thing you actually tap, repeatedly - costs
+            // nothing.
             DhikrCounterWidget(
               count: _count,
               targetCount: _targetCount,
@@ -322,12 +320,20 @@ class _DhikrCounterScreenState extends State<DhikrCounterScreen> {
               onTargetEdit: _editTarget,
               primaryColor: AppTheme.islamicColors['dhikr']!,
             ),
-            
+
+            const SizedBox(height: 30),
+
+            // Dhikr text display
+            DhikrDisplayWidget(
+              dhikr: widget.dhikr,
+              settings: _settings,
+            ),
+
             const SizedBox(height: 20),
-            
+
             // Progress info
             _buildProgressInfo(),
-            
+
             const SizedBox(height: 20),
           ],
         ),

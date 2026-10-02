@@ -1,6 +1,7 @@
 // widgets/dhikr_text_widget.dart
 import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
+import 'package:prayerly/utils/bidi_utils.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 
 /// Widget for displaying Dhikr text in multiple formats
@@ -106,6 +107,7 @@ class DhikrTextWidget extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: onSurface,
           height: 1.5,
+          fontFamily: 'Amiri',
         ),
         textAlign: TextAlign.center,
         textDirection: TextDirection.rtl,
@@ -140,6 +142,7 @@ class DhikrTextWidget extends StatelessWidget {
           color: onSurface.withValues(alpha: 0.75),
         ),
         textAlign: TextAlign.center,
+        textDirection: autoTextDirection(dhikr.translation),
       ),
     );
   }
@@ -181,6 +184,7 @@ class DhikrTextWidget extends StatelessWidget {
               color: onSurface.withValues(alpha: 0.7),
               height: 1.3,
             ),
+            textDirection: autoTextDirection(dhikr.meaning),
           ),
         ],
       ),
@@ -265,6 +269,7 @@ class DhikrCardWidget extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: onSurface,
+                  fontFamily: 'Amiri',
                 ),
                 textDirection: TextDirection.rtl,
               ),
@@ -291,6 +296,7 @@ class DhikrCardWidget extends StatelessWidget {
                   fontSize: 12,
                   color: onSurface.withValues(alpha: 0.6),
                 ),
+                textDirection: autoTextDirection(dhikr.translation),
               ),
               
               // Reward indicator
@@ -363,6 +369,7 @@ class DhikrDisplayWidget extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: onSurface,
                 height: 1.5,
+                fontFamily: 'Amiri',
               ),
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
@@ -397,6 +404,7 @@ class DhikrDisplayWidget extends StatelessWidget {
                 color: onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
+              textDirection: autoTextDirection(dhikr.translation),
             ),
         ],
       ),

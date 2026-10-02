@@ -148,6 +148,8 @@ class DhikrService {
         return 7;
       case DhikrCategory.asmaUlHusna:
         return 99;
+      case DhikrCategory.wazifa:
+        return 100;
       case DhikrCategory.custom:
         return 33;
     }
@@ -221,6 +223,9 @@ class DhikrService {
         return 'Dua is the essence of worship. It strengthens the connection between servant and Creator.';
       case DhikrCategory.asmaUlHusna:
         return 'Reciting Allah\'s beautiful names brings one closer to Allah and increases spiritual knowledge.';
+      case DhikrCategory.wazifa:
+        return 'Each day of the week carries its own recommended wazifa and virtue, '
+            'per Imam Ghazali\'s Ihya Ulum-id-Din / Kimiya-e-Sa\'adat.';
       case DhikrCategory.custom:
         return 'All sincere dhikr purifies the heart and brings peace to the soul.';
     }

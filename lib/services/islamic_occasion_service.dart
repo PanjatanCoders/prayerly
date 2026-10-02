@@ -9,10 +9,16 @@ class IslamicOccasion {
   final String subtitle;
   final IconData icon;
 
+  /// Whether this occasion is the Jumu'ah banner specifically - lets the
+  /// widget make just this one tappable (to prompt the Shab-e-Jumu'ah
+  /// Durood) without every other occasion also appearing interactive.
+  final bool isJumuah;
+
   const IslamicOccasion({
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.isJumuah = false,
   });
 }
 
@@ -48,8 +54,9 @@ class IslamicOccasionService {
     if (now.weekday == DateTime.friday) {
       return const IslamicOccasion(
         title: 'Jumu’ah Mubarak',
-        subtitle: 'Friday — the best day of the week',
+        subtitle: 'Tap to recite the Durood of Jumu’ah',
         icon: Icons.mosque,
+        isJumuah: true,
       );
     }
 

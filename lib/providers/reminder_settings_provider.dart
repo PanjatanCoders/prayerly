@@ -75,4 +75,12 @@ class ReminderSettingsProvider extends ChangeNotifier {
       surahMulkDelayAfterIshaMinutes: delayMinutes,
     ));
   }
+
+  Future<void> setJumuahMubarak({required bool enabled}) {
+    return _persistAndReschedule(_settings.copyWith(jumuahMubarakEnabled: enabled));
+  }
+
+  Future<void> setDailyWazifa({required bool enabled}) {
+    return _persistAndReschedule(_settings.copyWith(dailyWazifaEnabled: enabled));
+  }
 }

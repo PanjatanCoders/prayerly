@@ -57,6 +57,7 @@ enum DhikrCategory {
   salawat,    // Blessings on Prophet
   dua,        // Supplications
   asmaUlHusna, // Names of Allah
+  wazifa,     // Day-of-week recitation with a specific virtue
   custom,     // User-created
 }
 
@@ -79,6 +80,8 @@ extension DhikrCategoryExtension on DhikrCategory {
         return 'Dua (Supplications)';
       case DhikrCategory.asmaUlHusna:
         return 'Asma ul-Husna';
+      case DhikrCategory.wazifa:
+        return 'Daily Wazifa';
       case DhikrCategory.custom:
         return 'Custom Dhikr';
     }
@@ -102,6 +105,8 @@ extension DhikrCategoryExtension on DhikrCategory {
         return const Color(0xFF5D4037); // Brown
       case DhikrCategory.asmaUlHusna:
         return const Color(0xFF0288D1); // Light Blue
+      case DhikrCategory.wazifa:
+        return const Color(0xFFFFA000); // Amber
       case DhikrCategory.custom:
         return const Color(0xFF00838F); // Teal
     }

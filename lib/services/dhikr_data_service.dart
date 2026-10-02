@@ -15,6 +15,7 @@ class DhikrDataService {
       ..._getSalawatDhikr(),
       ..._getDuaDhikr(),
       ..._getAsmaUlHusnaDhikr(),
+      ..._getDailyWazifaDhikr(),
     ];
   }
 
@@ -155,6 +156,34 @@ class DhikrDataService {
         targetCount: 10,
         category: DhikrCategory.salawat,
       ),
+      Dhikr(
+        id: 'salawat_shab_e_jumuah',
+        arabic: 'اَللّٰھُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلٰی سَیِّدِنَا مُحَمَّدِنِ '
+            'النَّبِیِّ الْاُمِّیِّ الْحَبِیْبِ الْعَالِی الْقَدْرِ الْعَظِیْمِ '
+            'الْجَاہِ وَعَلٰی اٰلِہٖ وَصَحْبِہٖ وَسَلِّمْ',
+        transliteration: "Allahumma salli wa sallim wa baarik 'alaa Sayyidinaa "
+            "Muhammadinin-Nabiyyil Ummiyyil Habeebil 'Aalil Qadril 'Azeemil "
+            "Jaahi, wa 'alaa aalihee wa sahbihee wa sallim",
+        // Urdu wording as it appears in the source image (Dawat-e-Islami),
+        // verbatim - not an English translation, per the user's preference.
+        translation: 'بزرگوں نے فرمایا ہے کہ جو شخص ہر شب جمعہ (جمعہ اور جمعرات '
+            'کی درمیانی رات) اس درود شریف کو پابندی سے کم از کم ایک مرتبہ '
+            'پڑھے گا، موت کے وقت سرکارِ مدینہ صلی اللہ علیہ وسلم کی زیارت '
+            'کرے گا اور قبر میں داخل ہوتے وقت بھی، یہاں تک کہ وہ دیکھے گا کہ '
+            'سرکارِ مدینہ صلی اللہ علیہ وسلم اسے قبر میں اپنے رحمت بھرے '
+            'ہاتھوں سے اُتار رہے ہیں۔ (افضل الصلوات علٰی سید السادات، '
+            'ص۱۵۱ الملخصاً)',
+        meaning: "Buzurgon ne farmaya hai ke jo shakhs har Shab-e-Jumu'ah "
+            "(Jumu'ah aur Jumeraat ki darmiyani raat) is Durood Sharif ko "
+            "pabandi se kam az kam ek martaba parhega, maut ke waqt "
+            "Sarkar-e-Madina (sallallahu alaihi wasallam) ki ziyarat karega "
+            "aur qabr mein dakhil hote waqt bhi, yahan tak ke woh dekhega ke "
+            "Sarkar-e-Madina (sallallahu alaihi wasallam) use qabr mein apne "
+            "rehmat bhare hathon se utaar rahe hain. (Afzal-us-Salawat ala "
+            "Sayyid-is-Sadat, safha 151, Mulakhkhasan)",
+        targetCount: 1,
+        category: DhikrCategory.salawat,
+      ),
     ];
   }
 
@@ -287,5 +316,117 @@ class DhikrDataService {
       targetCount: 100,
       category: DhikrCategory.dua,
     );
+  }
+
+  /// Daily Wazifa: a recitation and virtue specific to each day of the
+  /// week, per Imam Ghazali's Ihya Ulum-id-Din / Kimiya-e-Sa'adat (as
+  /// compiled/circulated by Jamat Raza-e-Mustafa, Ajmer Sharif). Looked up
+  /// by weekday via [DailyWazifaService] for the morning reminder and its
+  /// tap-to-recite dialog; also browsable/countable here like any other
+  /// Dhikr since each is a 100x count.
+  static List<Dhikr> _getDailyWazifaDhikr() {
+    return [
+      const Dhikr(
+        id: 'wazifa_sunday',
+        arabic: 'يَا حَيُّ يَا قَيُّوْم',
+        transliteration: 'Ya Hayyu Ya Qayyum',
+        translation: '100 مرتبہ یَا حَیُّ یَا قَیُّوم پڑھنے سے غیب سے روزی ملتی '
+            'ہے۔ (اِن شاء اللہ) (حجۃ الاسلام امام محمد غزالی رحمۃ اللہ علیہ '
+            '- احیاء العلوم، کیمیا ے سعادت)',
+        meaning: '100 martaba Ya Hayyu Ya Qayyum padhne se gaib se roji milti '
+            'hai. (In Sha Allah) (Hujjat-ul-Islam Imam Muhammad Ghazali '
+            "rahmatullahi alaih - Ihya-ul-Uloom, Kimiya-e-Sa'adat)",
+        targetCount: 100,
+        category: DhikrCategory.wazifa,
+      ),
+      const Dhikr(
+        id: 'wazifa_monday',
+        arabic: 'اَللّٰهُمَّ صَلِّ عَلٰی سَیِّدِنَا وَمَوْلَانَا مُحَمَّدٍ صَلَاةً '
+            'تُحَلُّ بِهَا عُقَدَتِیْ وَتُفَرَّجُ بِهَا کُرْبَتِیْ وَتُنْقَذُ بِهَا '
+            'وَحْلَتِیْ وَعَلٰی اٰلِہٖ وَصَحْبِہٖ وَسَلِّمْ عَدَدَ تَقَالِیْبِ '
+            'الْاَیَّامِ وَالسِّنِیْنَ وَالْحَمْدُلِلّٰہِ رَبِّ الْعَالَمِیْنَ',
+        transliteration: "Allahumma salli 'alaa Sayyidinaa wa Maulaanaa "
+            "Muhammadin, salaatan tuhallu bihaa 'uqdatee wa tufarriju bihaa "
+            "kurbatee wa tunqadhu bihaa wahlatee, wa 'alaa aalihee wa "
+            "sahbihee wa sallim, 'adada taqaalibil ayyaami was-sineen, wal "
+            "hamdu lillaahi rabbil 'aalameen",
+        translation: '100 مرتبہ یہ درود شریف پڑھنے سے مقبولیت حاصل ہوتی ہے۔ '
+            '(اِن شاء اللہ) (حجۃ الاسلام امام محمد غزالی رحمۃ اللہ علیہ - '
+            'احیاء العلوم، کیمیا ے سعادت)',
+        meaning: 'Durood Sharif 100 martaba padhne se maqbuliyat hasil hoti '
+            'hai. (In Sha Allah) (Hujjat-ul-Islam Imam Muhammad Ghazali '
+            "rahmatullahi alaih - Ihya-ul-Uloom, Kimiya-e-Sa'adat)",
+        targetCount: 100,
+        category: DhikrCategory.wazifa,
+      ),
+      const Dhikr(
+        id: 'wazifa_tuesday',
+        arabic: 'أَسْتَغْفِرُ اللّٰه',
+        transliteration: 'Astaghfirullah',
+        translation: '100 مرتبہ اَستغفراللہ پڑھنے سے بلا ٹلتی ہے۔ (اِن شاء '
+            'اللہ) (حجۃ الاسلام امام محمد غزالی رحمۃ اللہ علیہ - احیاء '
+            'العلوم، کیمیا ے سعادت)',
+        meaning: '100 martaba Astaghfirullah padhne se bala talti hai. (In '
+            "Sha Allah) (Hujjat-ul-Islam Imam Muhammad Ghazali rahmatullahi "
+            "alaih - Ihya-ul-Uloom, Kimiya-e-Sa'adat)",
+        targetCount: 100,
+        category: DhikrCategory.wazifa,
+      ),
+      const Dhikr(
+        id: 'wazifa_wednesday',
+        arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
+        transliteration: 'Bismillah hir-Rahman nir-Raheem',
+        translation: '100 مرتبہ بِسْمِ اللہِ الرَّحْمٰنِ الرَّحِیْم پڑھنے سے '
+            'قبر کے عذاب سے نجات ملے گی۔ (اِن شاء اللہ) (حجۃ الاسلام امام '
+            'محمد غزالی رحمۃ اللہ علیہ - احیاء العلوم، کیمیا ے سعادت)',
+        meaning: '100 martaba Bismillah hir-Rahman nir-Rahim padhne se qabr '
+            'ke azaab se najaat milegi. (In Sha Allah) (Hujjat-ul-Islam Imam '
+            "Muhammad Ghazali rahmatullahi alaih - Ihya-ul-Uloom, "
+            "Kimiya-e-Sa'adat)",
+        targetCount: 100,
+        category: DhikrCategory.wazifa,
+      ),
+      const Dhikr(
+        id: 'wazifa_thursday',
+        arabic: 'لَا اِلٰهَ اِلَّا اللّٰهُ الْمَلِکُ الْحَقُّ الْمُبِیْن',
+        transliteration: 'La ilaha illallahul Malikul Haqqul Mubeen',
+        translation: '100 مرتبہ لَا اِلٰہَ اِلَّا اللّٰہُ الْمَلِکُ الْحَقُّ '
+            'الْمُبِیْن پڑھنے سے ایمان سے مالامال ہو جاتے ہیں۔ (اِن شاء اللہ) '
+            '(حجۃ الاسلام امام محمد غزالی رحمۃ اللہ علیہ - احیاء العلوم، '
+            'کیمیا ے سعادت)',
+        meaning: '100 martaba La ilaha illallahul Malikul Haqqul Mubeen '
+            'padhne se imaan se malamaal ho jate hain. (In Sha Allah) '
+            "(Hujjat-ul-Islam Imam Muhammad Ghazali rahmatullahi alaih - "
+            "Ihya-ul-Uloom, Kimiya-e-Sa'adat)",
+        targetCount: 100,
+        category: DhikrCategory.wazifa,
+      ),
+      const Dhikr(
+        id: 'wazifa_friday',
+        arabic: 'اللّٰه',
+        transliteration: 'Allah',
+        translation: '100 مرتبہ اللہ پڑھنے سے تنگی دور ہوتی ہے۔ (اِن شاء اللہ) '
+            '(حجۃ الاسلام امام محمد غزالی رحمۃ اللہ علیہ - احیاء العلوم، '
+            'کیمیا ے سعادت)',
+        meaning: '100 martaba Allah padhne se tangi door hoti hai. (In Sha '
+            "Allah) (Hujjat-ul-Islam Imam Muhammad Ghazali rahmatullahi "
+            "alaih - Ihya-ul-Uloom, Kimiya-e-Sa'adat)",
+        targetCount: 100,
+        category: DhikrCategory.wazifa,
+      ),
+      const Dhikr(
+        id: 'wazifa_saturday',
+        arabic: 'لَا اِلٰهَ اِلَّا اللّٰه',
+        transliteration: 'La ilaha illallah',
+        translation: '100 مرتبہ لَا اِلٰہَ اِلَّا اللّٰہ پڑھنے سے دنیا کے غم '
+            'دور ہوتے ہیں۔ (اِن شاء اللہ) (حجۃ الاسلام امام محمد غزالی رحمۃ '
+            'اللہ علیہ - احیاء العلوم، کیمیا ے سعادت)',
+        meaning: '100 martaba La ilaha illallah padhne se duniya ke gham '
+            'door hote hain. (In Sha Allah) (Hujjat-ul-Islam Imam Muhammad '
+            "Ghazali rahmatullahi alaih - Ihya-ul-Uloom, Kimiya-e-Sa'adat)",
+        targetCount: 100,
+        category: DhikrCategory.wazifa,
+      ),
+    ];
   }
 }

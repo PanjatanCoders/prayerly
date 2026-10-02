@@ -7,6 +7,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 
 import 'services/notification_service.dart';
 import 'services/adhan_service.dart';
+import 'services/notification_router.dart';
 import 'services/reminder_service.dart';
 import 'services/language_service.dart';
 import 'screens/splash_screen.dart';
@@ -65,10 +66,26 @@ class _MyAppState extends State<MyApp> {
     // channel's own native sound (see AdhanService._initializeNotifications)
     // plays automatically, posted by the OS with no Dart isolate involved.
     // This listener only handles explicit user interaction with the
-    // notification (the Play/Stop/Pause buttons, or a tap).
+    // notification (the Play/Stop/Pause buttons, or a tap) - routed by
+    // onNotificationAction to whichever feature owns that notification.
     AwesomeNotifications().setListeners(
-      onActionReceivedMethod: AdhanService.onNotificationTap,
+      onActionReceivedMethod: onNotificationAction,
     );
+    _handleInitialNotificationAction();
+  }
+
+  /// Covers the cold-start case: the app process was dead and this exact
+  /// notification tap is what launched it, racing MaterialApp's first
+  /// build - [onNotificationAction] may fire in a background isolate before
+  /// any widget tree exists to find a navigator in. This is the documented
+  /// awesome_notifications pattern for catching that launch action
+  /// reliably, consumed once so a later warm-start doesn't replay it.
+  Future<void> _handleInitialNotificationAction() async {
+    final initial = await AwesomeNotifications()
+        .getInitialNotificationAction(removeFromActionEvents: true);
+    if (initial != null) {
+      await onNotificationAction(initial);
+    }
   }
 
   @override
@@ -79,6 +96,7 @@ class _MyAppState extends State<MyApp> {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, _) {
             return MaterialApp(
+              navigatorKey: rootNavigatorKey,
               title: 'Prayerly',
               onGenerateTitle: (context) =>
                   AppLocalizations.of(context)!.appTitle,

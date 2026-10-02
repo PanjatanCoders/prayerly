@@ -2,12 +2,17 @@
 
 import 'package:flutter/material.dart';
 import '../services/weather_service.dart';
+import '../utils/theme/app_theme.dart';
 
-/// Location, date and current-weather summary shown on the semi-opaque card
-/// over the hero photo. Always renders in dark text on the assumption of a
-/// light (near-white) card background, regardless of app theme - see
-/// [HeroStatusCard]'s `_LocationDateCard`.
+/// Next prayer/countdown, location, date and current-weather summary shown
+/// on the semi-opaque card over the hero photo. Always renders in dark text
+/// on the assumption of a light (near-white) card background, regardless of
+/// app theme - see [HeroStatusCard]'s `_LocationDateCard`. The next-prayer
+/// row used to live as text inside the circular timer itself; it moved here
+/// so the circle could be a clean, unobstructed globe.
 class InfoCardWidget extends StatelessWidget {
+  final String nextPrayer;
+  final Duration timeRemaining;
   final String location;
   final String islamicDate;
   final String currentDate;
@@ -16,6 +21,8 @@ class InfoCardWidget extends StatelessWidget {
 
   const InfoCardWidget({
     super.key,
+    required this.nextPrayer,
+    required this.timeRemaining,
     required this.location,
     required this.islamicDate,
     required this.currentDate,
@@ -30,6 +37,8 @@ class InfoCardWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildNextPrayerRow(context),
+        const SizedBox(height: 8),
         _buildIconRow(
           icon: Icons.location_on,
           primary: locationParts.$1,
@@ -45,6 +54,48 @@ class InfoCardWidget extends StatelessWidget {
         _buildWeatherRow(),
       ],
     );
+  }
+
+  Widget _buildNextPrayerRow(BuildContext context) {
+    final accent = AppTheme.legibleAccent(context, AppTheme.primaryAmber);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.alarm, color: accent, size: 16),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                nextPrayer,
+                style: TextStyle(
+                  color: accent,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                '${_formatDuration(timeRemaining)} until prayer',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    return "${duration.inHours.toString().padLeft(2, '0')}:"
+        "${(duration.inMinutes % 60).toString().padLeft(2, '0')}:"
+        "${(duration.inSeconds % 60).toString().padLeft(2, '0')}";
   }
 
   /// Splits "Neighborhood, City, Country" into a bold first line and a

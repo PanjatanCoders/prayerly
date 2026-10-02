@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
 import 'package:prayerly/services/dhikr_data_service.dart';
+import 'package:prayerly/utils/bidi_utils.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/utils/theme/app_transitions.dart';
 import 'dhikr_counter_screen.dart';
@@ -88,6 +89,7 @@ class DhikrCategoriesScreen extends StatelessWidget {
                     subtitle: Text(
                       dhikr.translation,
                       style: AppTheme.captionStyle(context),
+                      textDirection: autoTextDirection(dhikr.translation),
                     ),
                     trailing: Text(
                       '${dhikr.targetCount}x',

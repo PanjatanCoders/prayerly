@@ -106,6 +106,7 @@ class _AddCustomDhikrDialogState extends State<AddCustomDhikrDialog> {
                   decoration: const InputDecoration(
                     labelText: 'Arabic text (optional)',
                   ),
+                  style: const TextStyle(fontFamily: 'Amiri'),
                   textDirection: TextDirection.rtl,
                   textAlign: TextAlign.right,
                 ),

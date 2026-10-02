@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prayerly/models/dhikr_models.dart';
 import 'package:prayerly/services/dhikr_service.dart';
 import 'package:prayerly/services/dhikr_storage_service.dart';
+import 'package:prayerly/utils/bidi_utils.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/utils/theme/app_transitions.dart';
 import 'package:prayerly/widgets/prayer_times/glass_sidebar.dart';
@@ -376,6 +377,7 @@ class _TodaysDhikrCard extends StatelessWidget {
                           style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 11),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          textDirection: autoTextDirection(dhikr.meaning),
                         ),
                       ],
                     ),
@@ -395,7 +397,12 @@ class _TodaysDhikrCard extends StatelessWidget {
                   children: [
                     Text(
                       dhikr.arabic,
-                      style: TextStyle(color: dhikrColor, fontSize: 30, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: dhikrColor,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Amiri',
+                      ),
                       textDirection: TextDirection.rtl,
                     ),
                     const SizedBox(height: 10),
@@ -406,6 +413,7 @@ class _TodaysDhikrCard extends StatelessWidget {
                     Text(
                       dhikr.translation,
                       style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 13),
+                      textDirection: autoTextDirection(dhikr.translation),
                     ),
                   ],
                 ),
@@ -503,6 +511,7 @@ class _DhikrListRow extends StatelessWidget {
                   style: TextStyle(
                     color: AppTheme.legibleAccent(context, dhikr.category.color),
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'Amiri',
                   ),
                 ),
               ),
@@ -520,6 +529,7 @@ class _DhikrListRow extends StatelessWidget {
                       style: TextStyle(color: onSurface.withValues(alpha: 0.6), fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      textDirection: autoTextDirection(dhikr.translation),
                     ),
                   ],
                 ),

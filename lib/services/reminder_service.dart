@@ -5,6 +5,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'daily_wazifa_service.dart';
 import 'prayer_service.dart';
 
 /// User-configurable timing for the makruh-window and recitation reminders.
@@ -27,6 +28,9 @@ class ReminderSettings {
   final bool surahMulkEnabled;
   final int surahMulkDelayAfterIshaMinutes;
 
+  final bool jumuahMubarakEnabled;
+  final bool dailyWazifaEnabled;
+
   const ReminderSettings({
     this.fajrEndingEnabled = true,
     this.fajrEndingMinutesBefore = 15,
@@ -38,6 +42,8 @@ class ReminderSettings {
     this.sunsetMakruhMinutesBefore = 20,
     this.surahMulkEnabled = true,
     this.surahMulkDelayAfterIshaMinutes = 30,
+    this.jumuahMubarakEnabled = true,
+    this.dailyWazifaEnabled = true,
   });
 
   ReminderSettings copyWith({
@@ -51,6 +57,8 @@ class ReminderSettings {
     int? sunsetMakruhMinutesBefore,
     bool? surahMulkEnabled,
     int? surahMulkDelayAfterIshaMinutes,
+    bool? jumuahMubarakEnabled,
+    bool? dailyWazifaEnabled,
   }) {
     return ReminderSettings(
       fajrEndingEnabled: fajrEndingEnabled ?? this.fajrEndingEnabled,
@@ -63,6 +71,8 @@ class ReminderSettings {
       sunsetMakruhMinutesBefore: sunsetMakruhMinutesBefore ?? this.sunsetMakruhMinutesBefore,
       surahMulkEnabled: surahMulkEnabled ?? this.surahMulkEnabled,
       surahMulkDelayAfterIshaMinutes: surahMulkDelayAfterIshaMinutes ?? this.surahMulkDelayAfterIshaMinutes,
+      jumuahMubarakEnabled: jumuahMubarakEnabled ?? this.jumuahMubarakEnabled,
+      dailyWazifaEnabled: dailyWazifaEnabled ?? this.dailyWazifaEnabled,
     );
   }
 
@@ -77,6 +87,8 @@ class ReminderSettings {
         'sunsetMakruhMinutesBefore': sunsetMakruhMinutesBefore,
         'surahMulkEnabled': surahMulkEnabled,
         'surahMulkDelayAfterIshaMinutes': surahMulkDelayAfterIshaMinutes,
+        'jumuahMubarakEnabled': jumuahMubarakEnabled,
+        'dailyWazifaEnabled': dailyWazifaEnabled,
       };
 
   factory ReminderSettings.fromJson(Map<String, dynamic> json) {
@@ -92,6 +104,8 @@ class ReminderSettings {
       sunsetMakruhMinutesBefore: json['sunsetMakruhMinutesBefore'] ?? defaults.sunsetMakruhMinutesBefore,
       surahMulkEnabled: json['surahMulkEnabled'] ?? defaults.surahMulkEnabled,
       surahMulkDelayAfterIshaMinutes: json['surahMulkDelayAfterIshaMinutes'] ?? defaults.surahMulkDelayAfterIshaMinutes,
+      jumuahMubarakEnabled: json['jumuahMubarakEnabled'] ?? defaults.jumuahMubarakEnabled,
+      dailyWazifaEnabled: json['dailyWazifaEnabled'] ?? defaults.dailyWazifaEnabled,
     );
   }
 }
@@ -111,6 +125,8 @@ class ReminderService {
   static const _idDhuhrMakruh = 3003;
   static const _idSunsetMakruh = 3004;
   static const _idSurahMulk = 3005;
+  static const _idJumuahMubarak = 3006;
+  static const _idDailyWazifa = 3007;
 
   /// Registers the reminder notification channel. Must run after
   /// [AwesomeNotifications] has been initialized with the 'adhan_group'
@@ -177,6 +193,7 @@ class ReminderService {
 
       for (var dayOffset = 0; dayOffset < prayerTimesByDay.length; dayOffset++) {
         final prayerTimes = prayerTimesByDay[dayOffset];
+        final fajr = prayerTimes['Fajr'];
         final sunrise = prayerTimes['Sunrise'];
         final dhuhr = prayerTimes['Dhuhr'];
         final maghrib = prayerTimes['Maghrib'];
@@ -244,6 +261,40 @@ class ReminderService {
             );
           }
         }
+
+        // Fires on Friday mornings (shortly after Fajr, same "greeting" spirit
+        // as the home screen's Jumu'ah Mubarak banner); tapping it opens the
+        // Shab-e-Jumu'ah Durood prompt via the 'show_jumuah_durood' payload,
+        // routed in notification_router.dart.
+        if (settings.jumuahMubarakEnabled && fajr != null &&
+            fajr.weekday == DateTime.friday) {
+          final fireAt = fajr.add(const Duration(minutes: 10));
+          if (!fireAt.isBefore(now)) {
+            await _schedule(
+              id: _idJumuahMubarak + idOffset,
+              time: fireAt,
+              title: '🕌 Jumu’ah Mubarak',
+              body: 'Tap to recite the Durood of Jumu’ah.',
+              payload: {'action': 'show_jumuah_durood'},
+            );
+          }
+        }
+
+        // Every day (not just Friday) - the day's own name/wazifa is known
+        // here since fajr carries the real calendar date for this dayOffset.
+        if (settings.dailyWazifaEnabled && fajr != null) {
+          final fireAt = fajr.add(const Duration(minutes: 15));
+          if (!fireAt.isBefore(now)) {
+            final wazifa = DailyWazifaService.forDate(fajr);
+            await _schedule(
+              id: _idDailyWazifa + idOffset,
+              time: fireAt,
+              title: '🤲 Today’s Wazifa: ${wazifa.transliteration}',
+              body: 'Tap to read today’s recitation and its virtue.',
+              payload: {'action': 'show_daily_wazifa'},
+            );
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error scheduling reminders: $e');
@@ -255,6 +306,7 @@ class ReminderService {
     required DateTime time,
     required String title,
     required String body,
+    Map<String, String>? payload,
   }) async {
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
@@ -262,6 +314,7 @@ class ReminderService {
         channelKey: _channelKey,
         title: title,
         body: body,
+        payload: payload,
         wakeUpScreen: false,
         category: NotificationCategory.Reminder,
         notificationLayout: NotificationLayout.BigText,

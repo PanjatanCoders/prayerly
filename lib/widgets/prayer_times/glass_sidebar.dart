@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:prayerly/screens/calendar/prayer_calendar_screen.dart';
 import 'package:prayerly/screens/dhikr/dhikr_selection_screen.dart';
+import 'package:prayerly/screens/islamic_events_screen.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:prayerly/utils/theme/app_transitions.dart';
 import '../../screens/qaza/qaza_tracker_screen.dart';
@@ -106,6 +107,13 @@ class GlassSidebar extends StatelessWidget {
                           title: 'Prayer Calendar',
                           subtitle: 'Monthly prayer times',
                           onTap: () => _navigate(context, const PrayerCalendarScreen()),
+                        ),
+                        _GlassMenuTile(
+                          icon: Icons.event,
+                          iconColor: AppTheme.primaryAmber,
+                          title: 'Islamic Events',
+                          subtitle: 'Ashura, Eid, Ramadan & more',
+                          onTap: () => _navigate(context, const IslamicEventsScreen()),
                         ),
                         _GlassMenuTile(
                           icon: Icons.info_outline,
