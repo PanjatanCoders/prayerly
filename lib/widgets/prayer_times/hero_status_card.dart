@@ -18,9 +18,8 @@ class HeroStatusCard extends StatefulWidget {
   final PrayerStatus prayerStatus;
   final DateTime currentTime;
   final String formattedCurrentDate;
-  final double? elevation;
-  final bool isLoadingElevation;
   final WeatherSnapshot? weather;
+  final bool isLoadingWeather;
   final double minHeight;
 
   const HeroStatusCard({
@@ -30,9 +29,8 @@ class HeroStatusCard extends StatefulWidget {
     required this.prayerStatus,
     required this.currentTime,
     required this.formattedCurrentDate,
-    required this.elevation,
-    required this.isLoadingElevation,
     this.weather,
+    this.isLoadingWeather = false,
     this.minHeight = 172,
   });
 
@@ -90,7 +88,7 @@ class _HeroStatusCardState extends State<HeroStatusCard>
             fit: BoxFit.cover,
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(14, 16, 14, 20),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
         child: Row(
           // Centered, not start-aligned, so the countdown ring sits centered
           // against the location/date card beside it rather than pinned to
@@ -104,8 +102,8 @@ class _HeroStatusCardState extends State<HeroStatusCard>
                 locationData: widget.locationData,
                 prayerTimesData: widget.prayerTimesData,
                 formattedCurrentDate: widget.formattedCurrentDate,
-                elevation: widget.elevation,
-                isLoadingElevation: widget.isLoadingElevation,
+                weather: widget.weather,
+                isLoadingWeather: widget.isLoadingWeather,
               ),
             ),
             const SizedBox(width: 14),
@@ -126,20 +124,20 @@ class _HeroStatusCardState extends State<HeroStatusCard>
 }
 
 /// The semi-opaque card over the hero photo: location, Gregorian/Hijri date,
-/// elevation, and the current Asr calculation method.
+/// current weather/temperature, and the current Asr calculation method.
 class _LocationDateCard extends StatelessWidget {
   final LocationData locationData;
   final PrayerTimesData prayerTimesData;
   final String formattedCurrentDate;
-  final double? elevation;
-  final bool isLoadingElevation;
+  final WeatherSnapshot? weather;
+  final bool isLoadingWeather;
 
   const _LocationDateCard({
     required this.locationData,
     required this.prayerTimesData,
     required this.formattedCurrentDate,
-    required this.elevation,
-    required this.isLoadingElevation,
+    required this.weather,
+    required this.isLoadingWeather,
   });
 
   @override
@@ -157,8 +155,8 @@ class _LocationDateCard extends StatelessWidget {
             location: locationData.address,
             islamicDate: prayerTimesData.islamicDate,
             currentDate: formattedCurrentDate,
-            elevation: elevation,
-            isLoadingElevation: isLoadingElevation,
+            weather: weather,
+            isLoadingWeather: isLoadingWeather,
           ),
           const SizedBox(height: 8),
           _AsrMethodPill(

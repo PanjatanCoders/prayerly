@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 
 class AdhanService {
   static final AudioPlayer _audioPlayer = AudioPlayer();
@@ -50,22 +50,72 @@ class AdhanService {
     }
   }
 
+  /// A short, finite vibration pattern (ms, off/on/off/on...). Left
+  /// unspecified, some OEMs pair `NotificationCategory.Alarm` +
+  /// `fullScreenIntent` with a vibration that repeats indefinitely until the
+  /// notification is dismissed - this bounds it to one buzz.
+  static Int64List get _vibrationPattern =>
+      Int64List.fromList([0, 500, 200, 500]);
+
+  /// One real notification channel per adhan audio file, each wired to play
+  /// that file as the channel's native sound (`resource://raw/<type>`,
+  /// backed by `android/app/src/main/res/raw/<type>.mp3`).
+  ///
+  /// This is deliberately *not* played through the Dart [_audioPlayer] for
+  /// the scheduled/auto-play path. `android_alarm_manager_plus` was tried
+  /// first (see git history) to wake a Dart background isolate and play the
+  /// adhan from there, but that isolate doesn't reliably survive to finish
+  /// (or play audio at all) once Android has killed the app process - the
+  /// user would see/feel the notification vibrate (posted natively, so that
+  /// part always worked) but never hear the adhan, and the adhan would only
+  /// actually play if they happened to reopen the app afterwards (the
+  /// buffered "notification displayed" event replaying once a Dart listener
+  /// reattached). A channel's own sound is posted by the OS itself, with no
+  /// Dart/Flutter isolate involved at all, so it's as reliable as the
+  /// notification itself.
+  ///
+  /// Android notification channels are immutable after first creation
+  /// (changing `soundSource` on an existing channel key has no effect), so
+  /// each adhan type needs its own channel key rather than one shared key
+  /// with a variable sound.
+  static String _channelKeyForType(String typeKey) => 'adhan_channel_$typeKey';
+
+  /// Used instead of a per-type channel when auto-play is disabled - plain
+  /// vibration only, no sound, since the user wants to tap to play manually.
+  static const String _silentChannelKey = 'adhan_channel_silent';
+
   static Future<void> _initializeNotifications() async {
     await AwesomeNotifications().initialize(
       null,
       [
+        for (final typeKey in adhanTypes.keys)
+          NotificationChannel(
+            channelGroupKey: 'adhan_group',
+            channelKey: _channelKeyForType(typeKey),
+            channelName: 'Adhan - ${adhanTypes[typeKey] ?? typeKey}',
+            channelDescription: 'Prayer time adhan notifications ($typeKey)',
+            defaultColor: Colors.amber,
+            importance: NotificationImportance.Max,
+            channelShowBadge: true,
+            playSound: true,
+            soundSource: 'resource://raw/$typeKey',
+            enableVibration: true,
+            vibrationPattern: _vibrationPattern,
+            enableLights: true,
+            criticalAlerts: true,
+          ),
         NotificationChannel(
           channelGroupKey: 'adhan_group',
-          channelKey: 'adhan_channel',
-          channelName: 'Adhan Notifications',
-          channelDescription: 'Prayer time adhan notifications',
+          channelKey: _silentChannelKey,
+          channelName: 'Adhan (manual)',
+          channelDescription: 'Prayer time notifications without auto-play',
           defaultColor: Colors.amber,
           importance: NotificationImportance.Max,
           channelShowBadge: true,
-          playSound: false, // We handle audio ourselves
+          playSound: false,
           enableVibration: true,
+          vibrationPattern: _vibrationPattern,
           enableLights: true,
-          criticalAlerts: true,
         ),
         NotificationChannel(
           channelGroupKey: 'adhan_group',
@@ -189,12 +239,20 @@ class AdhanService {
     }
   }
 
-  static Future<String> _getAdhanFile(String prayerName) async {
+  /// The adhan type key (e.g. `'azan1'`, `'azan_fajr1'`) to use for
+  /// [prayerName] - doubles as the Flutter asset basename and the Android
+  /// raw resource name (`resource://raw/<key>`) for that audio.
+  static Future<String> _getAdhanTypeKey(String prayerName) async {
     final adhanType = await getSelectedAdhanType();
     if (prayerName == 'Fajr' && adhanType == 'azan_fajr1') {
-      return 'audio/adhan/azan_fajr1.mp3';
+      return 'azan_fajr1';
     }
-    return 'audio/adhan/$adhanType.mp3';
+    return adhanType;
+  }
+
+  static Future<String> _getAdhanFile(String prayerName) async {
+    final typeKey = await _getAdhanTypeKey(prayerName);
+    return 'audio/adhan/$typeKey.mp3';
   }
 
   static Future<void> stopAdhan() async {
@@ -262,59 +320,19 @@ class AdhanService {
     }
   }
 
-  /// Auto-plays the adhan when its notification actually appears on screen.
-  ///
-  /// Must be a bare static tear-off passed to `setListeners`, not a closure:
-  /// `PluginUtilities.getCallbackHandle` (which awesome_notifications uses to
-  /// resurrect this callback in a background isolate when Android has killed
-  /// the app - the normal case by prayer time) can only resolve a handle for
-  /// a static/top-level function. A closure silently resolves to a null
-  /// handle, so the callback only ever fires if the app process happens to
-  /// still be alive - which looked like "auto-play works sometimes" before
-  /// this was pulled out of the inline closure in main.dart.
-  @pragma('vm:entry-point')
-  static Future<void> onNotificationDisplayed(
-    ReceivedNotification notification,
-  ) async {
-    final payload = notification.payload;
-    if (payload != null && payload['action'] == 'play_adhan') {
-      final prayer = payload['prayer'];
-      final autoPlay = await getAutoPlayEnabled();
-      if (autoPlay && prayer != null) {
-        await playAdhan(prayer);
-      }
-    }
-  }
-
-  /// Fires the adhan from a plain AlarmManager alarm, independent of whether
-  /// the Flutter engine/Dart VM is already running.
-  ///
-  /// [onNotificationDisplayed] above only runs if the app process is still
-  /// alive - awesome_notifications has no background-isolate resurrection
-  /// path for "notification displayed", only for [onNotificationTap]'s
-  /// action-received event. By actual prayer time Android has normally
-  /// killed the process, so that hook was never even attempted and the adhan
-  /// silently didn't play. `android_alarm_manager_plus` exists specifically
-  /// to run Dart code at an exact time with its own background isolate
-  /// (plugins registered), the same mechanism alarm-clock apps use, so this
-  /// alarm - scheduled alongside each notification in
-  /// `_scheduleAdhanNotification` - is what actually triggers playback now.
-  @pragma('vm:entry-point')
-  static Future<void> onAlarmFired(int id, Map<String, dynamic> params) async {
-    final prayer = params['prayer'] as String?;
-    if (prayer == null) return;
-    // This runs in android_alarm_manager_plus's own background isolate,
-    // which never ran this app's main() - _audioPlayer and the notification
-    // channels haven't been set up in *this* isolate yet, even though they
-    // were in the foreground one.
-    await initialize();
-    final autoPlay = await getAutoPlayEnabled();
-    if (autoPlay) {
-      await playAdhan(prayer);
-    }
-  }
-
-  // This method is called when notifications are created OR when user interacts with them
+  // This method is called when the user interacts with a notification
+  // (button press or tap). Auto-play itself does NOT go through here - it's
+  // the adhan channel's own native sound (`resource://raw/<type>`, set up in
+  // `_initializeNotifications`) that plays automatically, posted by the OS
+  // with no Dart involvement. Two earlier approaches were tried and
+  // abandoned: `onNotificationDisplayedMethod` (awesome_notifications has no
+  // background-isolate resurrection path for it, so it only fired if the app
+  // process happened to still be alive) and an `android_alarm_manager_plus`
+  // alarm running this same playback in its own background isolate (that
+  // isolate could start but audio playback through it was unreliable - the
+  // user would feel the notification vibrate on time but only actually hear
+  // the adhan if they reopened the app afterwards, which replayed it late).
+  // A channel's native sound has neither failure mode.
   @pragma('vm:entry-point')
   static Future<void> onNotificationTap(ReceivedAction receivedAction) async {
     try {
@@ -341,15 +359,12 @@ class AdhanService {
         case 'dismiss':
           break;
         default:
-          // This handles the case when notification is created (no button pressed)
-          // or when the notification itself is tapped
-          if (action == 'play_adhan' && prayer != null) {
-            final autoPlay = await getAutoPlayEnabled();
-            if (autoPlay || buttonKey == null) {
-              // Auto play if enabled, or if user tapped the notification
-              await playAdhan(prayer);
-            }
-          }
+          // The notification body was tapped (just opens the app) or this
+          // fired for the notification's creation/display, neither of which
+          // should (re)play the adhan - the channel's native sound already
+          // handled auto-play, and replaying it here is what caused the
+          // adhan to play late, minutes after the actual prayer time, if the
+          // user opened the app sometime after it had already fired.
           break;
       }
     } catch (e) {
@@ -370,10 +385,14 @@ class AdhanService {
     Map<String, bool> notificationSettings,
   ) async {
     try {
+      for (final typeKey in adhanTypes.keys) {
+        await AwesomeNotifications().cancelNotificationsByChannelKey(
+          _channelKeyForType(typeKey),
+        );
+      }
       await AwesomeNotifications().cancelNotificationsByChannelKey(
-        'adhan_channel',
+        _silentChannelKey,
       );
-      await _cancelAllAlarms();
       final now = DateTime.now();
 
       for (var dayOffset = 0; dayOffset < prayerTimesByDay.length; dayOffset++) {
@@ -407,11 +426,14 @@ class AdhanService {
       // of each day's schedule call overwriting the previous day's.
       final id = _getNotificationId(prayer) + dayOffset * 10;
       final autoPlay = await getAutoPlayEnabled();
-      
+      final channelKey = autoPlay
+          ? _channelKeyForType(await _getAdhanTypeKey(prayer))
+          : _silentChannelKey;
+
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: id,
-          channelKey: 'adhan_channel',
+          channelKey: channelKey,
           title: '🕌 $prayer Prayer Time',
           body: autoPlay 
               ? 'It\'s time for $prayer prayer. Adhan will play automatically.'
@@ -447,35 +469,8 @@ class AdhanService {
           preciseAlarm: true,
         ),
       );
-
-      // The actual auto-play trigger - see the doc comment on [onAlarmFired].
-      await AndroidAlarmManager.oneShotAt(
-        time,
-        id,
-        onAlarmFired,
-        alarmClock: true,
-        exact: true,
-        wakeup: true,
-        rescheduleOnReboot: true,
-        params: {'prayer': prayer},
-      );
     } catch (e) {
       debugPrint('Error scheduling $prayer notification: $e');
-    }
-  }
-
-  /// Every id [_scheduleAdhanNotification] could have handed to
-  /// `AndroidAlarmManager.oneShotAt` across the ~week of days
-  /// `scheduleAdhanNotifications` schedules - cancelled up front on every
-  /// reschedule so a prayer/day that becomes disabled doesn't leave a
-  /// dangling native alarm that fires anyway.
-  static Future<void> _cancelAllAlarms() async {
-    for (final prayer in _defaultSettings.keys) {
-      for (var dayOffset = 0; dayOffset < 8; dayOffset++) {
-        await AndroidAlarmManager.cancel(
-          _getNotificationId(prayer) + dayOffset * 10,
-        );
-      }
     }
   }
 
@@ -498,13 +493,17 @@ class AdhanService {
 
   static Future<void> cancelAllNotifications() async {
     try {
+      for (final typeKey in adhanTypes.keys) {
+        await AwesomeNotifications().cancelNotificationsByChannelKey(
+          _channelKeyForType(typeKey),
+        );
+      }
       await AwesomeNotifications().cancelNotificationsByChannelKey(
-        'adhan_channel',
+        _silentChannelKey,
       );
       await AwesomeNotifications().cancelNotificationsByChannelKey(
         'adhan_playing_channel',
       );
-      await _cancelAllAlarms();
     } catch (e) {
       debugPrint('Error canceling notifications: $e');
     }

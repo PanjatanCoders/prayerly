@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../services/weather_service.dart';
 import '../utils/circular_progress_painter.dart';
@@ -5,6 +7,23 @@ import '../utils/moon_phase.dart';
 import '../utils/moon_phase_painter.dart';
 import '../utils/sun_position.dart';
 import '../utils/theme/app_theme.dart';
+
+/// Where to draw the sun/moon along the sky disc's upper arc for a given
+/// [SunPosition.angleDegrees] (0 = horizon/rising, 90 = zenith, 180 =
+/// horizon/setting), as an offset from the disc's center.
+///
+/// The vertical sweep is compressed to `[baseLift*radius, radius]` rather
+/// than the full `[0, radius]` so the body never drops to the same height as
+/// the centered countdown text, even right at sunrise/sunset/moonrise/
+/// moonset - it stays a "sky arc" confined to the upper part of the disc.
+Offset _skyArcOffset(double angleDegrees, double radius) {
+  const baseLift = 0.35;
+  final rad = angleDegrees.clamp(0.0, 180.0) * math.pi / 180.0;
+  final sweep = math.sin(rad);
+  final dx = -math.cos(rad) * radius * 0.9;
+  final dy = -(baseLift + sweep * (1 - baseLift)) * radius;
+  return Offset(dx, dy);
+}
 
 /// The countdown ring: a plain disc with an orange progress ring, a sky icon,
 /// the next prayer's name, and an HH:MM:SS countdown.
@@ -94,6 +113,9 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
   Widget build(BuildContext context) {
     final sun = SunPosition.calculate(widget.prayerTimes, widget.currentTime);
     final ringColor = AppTheme.legibleAccent(context, AppTheme.primaryAmber);
+    // The sky disc behind this text switches to a dark "night mode" gradient
+    // after Maghrib (see _SkyDisc) - black text would be unreadable on it.
+    final textColor = sun.isDaytime ? Colors.black87 : Colors.white;
 
     return AnimatedBuilder(
       animation: _pulseController,
@@ -121,13 +143,11 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Container(
-                  width: widget.size - 12,
-                  height: widget.size - 12,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
+                _SkyDisc(
+                  size: widget.size - 12,
+                  sun: sun,
+                  currentTime: widget.currentTime,
+                  weather: widget.weather,
                 ),
                 CustomPaint(
                   size: Size(widget.size, widget.size),
@@ -136,20 +156,28 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                     color: ringColor,
                   ),
                 ),
+                // Positioned along the sky disc's arc per the sun/moon's
+                // actual current angle, rather than sitting fixed in place -
+                // see _skyArcOffset.
+                Transform.translate(
+                  offset: _skyArcOffset(
+                    sun.angleDegrees,
+                    (widget.size - 12) / 2 * 0.72,
+                  ),
+                  child: _SkyIcon(
+                    sun: sun,
+                    weather: widget.weather,
+                    currentTime: widget.currentTime,
+                    size: widget.size * 0.165,
+                  ),
+                ),
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _SkyIcon(
-                      sun: sun,
-                      weather: widget.weather,
-                      currentTime: widget.currentTime,
-                      size: widget.size * 0.165,
-                    ),
-                    SizedBox(height: widget.size * 0.035),
                     Text(
                       widget.nextPrayer,
                       style: TextStyle(
-                        color: Colors.black87,
+                        color: textColor,
                         fontSize: widget.size * 0.106,
                         fontWeight: FontWeight.bold,
                       ),
@@ -157,7 +185,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                     Text(
                       _formatTimeRemaining(widget.timeRemaining),
                       style: TextStyle(
-                        color: Colors.black87,
+                        color: textColor,
                         fontSize: widget.size * 0.118,
                         fontWeight: FontWeight.bold,
                       ),
@@ -165,7 +193,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
                     Text(
                       'until prayer',
                       style: TextStyle(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: textColor.withValues(alpha: 0.6),
                         fontSize: widget.size * 0.065,
                       ),
                     ),
@@ -184,6 +212,67 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
     return "${duration.inHours.toString().padLeft(2, '0')}:"
         "${(duration.inMinutes % 60).toString().padLeft(2, '0')}:"
         "${(duration.inSeconds % 60).toString().padLeft(2, '0')}";
+  }
+}
+
+/// The countdown ring's sky background - not just a flat white disc, but a
+/// gradient that actually reflects what's going on outside: pale cream
+/// warming toward white as the sun's [SunPosition.intensity] climbs by day,
+/// a dark indigo "night mode" (lighter the fuller the moon) by night, and a
+/// blue-grey wash over either one when [weather] reports real cloud cover -
+/// so an overcast sky reads as overcast at a glance, not just via a small
+/// cloud glyph on the sun/moon icon itself.
+class _SkyDisc extends StatelessWidget {
+  final double size;
+  final SunPosition sun;
+  final DateTime currentTime;
+  final WeatherSnapshot? weather;
+
+  const _SkyDisc({
+    required this.size,
+    required this.sun,
+    required this.currentTime,
+    required this.weather,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Color> colors;
+    if (sun.isDaytime) {
+      final intensity = sun.intensity.clamp(0.0, 1.0);
+      colors = [
+        Color.lerp(const Color(0xFFFFF3D6), Colors.white, intensity)!,
+        Color.lerp(const Color(0xFFFFE9B8), const Color(0xFFEAF2FF), intensity)!,
+      ];
+    } else {
+      final moon = MoonPhase.forDate(currentTime);
+      colors = [
+        Color.lerp(const Color(0xFF171B38), const Color(0xFF39407A), moon.illumination)!,
+        const Color(0xFF0A0B1C),
+      ];
+    }
+
+    final cloudFraction = weather?.cloudFraction ?? 0.0;
+    final cloudAlpha = ((cloudFraction - 0.3) / 0.7).clamp(0.0, 1.0) * 0.45;
+
+    return ClipOval(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(colors: colors, radius: 0.95),
+              ),
+            ),
+            if (cloudAlpha > 0)
+              ColoredBox(color: Colors.blueGrey.withValues(alpha: cloudAlpha)),
+          ],
+        ),
+      ),
+    );
   }
 }
 

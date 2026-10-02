@@ -1,25 +1,26 @@
 // widgets/info_card_widget.dart
 
 import 'package:flutter/material.dart';
+import '../services/weather_service.dart';
 
-/// Location, date and elevation summary shown on the semi-opaque card over
-/// the hero photo. Always renders in dark text on the assumption of a light
-/// (near-white) card background, regardless of app theme - see
+/// Location, date and current-weather summary shown on the semi-opaque card
+/// over the hero photo. Always renders in dark text on the assumption of a
+/// light (near-white) card background, regardless of app theme - see
 /// [HeroStatusCard]'s `_LocationDateCard`.
 class InfoCardWidget extends StatelessWidget {
   final String location;
   final String islamicDate;
   final String currentDate;
-  final double? elevation;
-  final bool isLoadingElevation;
+  final WeatherSnapshot? weather;
+  final bool isLoadingWeather;
 
   const InfoCardWidget({
     super.key,
     required this.location,
     required this.islamicDate,
     required this.currentDate,
-    this.elevation,
-    this.isLoadingElevation = false,
+    this.weather,
+    this.isLoadingWeather = false,
   });
 
   @override
@@ -41,7 +42,7 @@ class InfoCardWidget extends StatelessWidget {
           secondary: islamicDate,
         ),
         const SizedBox(height: 8),
-        _buildElevationRow(),
+        _buildWeatherRow(),
       ],
     );
   }
@@ -98,17 +99,17 @@ class InfoCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildElevationRow() {
+  Widget _buildWeatherRow() {
     return Row(
       // Matches the start alignment _buildIconRow uses above, so this row's
       // icon sits at the same relative position against its text as the
       // location/date rows' icons do against theirs.
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.terrain, color: Colors.black54, size: 16),
+        Icon(weather?.icon ?? Icons.wb_sunny, color: Colors.black54, size: 16),
         const SizedBox(width: 6),
         Expanded(
-          child: isLoadingElevation
+          child: isLoadingWeather
               ? Row(
                   children: [
                     const SizedBox(
@@ -121,7 +122,7 @@ class InfoCardWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      "Loading elevation...",
+                      "Loading weather...",
                       style: TextStyle(
                         color: Colors.black.withValues(alpha: 0.55),
                         fontSize: 11,
@@ -130,7 +131,7 @@ class InfoCardWidget extends StatelessWidget {
                   ],
                 )
               : Text(
-                  _formatElevationWithFeet(elevation),
+                  _formatWeather(weather),
                   style: TextStyle(
                     color: Colors.black.withValues(alpha: 0.55),
                     fontSize: 12,
@@ -141,14 +142,11 @@ class InfoCardWidget extends StatelessWidget {
     );
   }
 
-  /// Formats elevation showing both meters and feet
-  String _formatElevationWithFeet(double? elevation) {
-    if (elevation == null) return 'Elevation unavailable';
-
-    final meters = elevation.round();
-    final feet = (elevation * 3.28084).round(); // 1 meter = 3.28084 feet
-
-    return '$meters m ($feet ft)';
+  /// Formats as "26°C · Partly cloudy".
+  String _formatWeather(WeatherSnapshot? weather) {
+    if (weather == null) return 'Weather unavailable';
+    final temperature = weather.temperatureCelsius.round();
+    return '$temperature°C · ${weather.description}';
   }
 }
 

@@ -14,9 +14,8 @@ class MainContentWidget extends StatelessWidget {
   final PrayerStatus prayerStatus;
   final DateTime currentTime;
   final String formattedCurrentDate;
-  final double? elevation;
-  final bool isLoadingElevation;
   final WeatherSnapshot? weather;
+  final bool isLoadingWeather;
 
   const MainContentWidget({
     super.key,
@@ -25,9 +24,8 @@ class MainContentWidget extends StatelessWidget {
     required this.prayerStatus,
     required this.currentTime,
     required this.formattedCurrentDate,
-    required this.elevation,
-    required this.isLoadingElevation,
     this.weather,
+    this.isLoadingWeather = false,
   });
 
   // On an ordinary day (no occasion banner, trustworthy location - the
@@ -46,9 +44,9 @@ class MainContentWidget extends StatelessWidget {
   // plain background below the cards - same color as the cards themselves
   // (see PrayerTimesScreen's Scaffold.backgroundColor), so it reads as
   // ordinary bottom breathing room rather than a mismatched void.
-  static const double _minHeroHeight = 172;
-  static const double _maxHeroHeight = 380;
-  static const double _heroHeightFraction = 0.38;
+  static const double _minHeroHeight = 160;
+  static const double _maxHeroHeight = 320;
+  static const double _heroHeightFraction = 0.32;
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +73,8 @@ class MainContentWidget extends StatelessWidget {
                 prayerStatus: prayerStatus,
                 currentTime: currentTime,
                 formattedCurrentDate: formattedCurrentDate,
-                elevation: elevation,
-                isLoadingElevation: isLoadingElevation,
                 weather: weather,
+                isLoadingWeather: isLoadingWeather,
                 minHeight: heroHeight,
               ),
               Container(
@@ -87,11 +84,11 @@ class MainContentWidget extends StatelessWidget {
                       const BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 transform: Matrix4.translationValues(0, -20, 0),
-                // Horizontal margin matches HeroStatusCard's (14) so the
+                // Horizontal margin matches HeroStatusCard's (12) so the
                 // Prayer Times card and Today's Verse/Next Prayer cards sit
                 // on the same vertical edge as the hero card above them -
                 // one shared content margin for the whole screen.
-                padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -111,19 +108,19 @@ class MainContentWidget extends StatelessWidget {
                       nextPrayer: prayerStatus.nextPrayer,
                     ),
 
-                    // Deliberate section-spacing value (the 32dp "major
+                    // Deliberate section-spacing value (the 24dp "major
                     // section spacing" tier) between the Prayer Times card
                     // and Today's Verse/Next Prayer - fixed rather than
                     // stretched to fill whatever space
                     // happens to be left, per the reasoning above.
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
 
                     BottomTilesRow(
                       nextPrayer: prayerStatus.nextPrayer,
                       timeRemaining: prayerStatus.timeRemaining,
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                   ],
                 ),
               ),

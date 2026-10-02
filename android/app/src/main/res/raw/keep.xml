@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Release builds run with shrinkResources (see app/build.gradle.kts), which
+  removes any resource it can't prove is used. The adhan audio files in this
+  same res/raw/ directory are only ever referenced by a runtime-built string
+  (AdhanService: 'resource://raw/$typeKey', passed to awesome_notifications'
+  NotificationChannel.soundSource) - never a literal @raw/azan1-style
+  reference anywhere in Kotlin/Java/XML - so the shrinker has no static
+  evidence they're used and strips them from the release APK. Without this
+  file, AwesomeNotifications().initialize() fails with "Audio media is not
+  valid" for a missing channel sound, which is an unhandled exception in
+  main() before runApp() - the app never gets past the splash screen.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/azan1,@raw/azan2,@raw/azan3,@raw/azan4,@raw/azan_fajr1" />

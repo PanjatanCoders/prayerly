@@ -4,7 +4,6 @@ import 'package:prayerly/l10n/app_localizations.dart';
 import 'package:prayerly/utils/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 import 'services/notification_service.dart';
 import 'services/adhan_service.dart';
@@ -20,17 +19,20 @@ import 'providers/theme_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Required for AdhanService's native-alarm fallback: awesome_notifications
-  // can only resurrect Dart in a background isolate for onActionReceivedMethod,
-  // not for onNotificationDisplayed, so the adhan itself is fired by a plain
-  // AlarmManager alarm (this plugin) scheduled alongside each notification.
-  await AndroidAlarmManager.initialize();
-
-  // Initialize services
-  await NotificationService.initialize();
-  await AdhanService.initialize();
-  await ReminderService.initialize();
-  await LanguageService.initialize();
+  // Each of these is awaited before runApp() below, so an exception here
+  // (e.g. a notification channel failing native validation - this has
+  // actually happened, see AdhanService's raw-resource keep.xml) would
+  // otherwise stop main() before runApp() ever runs, stranding the user on
+  // the native splash screen forever with no way to recover. Degraded
+  // functionality (no notifications this session) beats that completely.
+  try {
+    await NotificationService.initialize();
+    await AdhanService.initialize();
+    await ReminderService.initialize();
+    await LanguageService.initialize();
+  } catch (e, stack) {
+    debugPrint('Error initializing services: $e\n$stack');
+  }
 
   final themeProvider = ThemeProvider();
   await themeProvider.initialize();
@@ -59,19 +61,13 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
+    // Auto-play itself doesn't go through a listener here - the adhan
+    // channel's own native sound (see AdhanService._initializeNotifications)
+    // plays automatically, posted by the OS with no Dart isolate involved.
+    // This listener only handles explicit user interaction with the
+    // notification (the Play/Stop/Pause buttons, or a tap).
     AwesomeNotifications().setListeners(
       onActionReceivedMethod: AdhanService.onNotificationTap,
-      // onNotificationCreatedMethod fires the instant a notification is
-      // scheduled (i.e. right when the app calls createNotification, which
-      // can be hours before the prayer time) - it must never trigger
-      // playback. onNotificationDisplayedMethod fires when the notification
-      // actually appears on screen at its scheduled time, which is the
-      // correct moment to auto-play the adhan without the user tapping
-      // anything.
-      //
-      // This must stay a bare static tear-off (not an inline closure) - see
-      // the doc comment on AdhanService.onNotificationDisplayed.
-      onNotificationDisplayedMethod: AdhanService.onNotificationDisplayed,
     );
   }
 

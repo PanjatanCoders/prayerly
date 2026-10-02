@@ -45,7 +45,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
   // State
   bool _isLoading = true;
   bool _isLoadingLocation = false;
-  bool _isLoadingElevation = false;
+  bool _isLoadingWeather = false;
   bool _notificationsEnabled = false;
 
   @override
@@ -232,45 +232,48 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
     setState(() => _locationData = enriched);
   }
 
-  /// Fetches elevation data (cached/offline; contributes to display only)
+  /// Fetches elevation data (cached/offline). Only used by the info dialog
+  /// now - the hero card shows current weather/temperature instead (see
+  /// [_fetchWeather]).
   Future<void> _fetchElevation() async {
     final location = _locationData;
     if (location == null || !mounted) return;
-
-    setState(() => _isLoadingElevation = true);
 
     try {
       final elevation = await ElevationService.getElevation(
         location.latitude,
         location.longitude,
       );
-      if (mounted) {
-        setState(() {
-          _elevation = elevation;
-          _isLoadingElevation = false;
-        });
-      }
+      if (mounted) setState(() => _elevation = elevation);
     } catch (e) {
       debugPrint('Error fetching elevation: $e');
-      if (mounted) setState(() => _isLoadingElevation = false);
     }
   }
 
-  /// Fetches cloud cover for the circular timer's sky ("cloudy" vs. clear
-  /// sun/moon) - purely cosmetic enrichment, same off-critical-path pattern
-  /// as [_fetchElevation]: it never blocks or fails the prayer times screen.
+  /// Fetches current weather: cloud cover for the circular timer's sky
+  /// ("cloudy" vs. clear sun/moon) and temperature/conditions for the hero
+  /// card - purely cosmetic enrichment, same off-critical-path pattern as
+  /// [_fetchElevation]: it never blocks or fails the prayer times screen.
   Future<void> _fetchWeather() async {
     final location = _locationData;
     if (location == null || !mounted) return;
+
+    setState(() => _isLoadingWeather = true);
 
     try {
       final weather = await WeatherService.getCurrentWeather(
         location.latitude,
         location.longitude,
       );
-      if (mounted) setState(() => _weather = weather);
+      if (mounted) {
+        setState(() {
+          _weather = weather;
+          _isLoadingWeather = false;
+        });
+      }
     } catch (e) {
       debugPrint('Error fetching weather: $e');
+      if (mounted) setState(() => _isLoadingWeather = false);
     }
   }
 
@@ -477,9 +480,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen>
           prayerStatus: status,
           currentTime: _currentTime,
           formattedCurrentDate: _formattedCurrentDate,
-          elevation: _elevation,
-          isLoadingElevation: _isLoadingElevation,
           weather: _weather,
+          isLoadingWeather: _isLoadingWeather,
         ),
       );
     }
