@@ -3,7 +3,7 @@ import 'package:prayerly/screens/compass/qibla_compass_screen.dart';
 import 'package:prayerly/screens/dhikr/dhikr_selection_screen.dart';
 import 'package:prayerly/screens/prayer_times_screen.dart';
 import 'package:prayerly/screens/qaza/qaza_tracker_screen.dart';
-import 'package:prayerly/screens/zakat/zakat_screen.dart';
+import 'package:prayerly/screens/other_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -22,7 +22,7 @@ class _HomeShellState extends State<HomeShell> {
         QiblaCompassScreen(isActive: _index == 1),
         const DhikrSelectionScreen(),
         const QazaTrackerScreen(),
-        const ZakatScreen(),
+        const OtherScreen(),
       ];
 
   @override
@@ -63,9 +63,9 @@ class _HomeShellState extends State<HomeShell> {
             label: 'Qaza',
           ),
           NavigationDestination(
-            icon: Icon(Icons.volunteer_activism_outlined),
-            selectedIcon: Icon(Icons.volunteer_activism),
-            label: 'Zakat',
+            icon: Icon(Icons.grid_view_outlined),
+            selectedIcon: Icon(Icons.grid_view),
+            label: 'Other',
           ),
         ],
       ),

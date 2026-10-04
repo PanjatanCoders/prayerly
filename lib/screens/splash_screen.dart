@@ -49,9 +49,18 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _goHome() {
-    Navigator.of(
-      context,
-    ).pushReplacement(AppTransitions.fadeThrough(const HomeShell()));
+    // Replace this splash's own route, not whatever is on top: a notification
+    // tap can open a dialog/screen over the splash during the 2s delay, and
+    // pushReplacement would swap that out instead, leaving a dead splash
+    // under HomeShell for the back button to land on.
+    final route = ModalRoute.of(context);
+    final navigator = Navigator.of(context);
+    final home = AppTransitions.fadeThrough(const HomeShell());
+    if (route == null || route.isCurrent) {
+      navigator.pushReplacement(home);
+    } else {
+      navigator.replace(oldRoute: route, newRoute: home);
+    }
   }
 
   @override
