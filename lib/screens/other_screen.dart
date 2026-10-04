@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:prayerly/screens/calendar/prayer_calendar_screen.dart';
+import 'package:prayerly/screens/fatiha_screen.dart';
+import 'package:prayerly/screens/book_reader_screen.dart';
 import 'package:prayerly/screens/islamic_events_screen.dart';
 import 'package:prayerly/screens/settings_screen.dart';
 import 'package:prayerly/screens/zakat/zakat_screen.dart';
@@ -49,6 +51,26 @@ class OtherScreen extends StatelessWidget {
             title: 'Settings',
             subtitle: 'Theme, language & adhan',
             onTap: () => _open(context, const SettingsScreen()),
+          ),
+          _OtherTile(
+            icon: Icons.menu_book,
+            color: Colors.purple,
+            title: 'Fatiha ki Tariqa',
+            subtitle: 'Step-by-step way to recite Fatiha',
+            onTap: () => _open(context, const FatihaScreen()),
+          ),
+          _OtherTile(
+            icon: Icons.auto_stories,
+            color: Colors.brown,
+            title: 'Namaz Ka Tariqa',
+            subtitle: 'Namaz Ka Mukhtasar Tariqa (book)',
+            onTap: () => _open(
+              context,
+              const BookReaderScreen(
+                title: 'Namaz Ka Tariqa',
+                assetPath: 'assets/books/namaz_ka_tariqa.pdf',
+              ),
+            ),
           ),
         ],
       ),

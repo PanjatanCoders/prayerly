@@ -2,7 +2,7 @@ name: prayerly
 description: "Prayerly app"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.6.0+14
+version: 3.0.0+15
 
 environment:
   sdk: ^3.8.1
@@ -27,6 +27,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_gen: ^5.12.0
+  pdfx: ^2.11.0
   
 
 dev_dependencies:
@@ -61,6 +62,7 @@ flutter:
     - assets/icons/icon_foreground.png
     - assets/images/hero_prayer_bg.jpg
     - assets/images/world_map.jpg
+    - assets/books/namaz_ka_tariqa.pdf
     - assets/audio/adhan/azan1.mp3
     - assets/audio/adhan/azan2.mp3
     - assets/audio/adhan/azan3.mp3
